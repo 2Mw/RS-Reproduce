@@ -1,15 +1,15 @@
 config = {
     "files": {
-        "criteo_base": "E:/Notes/DeepLearning/dataset/criteo",
+        "criteo_base": "data/criteo",
         "criteo_train": "train.txt",
         "criteo_test": "test.txt",
     },
 
     "train": {
-        "epochs": 300,
+        "epochs": 3,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
-        "sample_size": 4500000,
+        "sample_size": 10000000,
         "batch_size": 4096,
         "lr": 0.001,
     },
@@ -28,6 +28,6 @@ config = {
         "cross_w_reg": 0.,
         "cross_b_reg": 0.,
         # evaluate part
-        "metrics": ['AUC', 'BCE']
+        "metrics": ['AUC']
     }
 }

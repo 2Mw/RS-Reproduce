@@ -1,3 +1,5 @@
+import os.path
+
 import tensorflow as tf
 from keras.api._v2 import keras
 from keras.models import Model
@@ -7,7 +9,7 @@ from cf.layers import crossnet, mlp
 
 
 class DCN(Model):
-    def __init__(self, feature_columns, config, *args, **kwargs):
+    def __init__(self, feature_columns, config, directory: str = '', *args, **kwargs):
         """
         Deep & Cross Network
 
@@ -22,6 +24,7 @@ class DCN(Model):
         :param kwargs:
         """
         super(DCN, self).__init__(*args, **kwargs)
+        self.directory = directory
         model_config = config['model']
         self.feature_columns = feature_columns
         self.hidden_units = model_config['hidden_units']
@@ -52,7 +55,10 @@ class DCN(Model):
             feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
             for feature in self.feature_columns
         }
-        Model(inputs=inputs, outputs=self.call(inputs)).summary()
+        model = Model(inputs=inputs, outputs=self.call(inputs))
+        if len(self.directory) > 0:
+            keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
+        model.summary()
 
     def call(self, inputs, training=None, mask=None):
         # todo 存在一个问题，所有的 dense 和 sparse feature 全变成了 embedding了

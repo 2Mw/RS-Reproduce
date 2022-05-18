@@ -1,9 +1,9 @@
 import copy
 import os.path
 import pickle
-from cf.config.dcn import config
+from cf.config.autoint import config
 from cf.preprocess.criteo import *
-from cf.models.dcn import *
+from cf.models.autoint import *
 from cf.utils.config import *
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
@@ -11,7 +11,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'dcn'
+__model__ = 'autoint'
 
 
 def train(cfg, dataset: str = 'criteo'):
@@ -54,7 +54,7 @@ def train(cfg, dataset: str = 'criteo'):
     model_config = cfg['model']
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-        model = DCN(feature_columns, cfg)
+        model = AutoInt(feature_columns, cfg, directory)
         model.summary()
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     epochs = train_config['epochs']

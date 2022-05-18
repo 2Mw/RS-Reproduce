@@ -1,6 +1,6 @@
 config = {
     "files": {
-        "criteo_base": "E:/Notes/DeepLearning/dataset/criteo",
+        "criteo_base": "data/criteo",
         "criteo_train": "train.txt",
         "criteo_test": "test.txt",
     },
@@ -9,7 +9,7 @@ config = {
         "epochs": 3,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
-        "sample_size": 4500000,
+        "sample_size": 10000000,
         "batch_size": 4096,
         "lr": 0.001,
     },

@@ -1,3 +1,5 @@
+import os.path
+
 import tensorflow as tf
 from keras.api._v2 import keras
 from keras.models import Model
@@ -7,8 +9,9 @@ from cf.layers import crossnet, mlp
 
 
 class DCNv2(Model):
-    def __init__(self, feature_column, config, *args, **kwargs):
+    def __init__(self, feature_column, config, directory="", *args, **kwargs):
         super(DCNv2, self).__init__(*args, **kwargs)
+        self.directory = directory
         model_cfg = config['model']
         self.feature_column = feature_column
         self.mlp = mlp.MLP(model_cfg['hidden_units'], model_cfg['activation'], model_cfg['dropout'],
@@ -39,7 +42,10 @@ class DCNv2(Model):
             f['name']: Input(shape=(), dtype=tf.int32, name=f['name'])
             for f in self.feature_column
         }
-        Model(inputs, outputs=self.call(inputs)).summary()
+        model = Model(inputs, outputs=self.call(inputs))
+        if len(self.directory) > 0:
+            keras.utils.plot_model(model, os.path.join(self.directory, "model.png"), show_shapes=True)
+        model.summary()
 
     def call(self, inputs, training=None, mask=None):
         sparse_embedding = tf.concat([

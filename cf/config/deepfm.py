@@ -6,17 +6,17 @@ config = {
     },
 
     "train": {
-        "epochs": 10,
+        "epochs": 2,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": 10000000,
-        "batch_size": 2048,
+        "batch_size": 4096,
         "lr": 0.001,
     },
 
     "model": {
         "hidden_units": [256, 128, 64],
-        "dropout": 0.3,
+        "dropout": 0.5,
         "use_bn": False,
         "fm_w_reg": 0.,
         "embedding_reg": 0.,

@@ -5,6 +5,9 @@ from cf.config.dcn_v2 import config
 from cf.preprocess.criteo import *
 from cf.models.dcnv2 import *
 from cf.utils.config import *
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
@@ -35,20 +38,7 @@ def train(cfg, dataset: str = 'criteo'):
         pickle.dump(test_data, open(f'{data_dir}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         print(f'保存数据')
     print(f'========= Build Model =========')
-    train_config = cfg['train']
-    model_config = cfg['model']
-    mirrored_strategy = tf.distribute.MirroredStrategy()
-    with mirrored_strategy.scope():
-        model = DCNv2(feature_columns, cfg)
-        model.summary()
-        model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
-    epochs = train_config['epochs']
-    batch_size = train_config['batch_size']
-    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size, validation_split=0.1)
-    res = model.evaluate(test_data[0], test_data[1], batch_size=batch_size)
-    print(f'test AUC: {res[1]}')
-
-    print('========= Export Model Information =========')
+    # 创建输出结果目录
     date = get_date()
     dirs = [__model__, date]
     directory = f'../result'
@@ -56,11 +46,27 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
+    # 创建回调
+    ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
+    earlyStop = EarlyStopping(min_delta=0.01)
 
-    export_config(bcfg, directory)
-    model.save_weights(f'{directory}/weights.h5')
+    train_config = cfg['train']
+    model_config = cfg['model']
+    mirrored_strategy = tf.distribute.MirroredStrategy()
+    with mirrored_strategy.scope():
+        model = DCNv2(feature_columns, cfg, directory)
+        model.summary()
+        model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
+    epochs = train_config['epochs']
+    batch_size = train_config['batch_size']
+    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size, validation_split=0.1,
+                              callbacks=[ckpt, earlyStop])
+    res = model.evaluate(test_data[0], test_data[1], batch_size=batch_size)
+    print(f'test AUC: {res[1]}')
+
+    print('========= Export Model Information =========')
     cost = time.time() - start
-    export_result(train_history, res, directory, cost)
+    export_all(directory, bcfg, model, train_history, res, cost)
     print(f'========= Train over, cost: {cost:.3f}s =========')
 
 

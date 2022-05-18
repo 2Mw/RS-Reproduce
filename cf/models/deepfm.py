@@ -2,6 +2,7 @@ import tensorflow as tf
 from keras.api._v2 import keras
 from keras.models import Model
 from cf.layers import fm, mlp
+from keras.layers import Input
 
 
 class DeepFM(Model):
@@ -82,3 +83,10 @@ class DeepFM(Model):
             for feature in self.feature_columns
         }
         Model(inputs=inputs, outputs=self.call(inputs)).summary()
+    #
+    # def build(self, input_shape):
+    #     inputs = Input(input_shape)
+    #     outputs = self.call(inputs)
+    #     self.model_plot = tf.keras.Model(inputs=inputs, outputs=outputs)
+    #     print("build")
+    #     super(DeepFM, self).build()

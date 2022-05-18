@@ -1,4 +1,5 @@
 import copy
+import json
 import os.path
 import pickle
 from cf.config.deepfm import config
@@ -7,6 +8,7 @@ import cf
 import tensorflow as tf
 from cf.models.deepfm import *
 from cf.utils.config import *
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 project_dir = cf.get_project_path()
 
@@ -37,6 +39,18 @@ def train(cfg, dataset: str = 'criteo'):
         pickle.dump(test_data, open(f'{data_dir}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         print(f'保存数据')
     print(f'========= Build Model =========')
+    # 创建输出结果目录
+    date = get_date()
+    dirs = [__model__, date]
+    directory = f'../result'
+    for d in dirs:
+        directory = os.path.join(directory, d)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+    # 创建回调
+    ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
+    earlyStop = EarlyStopping(min_delta=0.01)
+
     train_config = cfg['train']
     model_config = cfg['model']
     mirrored_strategy = tf.distribute.MirroredStrategy()
@@ -46,24 +60,34 @@ def train(cfg, dataset: str = 'criteo'):
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
-    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size, validation_split=0.1)
+    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size, validation_split=0.1,
+                              callbacks=[ckpt, earlyStop])
     res = model.evaluate(test_data[0], test_data[1], batch_size=batch_size)
     print(f'test AUC: {res[1]}')
 
     print('========= Export Model Information =========')
-    date = get_date()
-    dirs = [__model__, date]
-    directory = f'../result'
-    for d in dirs:
-        directory = os.path.join(directory, d)
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-
-    export_config(bcfg, directory)
-    model.save_weights(f'{directory}/weights.h5')
     cost = time.time() - start
-    export_result(train_history, res, directory, cost)
+    export_all(directory, bcfg, model, train_history, res, cost)
     print(f'========= Train over, cost: {cost:.3f}s =========')
+
+
+def testGraph():
+    model = keras.models.Sequential()
+    model.add(keras.layers.Dense(32, activation='relu', input_dim=100))
+    model.add(keras.layers.Dense(10, activation='softmax'))
+    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
+
+    import numpy as np
+    data = np.random.random((1000, 100))
+    labels = np.random.randint(10, size=(1000, 1))
+
+    one_hot_labels = keras.utils.to_categorical(labels, num_classes=10)
+
+    model.fit(data, one_hot_labels, epochs=10, batch_size=128)
+    yml = model.to_json()
+    with open('s.json', 'w') as f:
+        json.dump(yml, f)
+    keras.utils.plot_model(model, 'model.png', show_shapes=True)
 
 
 if __name__ == '__main__':
