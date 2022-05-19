@@ -1,8 +1,6 @@
 import json
 import os
-import random
 import time
-import numpy as np
 import yaml
 import sys
 import cf
@@ -57,7 +55,7 @@ def get_date() -> str:
 
 def export_result(train_hist: keras.callbacks.History, val_res, directory: str, cost: float, params: int):
     """
-    Export model training result to specified file. {directory}/result.txt
+    Export model training result to specified file. {directory}/result.json
 
     :param params: The count of model parameters
     :param cost: cost seconds.
@@ -77,7 +75,7 @@ def export_result(train_hist: keras.callbacks.History, val_res, directory: str, 
             'result': val_res
         }
     }
-    f = open(os.path.join(directory, 'result.txt'), 'w')
+    f = open(os.path.join(directory, 'result.json'), 'w')
     json.dump(info, f)
     f.close()
 

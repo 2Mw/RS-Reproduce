@@ -28,3 +28,4 @@ E:.
     2. [DCN 2017](https://dl.acm.org/doi/pdf/10.1145/3124749.3124754?ref=https://githubhelp.com)
     3. [DCN-v2 2020](https://arxiv.org/pdf/2008.13535.pdf)
     4. [AutoInt 2018](https://arxiv.org/pdf/1810.11921.pdf)
+    5. [InterHAt 2020](https://dl.acm.org/doi/pdf/10.1145/3336191.3371785)
