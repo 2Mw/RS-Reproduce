@@ -1,9 +1,9 @@
 import copy
 import os.path
 import pickle
-from cf.config.dcn_v2 import config
+from cf.config.can import config
 from cf.preprocess.criteo import *
-from cf.models.dcnv2 import *
+from cf.models.can import *
 from cf.utils.config import *
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
@@ -12,13 +12,13 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'dcnv2'
+__model__ = 'can'
 
 
 def train(cfg, dataset: str = 'criteo'):
     bcfg = copy.deepcopy(cfg)
     start = time.time()
-    print(f'========= Loading configures of {__model__} =========')
+    print(f'========= Loading configures =========')
     base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
     train_file = os.path.join(base, cfg['files'][f'{dataset}_train'])
     sample_size = cfg['train']['sample_size']
@@ -52,7 +52,7 @@ def train(cfg, dataset: str = 'criteo'):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.001)
-    aucStop = AbnormalAUC(0.8115)
+    aucStop = AbnormalAUC()
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
     train_config = cfg['train']
@@ -84,7 +84,7 @@ def initModel(cfg, feature_columns, directory, weights: str = ''):
     model_config = cfg['model']
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-        model = DCNv2(feature_columns, cfg, directory)
+        model = CAN(feature_columns, cfg, directory)
         model.summary()
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     if weights == '' or weights is None:
@@ -111,12 +111,12 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     model_config = cfg['model']
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
-        model = DCNv2(feature_columns, cfg)
+        model = CAN(feature_columns, cfg)
         model.summary()
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     model.built = True  # 必须添加这一句，否则无法训练
     model.load_weights(weight)
-    res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
+    res = model.evaluate(test_data[0], test_data[1], batch_size=2048)
     print(res)
 
 

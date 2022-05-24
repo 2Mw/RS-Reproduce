@@ -13,13 +13,9 @@ class DCN(Model):
         """
         Deep & Cross Network
 
-        :param feature_columns:
-        :param hidden_units:
-        :param activation:
-        :param dnn_dropout: The dropout rate.
-        :param embedding_reg:
-        :param cross_w_reg:
-        :param cross_b_reg:
+        :param feature_columns: The feature columns
+        :param cfg: The config of hyper parameters.
+        :param directory: The directory of the model.
         :param args:
         :param kwargs:
         """
@@ -59,6 +55,9 @@ class DCN(Model):
         if len(self.directory) > 0:
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
         model.summary()
+
+    def build(self, input_shape):
+        super(DCN, self).build(input_shape)
 
     def call(self, inputs, training=None, mask=None):
         # todo 存在一个问题，所有的 dense 和 sparse feature 全变成了 embedding了

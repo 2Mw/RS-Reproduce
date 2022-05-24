@@ -60,12 +60,11 @@ class InterHAt(Model):
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
         x = tf.reshape(embedding, [-1, len(self.feature_column), self.embedding_dim])
 
-        x = x
-        x = self.attention(x)
+        x = self.attention(x)  # (batch, F, dk*head)
 
-        x = self.trim_dense(x)  # (batch, F, dim)
+        x = self.trim_dense(x)  # (batch, F, dk)
 
-        x = self.ff(x)  # (batch, F, dim)
+        x = self.ff(x)  # (batch, F, dk)
 
         # store nth order information.
         agg_res = []
@@ -79,19 +78,19 @@ class InterHAt(Model):
             u, _ = agg(x_i)
             agg_res.append(u)
 
-        all_feature = tf.stack(agg_res, axis=1)
+        all_feature = tf.stack(agg_res, axis=1)  # (Batch, agg_order, dk)
         mapped_feature = self.pool(all_feature)
 
         # context vector
-        weights = tf.nn.softmax(tf.squeeze(self.weighted_dense(mapped_feature), axis=2))
+        weights = tf.nn.softmax(self.weighted_dense(mapped_feature))    # (Batch, agg_order)
 
         # weighted sum
-        weighted_sum_feature = tf.reduce_sum(tf.multiply(all_feature, tf.expand_dims(weights, axis=2)), axis=1)
+        weighted_sum_feature = tf.reduce_sum(tf.multiply(all_feature, weights), axis=1)  # (agg_order)
 
         hidden_logits = self.final_dense[0](weighted_sum_feature)
 
         # logits = tf.squeeze(self.final_dense[1](hidden_logits), axis=1)
-        logits = self.final_dense[1](hidden_logits)
+        logits = self.final_dense[1](hidden_logits)  # (batch,)
 
         # shapes = 1
         # for i in logits.shape[1:]:

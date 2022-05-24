@@ -1,8 +1,8 @@
 config = {
     'files': {
-        "criteo_base": "data/criteo",
-        "criteo_train": "train.txt",
-        "criteo_test": "test.txt",
+        'criteo_base': 'data/criteo',
+        'criteo_train': 'train.txt',
+        'criteo_test': 'test.txt',
     },
 
     'train': {
@@ -10,7 +10,7 @@ config = {
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": 15000000,
-        "batch_size": 4096,
+        "batch_size": 2048,
         "lr": 0.001,
         'val_ratio': 0.083,
         'test_ratio': 0.07,
@@ -23,16 +23,23 @@ config = {
         'embedding_dim': 8,
         'l2_reg_embedding': 1e-5,
         # deep part
-        'hidden_units': [256, 128, 64],
-        'dropout': 0.5,
+        'dropout': 0,
         'fm_w_reg': 0.,
         'activation': 'relu',
         'use_bn': False,
+        'use_residual': True,
+        # cross part
+        'cross_layers': 4,
+        'cross_w_reg': 0.,
+        'cross_b_reg': 0.,
+        'low_rank': 32,
+        'num_experts': 4,
+        'l2_reg_cross': 1e-5,
         # attention layer
         'att_layer_num': 3,
         'att_head_num': 2,
         'att_size': 8,
-        'att_dropout': 0,
+        'att_dropout': 0.5,
         # evaluate part
         'metrics': ['AUC']
     }

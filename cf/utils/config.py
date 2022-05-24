@@ -94,7 +94,7 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     :return:
     """
     export_config(config, directory)
-    model.save_weights(f'{directory}/weights_last.h5')
+    # model.save_weights(f'{directory}/weights_last.hdf5')
     export_result(train_hist, val_res, directory, cost, model.count_params())
     # keras.utils.plot_model(model.build_graph(), os.path.join(directory, 'model.png'))
     # keras.utils.plot_model(model.model_plot, os.path.join(directory, 'model.png'))

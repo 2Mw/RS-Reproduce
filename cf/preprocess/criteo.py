@@ -51,7 +51,7 @@ def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, t
     ]
 
     if test_size > 0:
-        train, test = train_test_split(df, test_size)
+        train, test = train_test_split(df, test_size=test_size)
         del df
         gc.collect()
         train_x = {feature: train[feature].values.astype('int32') for feature in features}

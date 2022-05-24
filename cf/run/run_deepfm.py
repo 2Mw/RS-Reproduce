@@ -1,14 +1,14 @@
 import copy
-import json
 import os.path
 import pickle
 from cf.config.deepfm import config
 from cf.preprocess.criteo import *
-import cf
-import tensorflow as tf
 from cf.models.deepfm import *
 from cf.utils.config import *
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
@@ -18,7 +18,7 @@ __model__ = 'deepfm'
 def train(cfg, dataset: str = 'criteo'):
     bcfg = copy.deepcopy(cfg)
     start = time.time()
-    print(f'========= Loading configures =========')
+    print(f'========= Loading configures of {__model__} =========')
     base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
     train_file = os.path.join(base, cfg['files'][f'{dataset}_train'])
     sample_size = cfg['train']['sample_size']
@@ -47,10 +47,39 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
+    preTrain = r''
+    model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
-    earlyStop = EarlyStopping(min_delta=0.01)
+    earlyStop = EarlyStopping(min_delta=0.001)
+    aucStop = AbnormalAUC()
+    aucMonitor = MetricsMonitor('auc', 'max', directory)
 
+    train_config = cfg['train']
+
+    epochs = train_config['epochs']
+    batch_size = train_config['batch_size']
+    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
+                              validation_split=train_config['val_ratio'],
+                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
+    res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
+    print(f'test AUC: {res[1]}')
+    print('========= Export Model Information =========')
+    cost = time.time() - start
+    export_all(directory, bcfg, model, train_history, res, cost)
+    print(f'========= Train over, cost: {cost:.3f}s =========')
+
+
+def initModel(cfg, feature_columns, directory: str = '', weights: str = ''):
+    """
+    有机的加载模型，可以从已有权重中继续训练模型
+
+    :param cfg:
+    :param feature_columns:
+    :param directory:
+    :param weights: 加载权重，空表示不提前加载权重
+    :return:
+    """
     train_config = cfg['train']
     model_config = cfg['model']
     mirrored_strategy = tf.distribute.MirroredStrategy()
@@ -58,37 +87,39 @@ def train(cfg, dataset: str = 'criteo'):
         model = DeepFM(feature_columns, cfg)
         model.summary()
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
-    epochs = train_config['epochs']
-    batch_size = train_config['batch_size']
-    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size, validation_split=0.1,
-                              callbacks=[ckpt, earlyStop])
-    res = model.evaluate(test_data[0], test_data[1], batch_size=batch_size)
-    print(f'test AUC: {res[1]}')
-
-    print('========= Export Model Information =========')
-    cost = time.time() - start
-    export_all(directory, bcfg, model, train_history, res, cost)
-    print(f'========= Train over, cost: {cost:.3f}s =========')
+    if weights == '' or weights is None:
+        return model
+    if os.path.exists(weights):
+        model.built = True
+        model.load_weights(weights)
+        print(f'========= Load pre-train weights =========')
+    else:
+        raise FileNotFoundError(f'{weights} weights file not exists.')
+    return model
 
 
-def testGraph():
-    model = keras.models.Sequential()
-    model.add(keras.layers.Dense(32, activation='relu', input_dim=100))
-    model.add(keras.layers.Dense(10, activation='softmax'))
-    model.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['accuracy'])
-
-    import numpy as np
-    data = np.random.random((1000, 100))
-    labels = np.random.randint(10, size=(1000, 1))
-
-    one_hot_labels = keras.utils.to_categorical(labels, num_classes=10)
-
-    model.fit(data, one_hot_labels, epochs=10, batch_size=128)
-    yml = model.to_json()
-    with open('s.json', 'w') as f:
-        json.dump(yml, f)
-    keras.utils.plot_model(model, 'model.png', show_shapes=True)
+def evaluate(cfg, weight: str, dataset: str = 'criteo'):
+    base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
+    sample_size = cfg['train']['sample_size']
+    data_dir = os.path.join(base, f'data_{sample_size}')
+    if os.path.exists(data_dir):
+        feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
+        test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
+    else:
+        raise FileNotFoundError(f'{data_dir} not found.')
+    train_config = cfg['train']
+    model_config = cfg['model']
+    mirrored_strategy = tf.distribute.MirroredStrategy()
+    with mirrored_strategy.scope():
+        model = DeepFM(feature_columns, cfg)
+        model.summary()
+        model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
+    model.built = True  # 必须添加这一句，否则无法训练
+    model.load_weights(weight)
+    res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
+    print(res)
 
 
 if __name__ == '__main__':
     train(config)
+    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')
