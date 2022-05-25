@@ -47,13 +47,14 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
-    preTrain = r''
+    preTrain = r'E:\Notes\DeepLearning\practice\rs\cf\result\interhat\20220525110027\weights.001-0.47871.hdf5'
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.001)
-    aucStop = AbnormalAUC(0.8115)
+    aucStop = AbnormalAUC(0.806)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
+    lossMonitor = MetricsMonitor('loss', 'min', directory)
 
     train_config = cfg['train']
 
@@ -61,7 +62,7 @@ def train(cfg, dataset: str = 'criteo'):
     batch_size = train_config['batch_size']
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_split=train_config['val_ratio'],
-                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
+                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor, lossMonitor])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     print(f'test AUC: {res[1]}')
     print('========= Export Model Information =========')
@@ -122,4 +123,4 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 if __name__ == '__main__':
     train(config)
-    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')
+    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\interhat\20220525095559\weights.002-0.47980.hdf5')

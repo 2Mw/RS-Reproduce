@@ -47,12 +47,12 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
-    preTrain = r''
+    preTrain = r'E:\Notes\DeepLearning\practice\rs\cf\result\deepfm\20220525160135\weights.002-0.45285.hdf5'
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.001)
-    aucStop = AbnormalAUC()
+    aucStop = AbnormalAUC(steps=500)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
     train_config = cfg['train']

@@ -9,22 +9,24 @@ import matplotlib.pyplot as plt
 
 
 class AbnormalAUC(Callback):
-    def __init__(self, threshold=0.8):
+    def __init__(self, threshold=0.8, steps: int = 0):
         """
         用于训练fit过程早停，auc大于threshold就停止训练
 
         :param threshold: train auc的最大值
+        :param steps: 大于某个steps才生效
         """
         super(AbnormalAUC, self).__init__()
         self._supports_tf_logs = True
         self.threshold = threshold
+        self.steps = steps
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
         auc = logs.get('auc')
         if auc is not None:
             auc = tf_utils.sync_to_numpy_or_python_type(auc)
-            if np.isnan(auc) or np.isinf(auc) or auc > self.threshold:
+            if auc > self.threshold and batch > self.steps:
                 self.model.stop_training = True
 
 

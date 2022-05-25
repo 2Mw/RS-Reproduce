@@ -21,7 +21,7 @@ def export_config(obj, directory: str):
     path = os.path.join(directory, 'config.yaml')
     with open(path, "w") as f:
         yaml.dump(obj, f)
-        print(f'Export config file to {path} successfully.')
+        # print(f'Export config file to {path} successfully.')
 
 
 def get_config(model: str, timestamp: str):
