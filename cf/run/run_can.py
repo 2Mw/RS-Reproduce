@@ -24,7 +24,10 @@ def train(cfg, dataset: str = 'criteo'):
     sample_size = cfg['train']['sample_size']
     embedding_dim = cfg['model']['embedding_dim']
     print(f'========= Loading {dataset} Data =========')
-    data_dir = os.path.join(base, f'data_{sample_size}')
+    if sample_size == -1:
+        data_dir = os.path.join(base, f'data_all')
+    else:
+        data_dir = os.path.join(base, f'data_{sample_size}')
     if os.path.exists(data_dir):
         print(f'读取已保存数据')
         feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))

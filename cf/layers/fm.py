@@ -1,6 +1,6 @@
 import tensorflow as tf
 from keras.api._v2 import keras
-from keras.models import Layer
+from keras.layers import Layer
 
 
 class FMLayer(Layer):

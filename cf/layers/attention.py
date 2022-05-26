@@ -2,8 +2,7 @@ import copy
 
 import tensorflow as tf
 from keras.api._v2 import keras
-from keras.models import Layer
-from keras.layers import BatchNormalization, Dropout, Dense
+from keras.layers import BatchNormalization, Dropout, Dense, Layer
 from keras.regularizers import L2
 
 

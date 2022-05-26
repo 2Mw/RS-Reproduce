@@ -9,7 +9,7 @@ config = {
         "epochs": 10,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
-        "sample_size": 15000000,
+        "sample_size": -1,
         "batch_size": 4096,
         "lr": 0.001,
         'val_ratio': 0.083,
