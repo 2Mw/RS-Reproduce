@@ -1,7 +1,7 @@
 import os.path
 
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.models import Model
 from keras.layers import Embedding, Dense, Input, Conv1D
 from keras.regularizers import l2

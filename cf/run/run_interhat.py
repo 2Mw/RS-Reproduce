@@ -35,7 +35,7 @@ def train(cfg, dataset: str = 'criteo'):
         test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
     else:
         print(f'数据处理中')
-        feature_columns, train_data, test_data = create_criteo_dataset(train_file, embedding_dim, sample_size, 0.2)
+        feature_columns, train_data, test_data = create_criteo_dataset(train_file, embedding_dim, sample_size, cfg['train']['test_ratio'])
         os.mkdir(data_dir)
         pickle.dump(feature_columns, open(f'{data_dir}/feature.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         pickle.dump(train_data, open(f'{data_dir}/train_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
@@ -45,7 +45,7 @@ def train(cfg, dataset: str = 'criteo'):
     # 创建输出结果目录
     date = get_date()
     dirs = [__model__, date]
-    directory = f'../result'
+    directory = os.path.join(project_dir, 'cf/result')
     for d in dirs:
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
@@ -105,7 +105,10 @@ def initModel(cfg, feature_columns, directory, weights: str = ''):
 def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
     sample_size = cfg['train']['sample_size']
-    data_dir = os.path.join(base, f'data_{sample_size}')
+    if sample_size == -1:
+        data_dir = os.path.join(base, f'data_all')
+    else:
+        data_dir = os.path.join(base, f'data_{sample_size}')
     if os.path.exists(data_dir):
         feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
         test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))

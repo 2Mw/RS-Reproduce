@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp
 from keras.layers import Input

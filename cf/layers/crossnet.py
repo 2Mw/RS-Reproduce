@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.layers import Dense, Layer
 from keras.regularizers import l2
 
@@ -45,6 +45,7 @@ class CrossNet(Layer):
         x_l = x_0
         for i in range(self.layer_num):
             x_l1 = tf.tensordot(x_l, self.cross_weights[i], axes=[1, 0])  # (batch, 1, 1)
+            print(f'xl_1 shape {x_l1.shape}')
             x_l = tf.matmul(x_0, x_l1) + self.cross_bias[i] + x_l  # (batch, dim, 1)
         x_l = tf.squeeze(x_l, axis=2)  # (batch, dim)
         return x_l

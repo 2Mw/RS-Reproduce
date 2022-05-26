@@ -25,7 +25,7 @@ class AbnormalAUC(Callback):
         logs = logs or {}
         auc = logs.get('auc')
         if auc is not None:
-            auc = tf_utils.sync_to_numpy_or_python_type(auc)
+            auc = auc.numpy().item()
             if auc > self.threshold and batch > self.steps:
                 self.model.stop_training = True
 
@@ -55,7 +55,7 @@ class MetricsMonitor(Callback):
         logs = logs or {}
         value = logs.get(self.metric)
         if value is not None:
-            value = tf_utils.sync_to_numpy_or_python_type(value)
+            value = value.numpy().item()
             if not np.isnan(value) and not np.isinf(value) and self.op(value, self.best_value):
                 self.best_value = value
             if self.directory != '' and batch % self.sample_step == 0:

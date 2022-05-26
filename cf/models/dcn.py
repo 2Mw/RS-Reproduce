@@ -1,7 +1,7 @@
 import os.path
 
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.models import Model
 from keras.layers import Embedding, Dense, Input
 from keras.regularizers import l2
@@ -65,8 +65,9 @@ class DCN(Model):
             self.embedding_layers[feature_name](value)
             for feature_name, value in inputs.items()
         ], axis=1)
-
+        print(f'test shape{self.embedding_layers["C1"](1).shape}')
         x = sparse_embedding
+        print(f'========== x.shape:  {x.shape} ===========')
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN
