@@ -54,7 +54,7 @@ def train(cfg, dataset: str = 'criteo'):
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
-    earlyStop = EarlyStopping(min_delta=0.0003)
+    earlyStop = EarlyStopping(min_delta=0.0001)
     aucStop = AbnormalAUC(0.806, directory=directory)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
     lossMonitor = MetricsMonitor('loss', 'min', directory)
