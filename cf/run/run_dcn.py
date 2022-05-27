@@ -35,7 +35,8 @@ def train(cfg, dataset: str = 'criteo'):
         test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
     else:
         print(f'数据处理中')
-        feature_columns, train_data, test_data = create_criteo_dataset(train_file, embedding_dim, sample_size, cfg['train']['test_ratio'])
+        feature_columns, train_data, test_data = create_criteo_dataset(train_file, embedding_dim, sample_size,
+                                                                       cfg['train']['test_ratio'])
         os.mkdir(data_dir)
         pickle.dump(feature_columns, open(f'{data_dir}/feature.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         pickle.dump(train_data, open(f'{data_dir}/train_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
@@ -55,7 +56,7 @@ def train(cfg, dataset: str = 'criteo'):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.0003)
-    aucStop = AbnormalAUC(0.8115)
+    aucStop = AbnormalAUC(0.8115, directory=directory)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
     train_config = cfg['train']
