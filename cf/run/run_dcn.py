@@ -5,7 +5,7 @@ from cf.config.dcn import config
 from cf.preprocess.criteo import *
 from cf.models.dcn import *
 from cf.utils.config import *
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -127,5 +127,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    train(config)
-    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')
+    # train(config)
+    evaluate(config, '/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn/20220526220154/weights.001-0.45153.hdf5')

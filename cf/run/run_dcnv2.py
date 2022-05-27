@@ -5,7 +5,7 @@ from cf.config.dcn_v2 import config
 from cf.preprocess.criteo import *
 from cf.models.dcnv2 import *
 from cf.utils.config import *
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"

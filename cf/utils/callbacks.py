@@ -2,8 +2,7 @@ import json
 import os.path
 
 import numpy as np
-from keras.utils import tf_utils
-from keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback
 import pickle
 import matplotlib.pyplot as plt
 
@@ -55,7 +54,8 @@ class MetricsMonitor(Callback):
         logs = logs or {}
         value = logs.get(self.metric)
         if value is not None:
-            value = value.numpy().item()
+            if type(value) != type(1.0):
+                value = value.numpy().item()
             if not np.isnan(value) and not np.isinf(value) and self.op(value, self.best_value):
                 self.best_value = value
             if self.directory != '' and batch % self.sample_step == 0:
