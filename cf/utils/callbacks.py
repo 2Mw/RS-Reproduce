@@ -9,13 +9,14 @@ import tensorflow as tf
 
 
 class AbnormalAUC(Callback):
-    def __init__(self, threshold=0.8, steps: int = 0, directory: str = ''):
+    def __init__(self, threshold=0.8, steps: int = 0, directory: str = '', gap_steps:int = 200):
         """
         用于训练fit过程早停，auc大于threshold就停止训练
 
         :param threshold: train auc的最大值
         :param steps: 大于某个steps才生效
         :param directory: Use to save model for lower tf version.
+        :param gap_steps: 如果保存模型，每个多少的step保存一次
         """
         super(AbnormalAUC, self).__init__()
         self._supports_tf_logs = True
@@ -23,6 +24,8 @@ class AbnormalAUC(Callback):
         self.steps = steps
         self.directory = directory
         self.low_tf_version = float(tf.__version__.replace('.', '')) < 240
+        self.last_save = 0
+        self.gap_steps = gap_steps
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
@@ -32,7 +35,9 @@ class AbnormalAUC(Callback):
             if auc > self.threshold and batch > self.steps:
                 self.model.stop_training = True
                 if self.low_tf_version:
-                    self.model.save_weights(os.path.join(self.directory, f'weights.999-{self.threshold}.hdf5'))
+                    if self.last_save % self.gap_steps == 0:
+                        self.model.save_weights(os.path.join(self.directory, f'weights.999-{self.threshold}.hdf5'))
+                    self.last_save += 1
 
 
 class MetricsMonitor(Callback):
