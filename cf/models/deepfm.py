@@ -1,8 +1,9 @@
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp
 from keras.layers import Input
+from cf.utils import tensor
 
 
 class DeepFM(Model):
@@ -48,6 +49,7 @@ class DeepFM(Model):
         for feature_name, value in inputs.items():
             group.append(self.embedding_layers[feature_name](value))
         sparse_embedding = tf.concat(group, axis=-1)
+        sparse_embedding = tensor.to2DTensor(sparse_embedding)
         # wide
         sparse_inputs = self._index_mapping(inputs, self.map_dict)
         wide_inputs = {

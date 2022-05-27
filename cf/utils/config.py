@@ -4,7 +4,7 @@ import time
 import yaml
 import sys
 import cf
-from keras.api._v2 import keras
+from tensorflow import keras
 
 'The utils of configuration export and import'
 

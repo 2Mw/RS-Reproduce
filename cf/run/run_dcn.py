@@ -5,7 +5,7 @@ from cf.config.dcn import config
 from cf.preprocess.criteo import *
 from cf.models.dcn import *
 from cf.utils.config import *
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -45,7 +45,7 @@ def train(cfg, dataset: str = 'criteo'):
     # 创建输出结果目录
     date = get_date()
     dirs = [__model__, date]
-    directory = f'../result'
+    directory = os.path.join(project_dir, 'cf/result')
     for d in dirs:
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
@@ -124,5 +124,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    train(config)
-    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')
+    # train(config)
+    evaluate(config, '/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn/20220526220154/weights.001-0.45153.hdf5')

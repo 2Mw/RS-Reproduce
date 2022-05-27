@@ -1,11 +1,12 @@
 import os.path
 
 import tensorflow as tf
-from keras.api._v2 import keras
+from tensorflow import keras
 from keras.models import Model
 from keras.layers import Embedding, Dense, Input
 from keras.regularizers import l2
 from cf.layers import crossnet, mlp
+from cf.utils import tensor
 
 
 class DCN(Model):
@@ -66,7 +67,7 @@ class DCN(Model):
             for feature_name, value in inputs.items()
         ], axis=1)
 
-        x = sparse_embedding
+        x = tensor.to2DTensor(sparse_embedding)
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN
