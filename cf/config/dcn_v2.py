@@ -11,8 +11,8 @@ config = {
         'loss': 'binary_crossentropy',
         "sample_size": -1,
         "batch_size": 4096,
-        "lr": 0.002,
-        'val_ratio': 0.083,
+        "lr": 0.0005,
+        'val_ratio': 0.076,
         'test_ratio': 0.07,
         'test_batch_size': 9012
     },

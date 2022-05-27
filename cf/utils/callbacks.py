@@ -36,7 +36,8 @@ class AbnormalAUC(Callback):
                 self.model.stop_training = True
                 if self.low_tf_version:
                     if self.last_save % self.gap_steps == 0:
-                        self.model.save_weights(os.path.join(self.directory, f'weights.999-{self.threshold}.hdf5'))
+                        print(f"Warning: auc has exceed threshold: {self.threshold} in step {batch}.")
+                        self.model.save_weights(os.path.join(self.directory, f'weights.999-{self.threshold}-{batch}.hdf5'))
                     self.last_save += 1
 
 
@@ -88,7 +89,8 @@ class MetricsMonitor(Callback):
             # plt.legend(f'epoch-{epoch}')
             plt.title(f'epoch-{epoch}')
             if epoch == 0:
-                plt.ylim(0.785, 0.810)
+                m = np.max(self.records)
+                plt.ylim(m-0.015, m)
             plt.xlabel('steps')
             plt.ylabel(self.metric)
             plt.savefig(os.path.join(self.directory, f'{self.metric}_curve_{epoch}.png'))

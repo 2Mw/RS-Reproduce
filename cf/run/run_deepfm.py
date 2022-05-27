@@ -54,7 +54,7 @@ def train(cfg, dataset: str = 'criteo'):
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
-    earlyStop = EarlyStopping(min_delta=0.0003)
+    earlyStop = EarlyStopping(min_delta=0.0001)
     aucStop = AbnormalAUC(steps=500, directory=directory)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
@@ -118,7 +118,6 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
         model = DeepFM(feature_columns, cfg)
-        model.summary()
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     model.built = True  # 必须添加这一句，否则无法训练
     model.load_weights(weight)
