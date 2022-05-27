@@ -1,3 +1,4 @@
+import imp
 import os.path
 
 import tensorflow as tf
@@ -6,6 +7,7 @@ from keras.models import Model
 from keras.layers import Embedding, Dense, Input
 from keras.regularizers import l2
 from cf.layers import crossnet, mlp
+from cf.utils import tensor
 
 
 class DCNv2(Model):
@@ -53,7 +55,7 @@ class DCNv2(Model):
             for f, v in inputs.items()
         ], axis=1)
 
-        x = sparse_embedding
+        x = tensor.to2DTensor(sparse_embedding)
         cross_out = self.cross(x)
         dnn_out = self.mlp(x)
         total_x = tf.concat([cross_out, dnn_out], axis=-1)
