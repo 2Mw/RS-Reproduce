@@ -118,6 +118,7 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
         model = DCNv2(feature_columns, cfg)
+        model.summary()  # 必不可少
         model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     model.built = True  # 必须添加这一句，否则无法训练
     model.load_weights(weight)

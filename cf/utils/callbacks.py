@@ -37,7 +37,9 @@ class AbnormalAUC(Callback):
                 if self.low_tf_version:
                     if self.last_save % self.gap_steps == 0:
                         print(f"Warning: auc has exceed threshold: {self.threshold} in step {batch}.")
-                        self.model.save_weights(os.path.join(self.directory, f'weights.999-{self.threshold}-{batch}.hdf5'))
+                        if auc < 0.82:
+                            path = os.path.join(self.directory, f'weights.{self.threshold}-{auc}-{batch}.hdf5')
+                            self.model.save_weights(path)
                     self.last_save += 1
 
 
