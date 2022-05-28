@@ -50,7 +50,8 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
-    preTrain = r'E:\Notes\DeepLearning\practice\rs\cf\result\autoint\20220525152508\weights.002-0.47046.hdf5'
+    export_config(copy.deepcopy(bcfg), directory)
+    preTrain = r''
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
@@ -127,5 +128,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    # train(config)
-    evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\autoint\20220525154826\weights.001-0.46849.hdf5')
+    train(config)
+    # evaluate(config, r'')

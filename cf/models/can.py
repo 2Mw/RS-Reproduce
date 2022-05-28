@@ -41,9 +41,6 @@ class CAN(Model):
         self.att_trim = Dense(64, use_bias=None)
         self.final = Dense(1, 'sigmoid')
 
-    def build(self, input_shape):
-        super(CAN, self).build(input_shape)
-
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
             feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])

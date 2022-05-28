@@ -4,3 +4,5 @@ data/*
 .idea
 __pycache__
 !result.csv
+tmp_*.py
+.vscode

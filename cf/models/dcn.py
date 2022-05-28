@@ -56,9 +56,6 @@ class DCN(Model):
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
         model.summary()
 
-    def build(self, input_shape):
-        super(DCN, self).build(input_shape)
-
     def call(self, inputs, training=None, mask=None):
         # todo 存在一个问题，所有的 dense 和 sparse feature 全变成了 embedding了
         sparse_embedding = tf.concat([

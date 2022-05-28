@@ -50,7 +50,8 @@ def train(cfg, dataset: str = 'criteo'):
         directory = os.path.join(directory, d)
         if not os.path.exists(directory):
             os.mkdir(directory)
-    preTrain = r'E:\Notes\DeepLearning\practice\rs\cf\result\interhat\20220525110027\weights.001-0.47871.hdf5'
+    export_config(copy.deepcopy(bcfg), directory)
+    preTrain = r''
     model = initModel(cfg, feature_columns, directory, preTrain)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)

@@ -9,7 +9,7 @@ import tensorflow as tf
 
 
 class AbnormalAUC(Callback):
-    def __init__(self, threshold=0.8, steps: int = 0, directory: str = '', gap_steps:int = 200):
+    def __init__(self, threshold=0.8, steps: int = 0, directory: str = '', gap_steps: int = 200):
         """
         用于训练fit过程早停，auc大于threshold就停止训练
 
@@ -91,7 +91,7 @@ class MetricsMonitor(Callback):
             plt.title(f'epoch-{epoch}')
             if epoch == 0:
                 m = np.max(self.records)
-                plt.ylim(m-0.015, m)
+                plt.ylim(m - 0.015, m + 0.003)
             plt.xlabel('steps')
             plt.ylabel(self.metric)
             plt.savefig(os.path.join(self.directory, f'{self.metric}_curve_{epoch}.png'))
