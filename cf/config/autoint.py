@@ -6,7 +6,7 @@ config = {
     },
 
     'train': {
-        "epochs": 3,
+        "epochs": 10,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": -1,

@@ -5,7 +5,7 @@ The implementation of various recommender system models (Tensorflow).
 ## 1. The architecture of documents
 
 ```
-E:.
+RS
 ├─cf                    # collaborative filtering based recommender system
 │  ├─config             # store the configurations of models (one model may has many configurations)
 │  ├─layers             # store the layers source code
@@ -13,12 +13,14 @@ E:.
 │  ├─preprocess         # store the preprocessing of datasets.
 │  ├─result             # store the result of training models, include configs, model summays, weights and accuracy (1 -> n)
 │  ├─run                # store the files which run the training process.
+│  ├─tune               # The multiple config of yaml files which used to fine tune.
 │  └─utils              # store some common functions
-├─data                  # store the datasets.
+├─data
 │  ├─avazu
 │  ├─criteo
 │  └─movielens
 └─gnn                   # gnn based recommender system
+└─log                   # store the log file.
 ```
 
 ## 2. The list of reproducing models

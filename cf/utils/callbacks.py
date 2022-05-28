@@ -6,6 +6,7 @@ from keras.callbacks import Callback
 import pickle
 import matplotlib.pyplot as plt
 import tensorflow as tf
+from cf.utils.logger import logger
 
 
 class AbnormalAUC(Callback):
@@ -31,14 +32,15 @@ class AbnormalAUC(Callback):
         logs = logs or {}
         auc = logs.get('auc')
         if auc is not None:
-            auc = auc.numpy().item()
+            if not isinstance(auc, float) or not isinstance(auc, np.float):
+                auc = auc.numpy().item()
             if auc > self.threshold and batch > self.steps:
                 self.model.stop_training = True
                 if self.low_tf_version:
                     if self.last_save % self.gap_steps == 0:
-                        print(f"Warning: auc has exceed threshold: {self.threshold} in step {batch}.")
+                        logger.warning(f"Warning: auc has exceed threshold: {self.threshold} in step {batch}.")
                         if auc < 0.82:
-                            path = os.path.join(self.directory, f'weights.{self.threshold}-{auc}-{batch}.hdf5')
+                            path = os.path.join(self.directory, f'weights.{self.threshold}-{auc:.5f}-{batch}.hdf5')
                             self.model.save_weights(path)
                     self.last_save += 1
 
@@ -70,7 +72,8 @@ class MetricsMonitor(Callback):
         logs = logs or {}
         value = logs.get(self.metric)
         if value is not None:
-            value = value.numpy().item()
+            if not isinstance(value, float) or not isinstance(value, np.float):
+                value = value.numpy().item()
             if not np.isnan(value) and not np.isinf(value) and self.op(value, self.best_value):
                 self.best_value = value
                 self.best_epoch = self.epoch
@@ -101,4 +104,4 @@ class MetricsMonitor(Callback):
         if self.directory != '' and os.path.exists(self.directory):
             with open(os.path.join(self.directory, f'{self.metric}_{self.mode}.json'), 'w') as f:
                 json.dump(res, f)
-        print(f'{self.metric}_{self.mode} best value is {self.best_value} in epoch-{self.best_epoch}')
+        logger.info(f'{self.metric}_{self.mode} best value is {self.best_value} in epoch-{self.best_epoch}')

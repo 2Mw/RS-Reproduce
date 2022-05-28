@@ -6,3 +6,5 @@ __pycache__
 !result.csv
 tmp_*.py
 .vscode
+*.log
+*/tune/*

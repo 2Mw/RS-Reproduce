@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.layers import Dense, Layer
 from keras.regularizers import l2
+from cf.utils.logger import logger
 
 
 class CrossNet(Layer):
@@ -45,7 +46,6 @@ class CrossNet(Layer):
         x_l = x_0
         for i in range(self.layer_num):
             x_l1 = tf.tensordot(x_l, self.cross_weights[i], axes=[1, 0])  # (batch, 1, 1)
-            print(f'xl_1 shape {x_l1.shape}')
             x_l = tf.matmul(x_0, x_l1) + self.cross_bias[i] + x_l  # (batch, dim, 1)
         x_l = tf.squeeze(x_l, axis=2)  # (batch, dim)
         return x_l
@@ -98,7 +98,9 @@ class CrossNetMix(Layer):
 
     def build(self, input_shape):
         if len(input_shape) != 2:
-            raise ValueError(f'Unexpected inputs dimensions {len(input_shape)}, expect to be 2 dimensions')
+            e = f'Unexpected inputs dimensions {len(input_shape)}, expect to be 2 dimensions'
+            logger.error(e)
+            raise ValueError(e)
 
         dim = int(input_shape[-1])
 
@@ -135,7 +137,9 @@ class CrossNetMix(Layer):
 
     def call(self, inputs, *args, **kwargs):
         if keras.backend.ndim(inputs) != 2:
-            raise ValueError(f'Unexpected inputs dimensions {keras.backend.ndim(inputs)}, expect to be 2 dimensions')
+            e = f'Unexpected inputs dimensions {keras.backend.ndim(inputs)}, expect to be 2 dimensions'
+            logger.error(e)
+            raise ValueError(e)
 
         x_0 = tf.expand_dims(inputs, axis=2)
         x_l = x_0
