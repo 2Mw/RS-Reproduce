@@ -30,7 +30,7 @@ class InterHAt(Model):
             Dense(1, use_bias=False)
         ]
 
-        self.embedding_layer = {
+        self.ebd = {
             f['name']: Embedding(
                 input_dim=f['feature_num'],
                 input_length=1,
@@ -43,8 +43,8 @@ class InterHAt(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_column
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
+            for f in self.feature_column
         }
         model = Model(inputs=inputs, outputs=self.call(inputs))
         if len(self.directory) > 0:
@@ -53,7 +53,7 @@ class InterHAt(Model):
 
     def call(self, inputs, training=None, mask=None):
         # get embedding
-        embedding = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
+        embedding = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
         x = tf.reshape(embedding, [-1, len(self.feature_column), self.embedding_dim])
 

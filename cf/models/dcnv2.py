@@ -19,7 +19,7 @@ class DCNv2(Model):
         self.cross = crossnet.CrossNetMix(model_cfg['low_rank'], model_cfg['num_experts'], model_cfg['cross_layers'],
                                           model_cfg['l2_reg_cross'], initializer=keras.initializers.he_normal)
 
-        self.embedding_layer = {
+        self.ebd = {
             f['name']: Embedding(
                 input_dim=f['feature_num'],
                 input_length=1,
@@ -39,7 +39,7 @@ class DCNv2(Model):
                 expand_nested=False,
                 show_trainable=False):
         inputs = {
-            f['name']: Input(shape=(), dtype=tf.int32, name=f['name'])
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
             for f in self.feature_column
         }
         model = Model(inputs, outputs=self.call(inputs))
@@ -48,12 +48,8 @@ class DCNv2(Model):
         model.summary()
 
     def call(self, inputs, training=None, mask=None):
-        sparse_embedding = tf.concat([
-            self.embedding_layer[f](v)
-            for f, v in inputs.items()
-        ], axis=1)
-
-        x = sparse_embedding
+        # 对于 类别型数据使用 embedding，对于数值型数值不使用 embedding
+        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         cross_out = self.cross(x)
         dnn_out = self.mlp(x)
         total_x = tf.concat([cross_out, dnn_out], axis=-1)

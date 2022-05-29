@@ -2,16 +2,21 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp
+from keras.layers import Input
+import os
 
 
 class DeepFM(Model):
-    def __init__(self, feature_columns, config):
+    def __init__(self, feature_columns, config, directory: str = ''):
+        # TODO 需要修复
         """
 
         :param feature_columns:  A list. [{'name':, 'feature_num':, 'dim':}, ...]
         :param config:  Hyper parameters configurations.
+        :param directory: The directory of the model.
         """
         super(DeepFM, self).__init__()
+        self.directory = directory
         self.feature_columns = feature_columns
         # Load configuration
         self.config = config
@@ -26,7 +31,7 @@ class DeepFM(Model):
             self.map_dict[feature['name']] = feature['feature_num']
             self.feature_len += feature['feature_num']
         # Layer initialization
-        self.embedding_layers = {
+        self.ebd = {
             feature['name']: keras.layers.Embedding(
                 input_dim=feature['feature_num'],
                 input_length=1,
@@ -42,11 +47,8 @@ class DeepFM(Model):
 
     def call(self, inputs, **kwargs):
         # embedding, (batch_size, embedding_dim*fields)
-        group = []
-
-        for feature_name, value in inputs.items():
-            group.append(self.embedding_layers[feature_name](value))
-        sparse_embedding = tf.concat(group, axis=-1)
+        sparse_embedding = tf.concat(
+            [self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         # wide
         sparse_inputs = self._index_mapping(inputs, self.map_dict)
         wide_inputs = {
@@ -78,10 +80,13 @@ class DeepFM(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            feature['name']: keras.layers.Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_columns
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
+            for f in self.feature_columns
         }
-        Model(inputs=inputs, outputs=self.call(inputs)).summary()
+        model = Model(inputs=inputs, outputs=self.call(inputs))
+        if len(self.directory) > 0:
+            keras.utils.plot_model(model, os.path.join(self.directory, "model.png"), show_shapes=True)
+        model.summary()
     #
     # def build(self, input_shape):
     #     inputs = Input(input_shape)
