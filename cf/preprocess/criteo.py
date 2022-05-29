@@ -12,14 +12,13 @@ NAMES = ['label', 'I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10', '
          'C20', 'C21', 'C22', 'C23', 'C24', 'C25', 'C26']
 
 
-def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, test_size: float = 0.2):
-    # TODO 注意力机制需要将每个特征转换为相同维度的embedding, 其他的不需要把数值型特征变换
+def create_criteo_dataset(file: str, sample_num: int = -1, test_size: float = 0.2):
+    # 注意力机制需要将每个特征转换为相同维度的embedding, 其他的不需要把数值型特征变换
     """
     使用 sklearn 来对 criteo 进行处理，
 
     :param file: 文件路径
     :param embedding_dim: embedding 维度
-    :param sample_num: 样本数量，-1 表示全部取样
     :param test_size: 测试集比例 (0-1)
     :return: feature_columns, (train_x, train_y)
     """
@@ -54,7 +53,7 @@ def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, t
         df[feature] = le.fit_transform(df[feature])  # 输入的数据必须是一维向量
 
     feature_columns = [
-        {'name': feature, 'feature_num': int(df[feature].max()) + 1, 'dim': embedding_dim}
+        {'name': feature, 'feature_num': int(df[feature].max()) + 1}
         for feature in features
     ]
 

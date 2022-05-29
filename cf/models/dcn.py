@@ -4,7 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model
 from keras.layers import Embedding, Dense, Input
-from keras.regularizers import l2
+from cf.models.base import *
 from cf.layers import crossnet, mlp
 from cf.utils import tensor
 
@@ -22,43 +22,25 @@ class DCN(Model):
         """
         super(DCN, self).__init__(*args, **kwargs)
         self.directory = directory
-        model_config = config['model']
-        self.feature_columns = feature_columns
-        self.hidden_units = model_config['hidden_units']
+        model_cfg = config['model']
+        self.feature_column = feature_columns
+        self.hidden_units = model_cfg['hidden_units']
         self.layer_num = len(self.hidden_units)
-        self.dnn_dropout = model_config['dropout']
-        self.activation = model_config['activation']
-        self.ebd = {
-            feature['name']: Embedding(
-                input_dim=feature['feature_num'],
-                input_length=1,
-                output_dim=feature['dim'],
-                embeddings_initializer='random_normal',
-                embeddings_regularizer=l2(model_config['embedding_reg'])
-            )
-            for feature in self.feature_columns
-        }
-        self.cross_net = crossnet.CrossNet(self.layer_num, model_config['cross_w_reg'], model_config['cross_b_reg'])
+        self.dnn_dropout = model_cfg['dropout']
+        self.activation = model_cfg['activation']
+        self.embedding_dim = model_cfg['embedding_dim']
+        self.numeric_same = model_cfg['numeric_same_dim']
+        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.cross_net = crossnet.CrossNet(self.layer_num, model_cfg['cross_w_reg'], model_cfg['cross_b_reg'])
         self.mlp = mlp.MLP(self.hidden_units, self.activation, self.dnn_dropout)
         self.dense_final = Dense(1, activation=None)
 
-    def summary(self,
-                line_length=None,
-                positions=None,
-                print_fn=None,
-                expand_nested=False,
-                show_trainable=False):
-        inputs = {
-            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
-            for f in self.feature_columns
-        }
-        model = Model(inputs=inputs, outputs=self.call(inputs))
-        if len(self.directory) > 0:
-            keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
-        model.summary()
+    def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
+        model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
+        # x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
+        x = form_x(inputs, self.ebd, self.numeric_same)
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN

@@ -5,6 +5,7 @@ from cf.layers import fm, mlp
 from cf.utils import tensor
 from keras.layers import Input
 import os
+from cf.models.base import *
 
 
 class DeepFM(Model):
@@ -18,13 +19,13 @@ class DeepFM(Model):
         """
         super(DeepFM, self).__init__()
         self.directory = directory
-        self.feature_columns = feature_columns
+        self.feature_column = feature_columns
         # Load configuration
         self.config = config
-        self.model_cfg = config['model']
+        model_cfg = config['model']
         self.training_cfg = config['train']
         # Load parameters
-        self.embedding_dim = self.model_cfg['embedding_dim']
+        self.embedding_dim = model_cfg['embedding_dim']
         self.map_dict = {}
         self.feature_len = 0
         self.field_num = len(feature_columns)
@@ -32,24 +33,15 @@ class DeepFM(Model):
             self.map_dict[feature['name']] = feature['feature_num']
             self.feature_len += feature['feature_num']
         # Layer initialization
-        self.ebd = {
-            feature['name']: keras.layers.Embedding(
-                input_dim=feature['feature_num'],
-                input_length=1,
-                output_dim=feature['dim'],
-                embeddings_initializer='random_normal',
-                embeddings_regularizer=keras.regularizers.l2(self.model_cfg['embedding_reg']),
-            )
-            for feature in feature_columns
-        }
-        self.fm = fm.FMLayer(self.feature_len, self.model_cfg['fm_w_reg'])
-        self.mlp = mlp.MLP(self.model_cfg['hidden_units'], self.model_cfg['activation'], self.model_cfg['dropout'])
+        self.numeric_same = model_cfg['numeric_same_dim']
+        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.fm = fm.FMLayer(self.feature_len, model_cfg['fm_w_reg'])
+        self.mlp = mlp.MLP(model_cfg['hidden_units'], model_cfg['activation'], model_cfg['dropout'])
         self.dense = keras.layers.Dense(units=1, activation=None)
 
     def call(self, inputs, **kwargs):
         # embedding, (batch_size, embedding_dim*fields)
-        sparse_embedding = tf.concat(
-            [self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
+        sparse_embedding = form_x(inputs, self.ebd, self.numeric_same)
         # wide
         sparse_inputs = self._index_mapping(inputs, self.map_dict)
         wide_inputs = {
@@ -80,14 +72,7 @@ class DeepFM(Model):
         return outputs_dict
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
-        inputs = {
-            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
-            for f in self.feature_columns
-        }
-        model = Model(inputs=inputs, outputs=self.call(inputs))
-        if len(self.directory) > 0:
-            keras.utils.plot_model(model, os.path.join(self.directory, "model.png"), show_shapes=True)
-        model.summary()
+        model_summary(self, self.feature_column, self.directory)
     #
     # def build(self, input_shape):
     #     inputs = Input(input_shape)
