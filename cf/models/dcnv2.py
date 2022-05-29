@@ -51,7 +51,8 @@ class DCNv2(Model):
 
     def call(self, inputs, training=None, mask=None):
         # 对于 类别型数据使用 embedding，对于数值型数值不使用 embedding
-        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
+        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=-1)
+        x = tensor.to2DTensor(x)
         cross_out = self.cross(x)
         dnn_out = self.mlp(x)
         total_x = tf.concat([cross_out, dnn_out], axis=-1)

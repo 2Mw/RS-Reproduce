@@ -12,8 +12,8 @@ config=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/config.y
 weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/weights.004-0.46825.hdf5
 ## train config
 t_model=dcnv2
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/config.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/weights.004-0.46825.hdf5
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220529135016/0.yaml
+t_weight=''
 ## Other
 lastlog=$(shell ls -f $(proj)/log/* | sort -r | head -n 1)
 evaluate:
