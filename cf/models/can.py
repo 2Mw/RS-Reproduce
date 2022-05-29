@@ -25,7 +25,7 @@ class CAN(Model):
         model_cfg = cfg['model']
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
-        self.embedding_layer = {
+        self.ebd = {
             f['name']: Embedding(input_dim=f['feature_num'],
                                  input_length=1,
                                  output_dim=f['dim'],
@@ -44,8 +44,8 @@ class CAN(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_column
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
+            for f in self.feature_column
         }
         model = Model(inputs=inputs, outputs=self.call(inputs))
         if len(self.directory) > 0:
@@ -53,9 +53,9 @@ class CAN(Model):
         model.summary()
 
     def call(self, inputs, training=None, mask=None):
-        embedding = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
+        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         # cross part
-        x = tensor.to2DTensor(embedding)
+        x = tensor.to2DTensor(x)
         cross_out = self.cross(x)
         # attention part
         att_x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])

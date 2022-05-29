@@ -13,11 +13,12 @@ NAMES = ['label', 'I1', 'I2', 'I3', 'I4', 'I5', 'I6', 'I7', 'I8', 'I9', 'I10', '
 
 
 def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, test_size: float = 0.2):
+    # TODO 注意力机制需要将每个特征转换为相同维度的embedding, 其他的不需要把数值型特征变换
     """
     使用 sklearn 来对 criteo 进行处理，
 
     :param file: 文件路径
-    :param embedding_dim: embedding 维度 TODO 原文中的 embedding dim 并不是指定的，而是根据特征数量
+    :param embedding_dim: embedding 维度
     :param sample_num: 样本数量，-1 表示全部取样
     :param test_size: 测试集比例 (0-1)
     :return: feature_columns, (train_x, train_y)
@@ -61,12 +62,12 @@ def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, t
         train, test = train_test_split(df, test_size=test_size)
         del df
         gc.collect()
-        train_x = {feature: train[feature].values.astype('int32') for feature in features}
-        train_y = train['label'].values.astype('int32')
-        test_x = {feature: test[feature].values.astype('int32') for feature in features}
-        test_y = test['label'].values.astype('int32')
+        train_x = {feature: train[feature].values.astype('float32') for feature in features}
+        train_y = train['label'].values.astype('float32')
+        test_x = {feature: test[feature].values.astype('float32') for feature in features}
+        test_y = test['label'].values.astype('float32')
         return feature_columns, (train_x, train_y), (test_x, test_y)
     else:
-        train_x = {feature: df[feature].values.astype('int32') for feature in features}
-        train_y = df['label'].values.astype('int32')
+        train_x = {feature: df[feature].values.astype('float32') for feature in features}
+        train_y = df['label'].values.astype('float32')
         return feature_columns, (train_x, train_y)

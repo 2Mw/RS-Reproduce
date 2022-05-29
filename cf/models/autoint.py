@@ -22,7 +22,7 @@ class AutoInt(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
         self.feature_column = feature_columns
-        self.embedding_layer = {
+        self.ebd = {
             f['name']: Embedding(
                 input_dim=f['feature_num'],
                 input_length=1,
@@ -39,7 +39,7 @@ class AutoInt(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            f['name']: Input(shape=(), dtype=tf.int32, name=f['name'])
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
             for f in self.feature_column
         }
         model = Model(inputs, outputs=self.call(inputs))
@@ -48,7 +48,7 @@ class AutoInt(Model):
         model.summary()
 
     def call(self, inputs, training=None, mask=None):
-        x = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
+        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
         x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])
         for att in self.attention:

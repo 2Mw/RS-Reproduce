@@ -28,7 +28,7 @@ class DCN(Model):
         self.layer_num = len(self.hidden_units)
         self.dnn_dropout = model_config['dropout']
         self.activation = model_config['activation']
-        self.embedding_layers = {
+        self.ebd = {
             feature['name']: Embedding(
                 input_dim=feature['feature_num'],
                 input_length=1,
@@ -49,8 +49,8 @@ class DCN(Model):
                 expand_nested=False,
                 show_trainable=False):
         inputs = {
-            feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_columns
+            f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
+            for f in self.feature_columns
         }
         model = Model(inputs=inputs, outputs=self.call(inputs))
         if len(self.directory) > 0:
@@ -58,13 +58,7 @@ class DCN(Model):
         model.summary()
 
     def call(self, inputs, training=None, mask=None):
-        # todo 存在一个问题，所有的 dense 和 sparse feature 全变成了 embedding了
-        sparse_embedding = tf.concat([
-            self.embedding_layers[feature_name](value)
-            for feature_name, value in inputs.items()
-        ], axis=1)
-
-        x = tensor.to2DTensor(sparse_embedding)
+        x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN
