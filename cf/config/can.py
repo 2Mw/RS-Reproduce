@@ -10,8 +10,8 @@ config = {
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": -1,
-        "batch_size": 512,
-        "lr": 0.0005,
+        "batch_size": 4096,
+        "lr": 0.001,
         'val_ratio': 0.076,
         'test_ratio': 0.07,
         'test_batch_size': 9012
@@ -20,7 +20,7 @@ config = {
     'model': {
         # embeddings
         'embedding_reg': 0.,
-        'embedding_dim': 8,
+        'embedding_dim': 39,
         'l2_reg_embedding': 1e-5,
         # deep part
         'dropout': 0,
@@ -32,7 +32,7 @@ config = {
         'cross_layers': 4,
         'cross_w_reg': 0.,
         'cross_b_reg': 0.,
-        'low_rank': 32,
+        'low_rank': 256,
         'num_experts': 4,
         'l2_reg_cross': 1e-5,
         # attention layer

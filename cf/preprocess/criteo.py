@@ -1,8 +1,9 @@
 import gc
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder, KBinsDiscretizer
+from sklearn.preprocessing import LabelEncoder, KBinsDiscretizer, FunctionTransformer
 from cf.utils.logger import logger
 
 # IXX 表示数值型数据, CXX表示类别型数据
@@ -37,11 +38,16 @@ def create_criteo_dataset(file: str, embedding_dim: int, sample_num: int = -1, t
     df[sparse_features] = df[sparse_features].fillna('-1')
     df[dense_features] = df[dense_features].fillna(0)
 
-    logger.info("数值离散化")
-    est = KBinsDiscretizer(1000, encode='ordinal', strategy='uniform')  # 使用 ordinal 编码而不是 one-hot
-    df[dense_features] = est.fit_transform(df[dense_features])  # 对每一列进行数值离散化处理
+    logger.info("=== Process numeric feature ===")  # 使用 log-normalize or MinMaxScaler
+    # est = KBinsDiscretizer(1000, encode='ordinal', strategy='uniform')  # 使用 ordinal 编码而不是 one-hot
+    # df[dense_features] = est.fit_transform(df[dense_features])  # 对每一列进行数值离散化处理
+    for f in dense_features:
+        if f == 'I2':
+            df[f] = np.log(df[f] + 4)
+        else:
+            df[f] = np.log(df[f] + 1)
 
-    logger.info("稀疏值数值化")
+    logger.info("=== Process categorical feature ===")
     for feature in sparse_features:  # 对于分类型数据进行处理，将对应的类别型数据转为唯一的数字编号
         le = LabelEncoder()
         df[feature] = le.fit_transform(df[feature])  # 输入的数据必须是一维向量

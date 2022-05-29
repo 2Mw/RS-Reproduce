@@ -39,7 +39,7 @@ def gen_tunes(model, cfg, part, item, opt_values=None):
             cfg[part][item] = obj
             with open(os.path.join(path, f'{idx}.yaml'), 'w') as f:
                 yaml.dump(cfg, f)
-    logger.info(f'Output all yaml files to {path}')
+    print(f'Output all yaml files to {path}')
 
 
 if __name__ == '__main__':

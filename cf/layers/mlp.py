@@ -1,8 +1,10 @@
 from keras.layers import Dense, Dropout, BatchNormalization, Layer
+from tensorflow import keras
 
 
 class MLP(Layer):
-    def __init__(self, units, activation: str, dropout: float, use_bn: bool = False, residual: bool = False, **kwargs):
+    def __init__(self, units, activation: str, dropout: float, use_bn: bool = False, residual: bool = False,
+                 initializer=None, **kwargs):
         """
         Multi-Layer perceptron.
 
@@ -14,6 +16,7 @@ class MLP(Layer):
         :param kwargs:
         """
         super().__init__(**kwargs)
+        self.initializer = initializer if initializer is not None else keras.initializers.glorot_normal
         self.dnn = [Dense(unit, activation) for unit in units]
         self.dropout = Dropout(dropout)
         self.bn = BatchNormalization()

@@ -100,7 +100,7 @@ if __name__ == '__main__':
 
     dataset = arg.dataset.lower()
     if arg.type.lower() == 'train':
-        model.train(cfg, dataset)
+        model.train(cfg, dataset, arg.pretrain)
     else:
         model.evaluate(cfg, arg.pretrain, dataset)
 

@@ -24,7 +24,7 @@ config = {
         "fm_w_reg": 0.,
         "embedding_reg": 0.,
         "activation": "relu",
-        "embedding_dim": 8,
+        "embedding_dim": 39,
         "metrics": ['AUC']
     }
 }

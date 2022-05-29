@@ -76,7 +76,7 @@ class CrossNetMix(Layer):
     """
 
     def __init__(self, low_rank: int, num_experts: int = 4, layer_num: int = 2, l2_reg: float = 0., seed=1024,
-                 **kwargs):
+                 initializer=None, **kwargs):
         if low_rank <= 0:
             raise ValueError(f'The low_rank parameter must be positive, but yours is {low_rank}')
 
@@ -94,6 +94,7 @@ class CrossNetMix(Layer):
         self.layer_num = layer_num
         self.l2_reg = l2_reg
         self.seed = seed
+        self.initializer = keras.initializers.glorot_normal if initializer is None else initializer
         super().__init__(**kwargs)
 
     def build(self, input_shape):
@@ -107,21 +108,21 @@ class CrossNetMix(Layer):
         # U: (dim, low_rank)
         self.U_list = [self.add_weight(name=f'U_list_{i}',
                                        shape=(self.num_experts, dim, self.low_rank),
-                                       initializer=keras.initializers.glorot_normal(self.seed),
+                                       initializer=self.initializer(self.seed),
                                        regularizer=l2(self.l2_reg),
                                        trainable=True) for i in range(self.layer_num)]
 
         # V: (dim, low_rank)
         self.V_list = [self.add_weight(name=f'V_list_{i}',
                                        shape=(self.num_experts, dim, self.low_rank),
-                                       initializer=keras.initializers.glorot_normal(self.seed),
+                                       initializer=self.initializer(self.seed),
                                        regularizer=l2(self.l2_reg),
                                        trainable=True) for i in range(self.layer_num)]
 
         # C: (low_rank, low_rank)
         self.C_list = [self.add_weight(name=f'C_list_{i}',
                                        shape=(self.num_experts, self.low_rank, self.low_rank),
-                                       initializer=keras.initializers.glorot_normal(self.seed),
+                                       initializer=self.initializer(self.seed),
                                        regularizer=l2(self.l2_reg),
                                        trainable=True
                                        ) for i in range(self.layer_num)]
