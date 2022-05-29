@@ -5,6 +5,7 @@ import yaml
 import sys
 import cf
 from tensorflow import keras
+from cf.utils.logger import logger
 
 'The utils of configuration export and import'
 
@@ -34,7 +35,9 @@ def get_config(model: str, timestamp: str):
     """
     file = f'../result/{model}/{timestamp}/config.yaml'
     if not os.path.exists(file):
-        raise FileExistsError(f"The file {file} not exists.")
+        e = f"The file {file} not exists."
+        logger.error(e)
+        raise FileExistsError(e)
     with open(f'{file}', "r") as f:
         return yaml.load(f, yaml.SafeLoader)
 
@@ -98,7 +101,7 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     export_result(train_hist, val_res, directory, cost, model.count_params())
     # keras.utils.plot_model(model.build_graph(), os.path.join(directory, 'model.png'))
     # keras.utils.plot_model(model.model_plot, os.path.join(directory, 'model.png'))
-    print(f'Successfully export all information of model to {os.path.abspath(directory)}')
+    logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 
 if __name__ == '__main__':

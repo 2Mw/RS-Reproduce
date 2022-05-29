@@ -17,9 +17,9 @@ class DCNv2(Model):
         model_cfg = config['model']
         self.feature_column = feature_column
         self.mlp = mlp.MLP(model_cfg['hidden_units'], model_cfg['activation'], model_cfg['dropout'],
-                           model_cfg['use_bn'])
+                           model_cfg['use_bn'], initializer=keras.initializers.he_normal)
         self.cross = crossnet.CrossNetMix(model_cfg['low_rank'], model_cfg['num_experts'], model_cfg['cross_layers'],
-                                          model_cfg['l2_reg_cross'])
+                                          model_cfg['l2_reg_cross'], initializer=keras.initializers.he_normal)
 
         self.embedding_layer = {
             f['name']: Embedding(

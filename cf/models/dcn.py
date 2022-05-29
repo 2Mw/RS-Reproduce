@@ -57,13 +57,13 @@ class DCN(Model):
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
         model.summary()
 
-
     def call(self, inputs, training=None, mask=None):
         # todo 存在一个问题，所有的 dense 和 sparse feature 全变成了 embedding了
         sparse_embedding = tf.concat([
             self.embedding_layers[feature_name](value)
             for feature_name, value in inputs.items()
         ], axis=1)
+
         x = tensor.to2DTensor(sparse_embedding)
         # Cross Network
         cross_x = self.cross_net(x)

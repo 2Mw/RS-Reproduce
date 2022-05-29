@@ -4,6 +4,7 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.layers import BatchNormalization, Dropout, Dense, Layer
 from keras.regularizers import L2
+from cf.utils.logger import logger
 
 
 class MultiheadAttention(Layer):
@@ -33,7 +34,9 @@ class MultiheadAttention(Layer):
 
     def build(self, input_shape):
         if len(input_shape) != 3:
-            raise ValueError(f"Unexpected inputs dimensions {len(input_shape)}, expect to be 3 dimensions")
+            e = f"Unexpected inputs dimensions {len(input_shape)}, expect to be 3 dimensions"
+            logger.error(e)
+            raise ValueError(e)
 
         embedding_size = int(input_shape[-1])
         self.Q = self.add_weight(name='query', shape=[embedding_size, self.dk * self.head_num],
@@ -52,7 +55,9 @@ class MultiheadAttention(Layer):
 
     def call(self, inputs, *args, **kwargs):
         if keras.backend.ndim(inputs) != 3:  # (batch, F, dim)
-            raise ValueError(f"Unexpected inputs dimensions {keras.backend.ndim(inputs)}, expect to be 3 dimensions")
+            e = f"Unexpected inputs dimensions {keras.backend.ndim(inputs)}, expect to be 3 dimensions"
+            logger.error(e)
+            raise ValueError(e)
 
         querys = tf.tensordot(inputs, self.Q, axes=(-1, 0))  # (batch, F, dim * head_num)
         keys = tf.tensordot(inputs, self.K, axes=(-1, 0))

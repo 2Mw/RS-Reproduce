@@ -2,7 +2,6 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp
-from keras.layers import Input
 from cf.utils import tensor
 
 

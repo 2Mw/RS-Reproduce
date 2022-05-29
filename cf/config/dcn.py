@@ -20,7 +20,7 @@ config = {
     "model": {
         # embeddings
         "embedding_reg": 0.,
-        "embedding_dim": 8,
+        "embedding_dim": 39,
         # deep part
         "hidden_units": [512, 256, 128, 64],
         "dropout": 0.5,
