@@ -24,13 +24,13 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     """
     train_config = cfg['train']
     model_config = cfg['model']
-    mirrored_strategy = tf.distribute.MirroredStrategy()
-    with mirrored_strategy.scope():
-        ins = pool.get(model_name)
-        model = ins(feature_columns, cfg, directory)
-        model.summary()
-        optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
-        model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
+    # mirrored_strategy = tf.distribute.MirroredStrategy()
+    # with mirrored_strategy.scope():
+    ins = pool.get(model_name)
+    model = ins(feature_columns, cfg, directory)
+    model.summary()
+    optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
+    model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):

@@ -18,6 +18,7 @@ config = {
     },
 
     "model": {
+        'embedding_device': 'cpu',
         "hidden_units": [256, 128, 64],
         "dropout": 0.5,
         "use_bn": False,
@@ -25,6 +26,7 @@ config = {
         "embedding_reg": 0.,
         "activation": "relu",
         "embedding_dim": 39,
+        'numeric_same_dim': True,  # 表示和categorical数据维度一致
         "metrics": ['AUC']
     }
 }
