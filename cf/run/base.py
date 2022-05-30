@@ -5,6 +5,7 @@ import cf
 from cf.models import MODULES as pool
 from cf.preprocess.criteo import *
 from cf.utils.logger import logger
+from tensorflow import keras
 
 project_dir = cf.get_project_path()
 
@@ -22,12 +23,14 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     """
     train_config = cfg['train']
     model_config = cfg['model']
-    mirrored_strategy = tf.distribute.MirroredStrategy()
-    with mirrored_strategy.scope():
-        ins = pool.get(model_name)
-        model = ins(feature_columns, cfg, directory)
-        model.summary()
-        model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
+    # mirrored_strategy = tf.distribute.MirroredStrategy()
+    # with mirrored_strategy.scope():
+    ins = pool.get(model_name)
+    model = ins(feature_columns, cfg, directory)
+    model.summary()
+    optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
+    model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
+    model.compile(loss=train_config['loss'], optimizer=train_config['optimizer'], metrics=model_config['metrics'])
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):
@@ -90,3 +93,10 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         pickle.dump(test_data, open(f'{data_dir}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         logger.info(f'保存数据')
     return feature_columns, train_data, test_data
+
+
+def get_optimizer(name, lr, clipnorm: float = 10):
+    opt = keras.optimizers.get(name)
+    opt.learning_rate = lr
+    opt.clipnorm = clipnorm if clipnorm is not None else 10
+    return opt

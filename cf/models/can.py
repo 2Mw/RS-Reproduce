@@ -6,6 +6,7 @@ from keras.models import Model
 from keras.layers import Embedding, Dense, Input, Conv1D
 from keras.regularizers import l2
 from cf.layers import crossnet, attention, mlp
+from cf.utils.tensor import *
 
 
 class CAN(Model):
@@ -54,7 +55,7 @@ class CAN(Model):
     def call(self, inputs, training=None, mask=None):
         embedding = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
         # cross part
-        x = embedding
+        x = to2DTensor(embedding)
         cross_out = self.cross(x)
         # attention part
         att_x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])

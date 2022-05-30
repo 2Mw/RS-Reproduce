@@ -6,6 +6,7 @@ from cf.layers.mlp import MLP
 import os
 from keras.layers import Input, Embedding, Conv1D, Dense
 from keras.regularizers import l2
+from cf.utils.tensor import *
 
 
 class InterHAt(Model):

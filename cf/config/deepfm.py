@@ -9,7 +9,7 @@ config = {
         "epochs": 3,
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
-        "sample_size": -1,
+        'sample_size': 20000,
         "batch_size": 4096,
         "lr": 0.001,
         'val_ratio': 0.076,
@@ -24,7 +24,7 @@ config = {
         "fm_w_reg": 0.,
         "embedding_reg": 0.,
         "activation": "relu",
-        "embedding_dim": 8,
+        'embedding_dim': 25,
         "metrics": ['AUC']
     }
 }

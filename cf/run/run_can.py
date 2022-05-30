@@ -3,7 +3,7 @@ import os.path
 from cf.config.can import config
 from cf.models.can import *
 from cf.utils.config import *
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.utils.logger import logger

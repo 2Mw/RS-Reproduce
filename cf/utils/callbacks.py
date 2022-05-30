@@ -2,7 +2,7 @@ import json
 import os.path
 
 import numpy as np
-from keras.callbacks import Callback
+from tensorflow.keras.callbacks import Callback
 import pickle
 import matplotlib.pyplot as plt
 import tensorflow as tf

@@ -13,6 +13,7 @@ from cf.run import MODULES as run_pool
 from cf.utils.config import get_date
 from cf.utils.logger import logger
 
+_log_file = ''
 
 def cli():
     p = argparse.ArgumentParser(description="Train model with parser.")
@@ -33,6 +34,7 @@ def checkArgs(args):
     :param args:
     :return: 返回yaml配置对象
     """
+    global _log_file
     model_name = args.model.lower()
     if pool.get(model_name) is None:
         logger.error(f'The model:{model_name} not exists.')
@@ -100,8 +102,9 @@ if __name__ == '__main__':
 
     dataset = arg.dataset.lower()
     if arg.type.lower() == 'train':
-        model.train(cfg, dataset)
+        model.train(cfg, dataset, arg.pretrain)
     else:
         model.evaluate(cfg, arg.pretrain, dataset)
+    print(f'Output log file in {_log_file}')
 
 # print(arg.config)
