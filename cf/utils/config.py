@@ -70,6 +70,7 @@ def export_result(train_hist: keras.callbacks.History, val_res, directory: str, 
     info = {
         'cost_seconds': cost,
         "params": params,
+        'now': time.asctime(),
         'train': {
             'epochs': train_hist.params['epochs'],
             'history': train_hist.history
