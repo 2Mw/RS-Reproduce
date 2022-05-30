@@ -20,7 +20,6 @@ def get_embedding(intance: Model, feature_columns, dim, numeric_same: bool = Tru
     """
     device = device.lower()
     device = f'/{device}:0' if device == 'cpu' else device
-    print('====================')
     logger.info(f'Set embedding in device: {device}')
     with tf.device(device):
         ebd = {}

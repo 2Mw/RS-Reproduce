@@ -41,6 +41,7 @@ class DCN(Model):
     def call(self, inputs, training=None, mask=None):
         # x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
         x = form_x(inputs, self.ebd, self.numeric_same)
+        x = tensor.to2DTensor(x)
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN

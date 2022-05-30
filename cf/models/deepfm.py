@@ -42,6 +42,7 @@ class DeepFM(Model):
     def call(self, inputs, **kwargs):
         # embedding, (batch_size, embedding_dim*fields)
         sparse_embedding = form_x(inputs, self.ebd, self.numeric_same)
+        sparse_embedding = tensor.to2DTensor(sparse_embedding)
         # wide
         sparse_inputs = self._index_mapping(inputs, self.map_dict)
         wide_inputs = {

@@ -42,11 +42,7 @@ class CAN(Model):
     def call(self, inputs, training=None, mask=None):
         x = form_x(inputs, self.ebd, self.numeric_same)
         # cross part
-<<<<<<< HEAD
         x = tensor.to2DTensor(x)
-=======
-        x = tensor.to2DTensor(embedding)
->>>>>>> exp-a
         cross_out = self.cross(x)
         # attention part
         att_x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])

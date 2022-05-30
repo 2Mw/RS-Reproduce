@@ -20,7 +20,7 @@ config = {
     "model": {
         # embeddings
         "embedding_reg": 0.,
-        "embedding_dim": 30,
+        "embedding_dim": 16,
         "l2_reg_embedding": 1e-5,
         'numeric_same_dim': False,  # 表示和categorical数据维度一致
         'embedding_device': 'cpu',

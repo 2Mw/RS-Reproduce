@@ -24,13 +24,13 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     """
     train_config = cfg['train']
     model_config = cfg['model']
-    mirrored_strategy = tf.distribute.MirroredStrategy()
-    with mirrored_strategy.scope():
-        ins = pool.get(model_name)
-        model = ins(feature_columns, cfg, directory)
-        model.summary()
-        optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
-        model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
+    # mirrored_strategy = tf.distribute.MirroredStrategy()
+    # with mirrored_strategy.scope():
+    ins = pool.get(model_name)
+    model = ins(feature_columns, cfg, directory)
+    model.summary()
+    optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
+    model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):
@@ -73,24 +73,23 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
     :return: feature_columns, train_data, test_data
     """
     if sample_size == -1:
-        data_dir = os.path.join(base, f'data_all')
+        data_dir = os.path.join(base, f'data_all_{embedding_dim}')
     else:
-        data_dir = os.path.join(base, f'data_{sample_size}')
+        data_dir = os.path.join(base, f'data_{sample_size}_{embedding_dim}')
     if os.path.exists(data_dir):
         logger.info(f'读取已保存数据')
-        feature_columns = pickle.load(open(f'{data_dir}_{embedding_dim}/feature.pkl', 'rb'))
-        train_data = pickle.load(open(f'{data_dir}_{embedding_dim}/train_data.pkl', 'rb'))
-        test_data = pickle.load(open(f'{data_dir}_{embedding_dim}/test_data.pkl', 'rb'))
+        feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
+        train_data = pickle.load(open(f'{data_dir}/train_data.pkl', 'rb'))
+        test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
     else:
         logger.info(f'数据处理中')
         feature_columns, train_data, test_data = None, None, None
         if dataset.lower() == 'criteo':
-            feature_columns, train_data, test_data = create_criteo_dataset(train_file, embedding_dim, sample_size,
-                                                                           test_ratio)
+            feature_columns, train_data, test_data = create_criteo_dataset(train_file, sample_size, test_ratio)
         os.mkdir(data_dir)
-        pickle.dump(feature_columns, open(f'{data_dir}_{embedding_dim}/feature.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
-        pickle.dump(train_data, open(f'{data_dir}_{embedding_dim}/train_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
-        pickle.dump(test_data, open(f'{data_dir}_{embedding_dim}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
+        pickle.dump(feature_columns, open(f'{data_dir}/feature.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
+        pickle.dump(train_data, open(f'{data_dir}/train_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
+        pickle.dump(test_data, open(f'{data_dir}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
         logger.info(f'保存数据')
     return feature_columns, train_data, test_data
 
