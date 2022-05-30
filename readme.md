@@ -35,4 +35,9 @@ RS
 ## Reference
 
 1. https://deepctr-doc.readthedocs.io/en/latest/Quick-Start.html#getting-started-4-steps-to-deepctr
+
+## Appendix
+
+1. Without MirroredStrategy in lower tf version, it will come with unknown shape warning, even sometimes it will affect
+   the training speed.
 2. 
