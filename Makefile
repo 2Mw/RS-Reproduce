@@ -25,10 +25,13 @@ train:
 	$(py) $(cli) -m $(t_model) -c $(t_cfg) -p $(t_weight)
 
 clear:
-	@rm $(proj)/log/*.log
+	@clear
+	rm $(proj)/log/*.log
 
 peek:
+	@clear
 	@cat $(lastlog)
 
 watch:
+	@clear
 	@tail -f $(lastlog)
