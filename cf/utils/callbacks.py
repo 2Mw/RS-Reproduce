@@ -25,7 +25,7 @@ class AbnormalAUC(Callback):
         self.steps = steps
         self.directory = directory
         self.low_tf_version = float(tf.__version__.replace('.', '')) < 240
-        self.last_save = 0
+        self.last_save = 1
         self.gap_steps = gap_steps
 
     def on_batch_end(self, batch, logs=None):
