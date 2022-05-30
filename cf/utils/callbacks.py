@@ -2,32 +2,47 @@ import json
 import os.path
 
 import numpy as np
-from keras.utils import tf_utils
 from keras.callbacks import Callback
 import pickle
 import matplotlib.pyplot as plt
+import tensorflow as tf
+from cf.utils.logger import logger
 
 
 class AbnormalAUC(Callback):
-    def __init__(self, threshold=0.8, steps: int = 0):
+    def __init__(self, threshold=0.8, steps: int = 0, directory: str = '', gap_steps: int = 200):
         """
         用于训练fit过程早停，auc大于threshold就停止训练
 
         :param threshold: train auc的最大值
         :param steps: 大于某个steps才生效
+        :param directory: Use to save model for lower tf version.
+        :param gap_steps: 如果保存模型，每个多少的step保存一次
         """
         super(AbnormalAUC, self).__init__()
         self._supports_tf_logs = True
         self.threshold = threshold
         self.steps = steps
+        self.directory = directory
+        self.low_tf_version = float(tf.__version__.replace('.', '')) < 240
+        self.last_save = 0
+        self.gap_steps = gap_steps
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
         auc = logs.get('auc')
         if auc is not None:
-            auc = tf_utils.sync_to_numpy_or_python_type(auc)
+            if not isinstance(auc, float) or not isinstance(auc, np.float):
+                auc = auc.numpy().item()
             if auc > self.threshold and batch > self.steps:
                 self.model.stop_training = True
+                if self.low_tf_version:
+                    if self.last_save % self.gap_steps == 0:
+                        logger.warning(f"Warning: auc has exceed threshold: {self.threshold} in step {batch}.")
+                        if auc < 0.82:
+                            path = os.path.join(self.directory, f'weights.{self.threshold}-{auc:.5f}-{batch}.hdf5')
+                            self.model.save_weights(path)
+                    self.last_save += 1
 
 
 class MetricsMonitor(Callback):
@@ -50,19 +65,24 @@ class MetricsMonitor(Callback):
         self.metric = metric
         self.sample_step = sample_step
         self.records = []
+        self.epoch = -1
+        self.best_epoch = 0
 
     def on_batch_end(self, batch, logs=None):
         logs = logs or {}
         value = logs.get(self.metric)
         if value is not None:
-            value = tf_utils.sync_to_numpy_or_python_type(value)
+            if not isinstance(value, float) or not isinstance(value, np.float):
+                value = value.numpy().item()
             if not np.isnan(value) and not np.isinf(value) and self.op(value, self.best_value):
                 self.best_value = value
+                self.best_epoch = self.epoch
             if self.directory != '' and batch % self.sample_step == 0:
                 self.records.append(value)
 
     def on_epoch_begin(self, epoch, logs=None):
         self.records = []
+        self.epoch += 1
 
     def on_epoch_end(self, epoch, logs=None):
         if self.directory != '' and os.path.exists(self.directory):
@@ -72,6 +92,9 @@ class MetricsMonitor(Callback):
             plt.plot(self.records)
             # plt.legend(f'epoch-{epoch}')
             plt.title(f'epoch-{epoch}')
+            if epoch == 0:
+                m = np.max(self.records)
+                plt.ylim(m - 0.015, m + 0.003)
             plt.xlabel('steps')
             plt.ylabel(self.metric)
             plt.savefig(os.path.join(self.directory, f'{self.metric}_curve_{epoch}.png'))
@@ -81,4 +104,4 @@ class MetricsMonitor(Callback):
         if self.directory != '' and os.path.exists(self.directory):
             with open(os.path.join(self.directory, f'{self.metric}_{self.mode}.json'), 'w') as f:
                 json.dump(res, f)
-        print(f'{self.metric}_{self.mode} best value is {self.best_value}')
+        logger.info(f'{self.metric}_{self.mode} best value is {self.best_value} in epoch-{self.best_epoch}')

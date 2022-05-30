@@ -4,9 +4,9 @@ import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model
 from keras.layers import Embedding, Dense, Input, Conv1D
-from keras.regularizers import l2
 from cf.layers import crossnet, attention, mlp
 from cf.utils import tensor
+from cf.models.base import *
 
 
 class CAN(Model):
@@ -25,14 +25,8 @@ class CAN(Model):
         model_cfg = cfg['model']
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
-        self.embedding_layer = {
-            f['name']: Embedding(input_dim=f['feature_num'],
-                                 input_length=1,
-                                 output_dim=f['dim'],
-                                 embeddings_initializer='random_normal',
-                                 embeddings_regularizer=l2(model_cfg['embedding_reg']))
-            for f in feature_columns
-        }
+        self.numeric_same = model_cfg['numeric_same_dim']
+        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
         self.cross = crossnet.CrossNetMix(model_cfg['low_rank'], model_cfg['num_experts'], model_cfg['cross_layers'],
                                           model_cfg['l2_reg_cross'])
         self.att_layer = model_cfg['att_layer_num']
@@ -42,21 +36,11 @@ class CAN(Model):
         self.att_trim = Dense(64, use_bias=None)
         self.final = Dense(1, 'sigmoid')
 
-    def build(self, input_shape):
-        super(CAN, self).build(input_shape)
-
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
-        inputs = {
-            feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_column
-        }
-        model = Model(inputs=inputs, outputs=self.call(inputs))
-        if len(self.directory) > 0:
-            keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
-        model.summary()
+        model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        embedding = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
+        x = form_x(inputs, self.ebd, self.numeric_same)
         # cross part
         x = tensor.to2DTensor(embedding)
         cross_out = self.cross(x)

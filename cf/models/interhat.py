@@ -5,7 +5,7 @@ from cf.layers.attention import MultiheadAttention, AggregationAttention
 from cf.layers.mlp import MLP
 import os
 from keras.layers import Input, Embedding, Conv1D, Dense
-from keras.regularizers import l2
+from cf.models.base import *
 
 
 class InterHAt(Model):
@@ -30,33 +30,15 @@ class InterHAt(Model):
             Dense(1, use_bias=False)
         ]
 
-        self.embedding_layer = {
-            f['name']: Embedding(
-                input_dim=f['feature_num'],
-                input_length=1,
-                output_dim=f['dim'],
-                embeddings_initializer='random_normal',
-                embeddings_regularizer=l2(model_cfg['l2_reg_embedding'])
-            )
-            for f in feature_column
-        }
-
-    def build(self, input_shape):
-        super(InterHAt, self).build(input_shape)
+        self.numeric_same = model_cfg['numeric_same_dim']
+        self.ebd = get_embedding(self, feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
-        inputs = {
-            feature['name']: Input(shape=(), dtype=tf.int32, name=feature['name'])
-            for feature in self.feature_column
-        }
-        model = Model(inputs=inputs, outputs=self.call(inputs))
-        if len(self.directory) > 0:
-            keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
-        model.summary()
+        model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
         # get embedding
-        embedding = tf.concat([self.embedding_layer[f](v) for f, v in inputs.items()], axis=1)
+        embedding = form_x(inputs, self.ebd, self.numeric_same)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
         x = tf.reshape(embedding, [-1, len(self.feature_column), self.embedding_dim])
 
