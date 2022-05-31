@@ -40,7 +40,7 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.0001)
-    aucStop = AbnormalAUC(directory=directory)
+    aucStop = AbnormalAUC(0.82, steps=800, directory=directory, gap_steps=800)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
     train_config = cfg['train']

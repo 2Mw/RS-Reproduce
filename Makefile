@@ -7,15 +7,15 @@ cli=/data/amax/b510/yl/repo/33/22/rs/cf/run/run_cli.py
 
 # Configs
 ## evaluate config
-model=dcnv2
-config=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/config.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/weights.004-0.46825.hdf5
+model=autoint
+config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint/20220531154531/0.yaml
+weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/autoint/20220531154925/weights.001-0.46823.hdf5
 ## train config
-t_model=dcnv2
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220530144943/0.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220529235439/weights.005-0.45683.hdf5
+t_model=autoint
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint/20220531154531/0.yaml
+t_weight=''
 ## Other
-lastlog=$(shell ls -f $(proj)/log/* | sort -r | head -n 1)
+lastlog=$(shell ls -f $(proj)/log/$(t_model)* | sort -r | head -n 1)
 evaluate:
 	@cd $(proj)
 	$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight)
