@@ -10,7 +10,7 @@ config = {
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": -1,
-        "batch_size": 4096,
+        "batch_size": 64,
         "lr": 0.0005,
         'val_ratio': 0.076,
         'test_ratio': 0.07,
@@ -20,10 +20,10 @@ config = {
     "model": {
         # embeddings
         "embedding_reg": 0.,
-        "embedding_dim": 39,
+        "embedding_dim": 8,
         "l2_reg_embedding": 1e-5,
         'numeric_same_dim': False,  # 表示和categorical数据维度一致
-        'embedding_device': 'cpu',
+        'embedding_device': 'gpu',
         # deep part
         "hidden_units": [512, 256, 64],
         "dropout": 0.5,

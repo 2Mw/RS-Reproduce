@@ -22,7 +22,7 @@ def cli():
     p.add_argument('-p', '--pretrain', type=str, default='', help='The filepath of the weight of pretrain model.')
     p.add_argument('-t', '--type', type=str, default='train', help='Select the run')
     p.add_argument('-l', '--log', type=bool, default=True,
-                   help='Whether output log info to file, default false(use stderr)') 
+                   help='Whether output log info to file, default false(use stderr)')
     return p.parse_args()
 
 
@@ -50,6 +50,8 @@ def checkArgs(args):
         _log_file = os.path.join(_log_file, f'{model_name}-{args.dataset.lower()}-{get_date()}.log')
         print(f'Output log file in {_log_file}')
         logging.basicConfig(format='%(asctime)s-%(levelname)s-%(message)s', datefmt='%y%m%d%H%M%S', filename=_log_file)
+    else:
+        logging.basicConfig(format='%(asctime)s-%(levelname)s-%(message)s', datefmt='%y%m%d%H%M%S', stream=sys.stdout)
 
     cfg_path = os.path.abspath(args.config)
     if not os.path.exists(cfg_path):

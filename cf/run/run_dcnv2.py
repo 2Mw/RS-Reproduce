@@ -3,7 +3,7 @@ import os.path
 from cf.config.dcnv2 import config
 from cf.models.dcnv2 import *
 from cf.utils.config import *
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.utils.logger import logger
@@ -40,16 +40,18 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.0001, patience=1)
-    aucStop = AbnormalAUC(0.8115, steps=800, directory=directory, gap_steps=800)
+    aucStop = AbnormalAUC(0.82, steps=2000, directory=directory, gap_steps=800)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
 
     train_config = cfg['train']
 
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
+    steps = int(sample_size * 0.86 / batch_size)
+    tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[1, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_split=train_config['val_ratio'],
-                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
+                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     logger.info(f'test AUC: {res[1]}')
     logger.info('========= Export Model Information =========')

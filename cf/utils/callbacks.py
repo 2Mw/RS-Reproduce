@@ -1,3 +1,4 @@
+import gc
 import json
 import os.path
 
@@ -82,6 +83,7 @@ class MetricsMonitor(Callback):
 
     def on_epoch_begin(self, epoch, logs=None):
         self.records = []
+        gc.collect()
         self.epoch += 1
 
     def on_epoch_end(self, epoch, logs=None):

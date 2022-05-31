@@ -7,6 +7,7 @@ import cf
 from cf.models import MODULES as pool
 from cf.preprocess.criteo import *
 from cf.utils.logger import logger
+from tensorflow._api.v2.compat.v1 import RunOptions, RunMetadata
 
 project_dir = cf.get_project_path()
 
