@@ -3,7 +3,7 @@ import os.path
 from cf.config.dcn import config
 from cf.models.dcn import *
 from cf.utils.config import *
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.utils.logger import logger
@@ -47,9 +47,11 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
 
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
+    steps = int(sample_size * 0.86 / batch_size)
+    tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[1, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_split=train_config['val_ratio'],
-                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
+                              callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     logger.info(f'test AUC: {res[1]}')
     logger.info('========= Export Model Information =========')
@@ -67,5 +69,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    # train(config)
-    evaluate(config, '/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn/20220526220154/weights.001-0.45153.hdf5')
+    train(config)
+    # evaluate(config, '/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn/20220526220154/weights.001-0.45153.hdf5')

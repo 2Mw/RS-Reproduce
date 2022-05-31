@@ -18,14 +18,14 @@ config = {
     },
 
     "model": {
-        'embedding_device': 'cpu',
+        'embedding_device': 'gpu',
         "hidden_units": [256, 128, 64],
         "dropout": 0.5,
         "use_bn": False,
         "fm_w_reg": 0.,
         "embedding_reg": 0.,
         "activation": "relu",
-        "embedding_dim": 39,
+        "embedding_dim": 8,
         'numeric_same_dim': True,  # 表示和categorical数据维度一致
         "metrics": ['AUC']
     }

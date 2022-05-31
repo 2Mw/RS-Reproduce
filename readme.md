@@ -32,6 +32,13 @@ RS
     4. [AutoInt 2018](https://arxiv.org/pdf/1810.11921.pdf)
     5. [InterHAt 2020](https://dl.acm.org/doi/pdf/10.1145/3336191.3371785)
 
+## Dataset
+
+1. criteo
+2. movielens-1m
+3. [User Behavior Data from Taobao](https://tianchi.aliyun.com/dataset/dataDetail?dataId=649)
+4. [Ad Display/Click Data](https://tianchi.aliyun.com/dataset/dataDetail?dataId=56#1)
+
 ## Reference
 
 1. https://deepctr-doc.readthedocs.io/en/latest/Quick-Start.html#getting-started-4-steps-to-deepctr
@@ -40,4 +47,6 @@ RS
 
 1. Without MirroredStrategy in lower tf version, it will come with unknown shape warning, even sometimes it will affect
    the training speed.
-2. 
+2. In the Callback(keras.callbacks.Callback) of lower version of tensorflow (<=2.4.0), if
+   set `self.model.stop_training = True`, the training process will stop in the end of **epoch**, while higher version
+   of tf will stop in the end of this **step**.

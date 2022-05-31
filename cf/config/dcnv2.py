@@ -10,7 +10,7 @@ config = {
         "optimizer": 'Adam',
         'loss': 'binary_crossentropy',
         "sample_size": -1,
-        "batch_size": 4096,
+        "batch_size": 64,
         "lr": 0.0005,
         'val_ratio': 0.076,
         'test_ratio': 0.07,

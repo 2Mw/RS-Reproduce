@@ -20,10 +20,10 @@ config = {
     'model': {
         # embeddings
         'embedding_reg': 0.,
-        "embedding_dim": 39,
+        "embedding_dim": 8,
         'l2_reg_embedding': 1e-5,
         'numeric_same_dim': True,  # 表示和categorical数据维度一致
-        'embedding_device': 'cpu',
+        'embedding_device': 'gpu',
         # deep part
         'dropout': 0,
         'fm_w_reg': 0.,
