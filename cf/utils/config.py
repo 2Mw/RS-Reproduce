@@ -56,11 +56,11 @@ def get_date() -> str:
     return time.strftime("%Y%m%d%H%M%S", time.localtime())
 
 
-def export_result(train_hist: keras.callbacks.History, val_res, directory: str, cost: float, params: int):
+def export_result(train_hist, val_res, directory: str, cost: float, model):
     """
     Export model training result to specified file. {directory}/result.json
 
-    :param params: The count of model parameters
+    :param model: The model of class `keras.models.Model`
     :param cost: cost seconds.
     :param train_hist: train_hist from model.fit()
     :param val_res: test result from model.evaluate()
@@ -69,8 +69,11 @@ def export_result(train_hist: keras.callbacks.History, val_res, directory: str, 
     """
     info = {
         'cost_seconds': cost,
-        "params": params,
-        'now': time.asctime(),
+        "params": {
+            'builtin': model.count_params(),
+            'mine': num_params(model),
+        },
+        'now': get_date(),
         'train': {
             'epochs': train_hist.params['epochs'],
             'history': train_hist.history
@@ -98,17 +101,22 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     :return:
     """
     export_config(config, directory)
-    # model.save_weights(f'{directory}/weights_last.hdf5')
-    export_result(train_hist, val_res, directory, cost, model.count_params())
-    # keras.utils.plot_model(model.build_graph(), os.path.join(directory, 'model.png'))
-    # keras.utils.plot_model(model.model_plot, os.path.join(directory, 'model.png'))
+    export_result(train_hist, val_res, directory, cost, model)
     logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 
-if __name__ == '__main__':
-    print(__name__)
-    print(os.path.abspath(".."))
-    print(sys.modules[__name__])
-    print(get_date())
-    print(__file__)
-    print(cf.get_project_path())
+def num_params(model: keras.models.Model):
+    total, embed, dense = 0, 0, 0
+    for v in model.trainable_variables:
+        shape = v.get_shape()
+        cnt = 1
+        for dim in shape:
+            cnt *= dim
+        total += cnt
+        if 'embedding' in v.name:
+            embed += cnt
+        else:
+            dense += cnt
+
+    res = {'total': total, 'embedding': embed, 'dense': dense}
+    return res

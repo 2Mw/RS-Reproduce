@@ -31,7 +31,7 @@ class InterHAt(Model):
         ]
 
         self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         model_summary(self, self.feature_column, self.directory)

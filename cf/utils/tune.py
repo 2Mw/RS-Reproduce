@@ -4,6 +4,8 @@ from cf.utils.config import get_date
 import yaml
 from cf.config import MODULES as pool
 from cf.utils.logger import logger
+import argparse
+import sys
 
 'Use to generate various hyper parameters file for fine tune model'
 
@@ -42,6 +44,16 @@ def gen_tunes(model, cfg, part, item, opt_values=None):
     print(f'Output all yaml files to {path}')
 
 
+def cli():
+    p = argparse.ArgumentParser(description="Generate yaml.")
+    p.add_argument('-m', '--model', required=True, help='The model name')
+    return p.parse_args()
+
+
 if __name__ == '__main__':
-    name = 'dcnv2'
+    arg = cli()
+    name = arg.model.lower()
+    if pool.get(name) is None:
+        logger.error(f'The model:{name} not exists.')
+        sys.exit(0)
     gen_tunes(name, pool.get(name), 'train', 'batch_size')

@@ -30,7 +30,7 @@ class DCN(Model):
         self.activation = model_cfg['activation']
         self.embedding_dim = model_cfg['embedding_dim']
         self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
         self.cross_net = crossnet.CrossNet(self.layer_num, model_cfg['cross_w_reg'], model_cfg['cross_b_reg'])
         self.mlp = mlp.MLP(self.hidden_units, self.activation, self.dnn_dropout)
         self.dense_final = Dense(1, activation=None)

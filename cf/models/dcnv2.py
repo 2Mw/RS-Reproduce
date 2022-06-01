@@ -1,10 +1,8 @@
-import os.path
-
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model
-from keras.layers import Embedding, Dense, Input
-from cf.models.base import *
+from keras.layers import Dense
+from cf.models.base import get_embedding, form_x, model_summary
 from cf.layers import crossnet, mlp
 
 
@@ -21,7 +19,7 @@ class DCNv2(Model):
 
         self.embedding_dim = model_cfg['embedding_dim']
         self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
         # self.final_dense = Dense(1, model_cfg['activation'])
         self.final_dense = Dense(1, activation=None)
 

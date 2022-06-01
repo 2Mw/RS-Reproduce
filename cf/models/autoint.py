@@ -24,7 +24,7 @@ class AutoInt(Model):
         self.directory = directory
         self.feature_column = feature_columns
         self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
         self.att_layer = model_cfg['att_layer_num']
         self.attention = [MultiheadAttention(model_cfg['att_size'], model_cfg['att_head_num']) for i in
                           range(self.att_layer)]

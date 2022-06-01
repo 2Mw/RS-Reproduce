@@ -6,31 +6,31 @@ from tensorflow import keras
 import os
 
 
-def get_embedding(intance: Model, feature_columns, dim, numeric_same: bool = True, device: str = 'gpu'):
+def get_embedding(feature_columns, dim, numeric_same: bool = True, device: str = 'gpu'):
     """
     Get the embedding according to dimensions. 由于 embedding 占用参数过多，因此提供在 cpu 中训练的方法
 
-    :param intance: The model instance
-    :param device: gpu or cpu
     :param feature_columns: list of feature columns
     :param dim: Embedding dimension
     :param numeric_same: Whether to use the same embedding as categorical for numeric features
+    :param device: gpu or cpu
     :return: Embedding list.
     """
     with tf.device(device.lower()):
         ebd = {}
         for f in feature_columns:
             if f['name'].startswith('C'):
-                ebd[f['name']] = Embedding(input_dim=f['feature_num'], input_length=1, output_dim=dim,
+                ebd[f['name']] = Embedding(input_dim=f['vocab_size'], input_length=1, output_dim=dim,
                                            embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5))
             else:
                 if numeric_same:
                     # 对于数值型数据采用 autoint 中的做法
                     # ebd[f['name']] = intance.add_weight(f'{f["name"]}_embedding', shape=(1, dim), dtype=tf.float32)
+                    # TODO 这么做存在问题
                     ebd[f['name']] = Dense(dim, use_bias=False)
                 else:
-                    ebd[f['name']] = Embedding(input_dim=f['feature_num'], input_length=1, output_dim=1,
-                                               embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5))
+                    # 采用 dcnv2的做法 直接将数值数据作为参数
+                    ebd[f['name']] = None
 
     return ebd
 

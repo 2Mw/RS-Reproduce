@@ -26,7 +26,7 @@ class CAN(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
         self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
         self.cross = crossnet.CrossNetMix(model_cfg['low_rank'], model_cfg['num_experts'], model_cfg['cross_layers'],
                                           model_cfg['l2_reg_cross'])
         self.att_layer = model_cfg['att_layer_num']
