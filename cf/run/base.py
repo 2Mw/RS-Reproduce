@@ -53,6 +53,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
             optimizers = get_optimizer(opt, lr, lr_embed, int(steps), warmup, cowclip)
             # map layer and optimizers
             layers = [
+                # TODO 对于layer的名称需要进行修改
                 [x for x in model.layers if "sparse_emb_" in x.name or "linear0sparse_emb_" in x.name],
                 [x for x in model.layers if "sparse_emb_" not in x.name and "linear0sparse_emb_" not in x.name],
             ]
@@ -60,7 +61,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
             optimizer = tfa.optimizers.MultiOptimizer(optimizers_and_layers)
         else:
             optimizer = get_optimizer(opt, lr)
-        loss = keras.losses.BinaryCrossentropy(reduction=keras.losses.Reduction.SUM_OVER_BATCH_SIZE)
+        loss = tf.keras.losses.BinaryCrossentropy(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)
         model.compile(loss=loss, optimizer=optimizer, metrics=model_config['metrics'])
     if weights == '' or weights is None:
         return model
@@ -122,10 +123,10 @@ def get_optimizer(name, lr, lr_emb=None, steps=None, warmup=False, cowclip=False
         if name.lower() != 'adam':
             e = f'Cowclip only support optmizer adam, so we change optimizer to adam.'
             logger.warning(e)
-        lr_fn = keras.optimizers.schedules.PolynomialDecay(1e-8, steps, lr, power=1) if warmup else lr
+        lr_fn = tf.keras.optimizers.schedules.PolynomialDecay(1e-8, steps, lr, power=1) if warmup else lr
         optimizers = [
-            keras.optimizers.Adam(learning_rate=lr_emb),
-            keras.optimizers.Adam(learning_rate=lr_fn)
+            tf.keras.optimizers.Adam(learning_rate=lr_emb),
+            tf.keras.optimizers.Adam(learning_rate=lr_fn)
         ]
         return optimizers
     else:

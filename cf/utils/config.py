@@ -2,8 +2,6 @@ import json
 import os
 import time
 import yaml
-import sys
-import cf
 from tensorflow import keras
 from cf.utils.logger import logger
 

@@ -1,36 +1,29 @@
-from keras.layers import Embedding, Input, Dense
+from keras.layers import Embedding, Input
 from keras.models import Model
 from keras.regularizers import l2
 import tensorflow as tf
 from tensorflow import keras
 import os
+from cf.preprocess.feature_column import SparseFeat
 
 
-def get_embedding(feature_columns, dim, numeric_same: bool = True, device: str = 'gpu'):
+def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
     """
     Get the embedding according to dimensions. 由于 embedding 占用参数过多，因此提供在 cpu 中训练的方法
 
     :param feature_columns: list of feature columns
     :param dim: Embedding dimension
-    :param numeric_same: Whether to use the same embedding as categorical for numeric features
     :param device: gpu or cpu
-    :return: Embedding list.
+    :param prefix: The prefix of embedding name.
+    :return: Embedding set, {'C1': Embedding(), 'C2': Embedding(), ... }.
     """
     with tf.device(device.lower()):
         ebd = {}
         for f in feature_columns:
-            if f['name'].startswith('C'):
-                ebd[f['name']] = Embedding(input_dim=f['vocab_size'], input_length=1, output_dim=dim,
-                                           embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5))
-            else:
-                if numeric_same:
-                    # 对于数值型数据采用 autoint 中的做法
-                    # ebd[f['name']] = intance.add_weight(f'{f["name"]}_embedding', shape=(1, dim), dtype=tf.float32)
-                    # TODO 这么做存在问题
-                    ebd[f['name']] = Dense(dim, use_bias=False)
-                else:
-                    # 采用 dcnv2的做法 直接将数值数据作为参数
-                    ebd[f['name']] = None
+            if isinstance(f, SparseFeat):
+                ebd[f.name] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
+                                        embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
+                                        name=f'{prefix}_emb_{f.name}')
 
     return ebd
 
@@ -45,7 +38,7 @@ def model_summary(instance, feature_column, directory):
     :return:
     """
     inputs = {
-        f['name']: Input(shape=(), dtype=tf.float32, name=f['name'])
+        f.name: Input(shape=(), dtype=tf.float32, name=f.name)
         for f in feature_column
     }
     model = Model(inputs, outputs=instance.call(inputs))
@@ -54,19 +47,27 @@ def model_summary(instance, feature_column, directory):
     model.summary()
 
 
-def form_x(inputs, embedding, numeric_same: bool):
-    x = []
+def form_x(inputs, embedding, divide: bool):
+    """
+    Generate the input `x` to the model， if attention_based is True, return (embedding_x, dense_x); if False return
+    the concatenation of both.
+
+    :param inputs:
+    :param embedding: The embedding lookup set.
+    :param divide: If True return value is (embedding_x, dense_x), else return the concatenation of both.
+    :return:
+    """
+    ebd_x = []
+    dense_x = []
     for f, v in inputs.items():
         if f[0] == 'C':
-            x.append(embedding[f](v))
+            ebd_x.append(embedding[f](v))
         else:
-            if numeric_same:
-                # mid = tf.expand_dims(v, 1) @ embedding[f]
-                mid = embedding[f](tf.expand_dims(v, 1))
-                x.append(mid)
-            else:
-                x.append(tf.expand_dims(v, 1))
-    return tf.concat(x, axis=-1)
+            dense_x.append(tf.expand_dims(v, 1))
+    if divide:
+        return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
+    else:
+        return tf.concat(ebd_x+dense_x, axis=-1)
 
 
 if __name__ == '__main__':

@@ -10,10 +10,9 @@ def to2DTensor(tensor):
     Returns:
         tensor: A tensor
     """
-    if len(tensor.shape) <3:
+    if len(tensor.shape) < 3:
         return tensor
     s = 1
     for i in tensor.shape[1:]:
         s *= i
-    
-    return tf.reshape([-1, s])
+    return tf.reshape(tensor, [-1, s])

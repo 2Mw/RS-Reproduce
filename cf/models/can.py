@@ -1,12 +1,9 @@
-import os.path
-
 import tensorflow as tf
-from tensorflow import keras
 from keras.models import Model
-from keras.layers import Embedding, Dense, Input, Conv1D
-from cf.layers import crossnet, attention, mlp
+from keras.layers import Dense
+from cf.layers import crossnet, attention
 from cf.utils import tensor
-from cf.models.base import *
+from cf.models.base import get_embedding, form_x, model_summary
 
 
 class CAN(Model):
@@ -25,8 +22,8 @@ class CAN(Model):
         model_cfg = cfg['model']
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
-        self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.cross = crossnet.CrossNetMix(model_cfg['low_rank'], model_cfg['num_experts'], model_cfg['cross_layers'],
                                           model_cfg['l2_reg_cross'])
         self.att_layer = model_cfg['att_layer_num']
@@ -40,19 +37,16 @@ class CAN(Model):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        x = form_x(inputs, self.ebd, self.numeric_same)
+        sparse_x, dense_x = form_x(inputs, self.ebd, True)
         # cross part
-        x = tensor.to2DTensor(embedding)
+        cross_x = tf.concat([sparse_x, dense_x], axis=-1)
+        x = tensor.to2DTensor(cross_x)
         cross_out = self.cross(x)
         # attention part
-        att_x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])
+        att_x = tf.reshape(sparse_x, [-1, len(self.feature_column), self.embedding_dim])
         for att in self.attention:
             att_x = att(att_x)
-        shapes = 1
-        for i in att_x.shape[1:]:
-            if i is not None:
-                shapes *= i
-        att_out = tf.reshape(att_x, [-1, shapes])
-        att_out = self.att_trim(att_out)
+        att_x = tensor.to2DTensor(att_x)
+        att_out = self.att_trim(att_x)
         out = tf.concat([cross_out, att_out], axis=-1)
         return self.final(out)

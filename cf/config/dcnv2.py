@@ -10,20 +10,23 @@ config = {
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
         'sample_size': -1,
-        'batch_size': 64,
+        'batch_size': 4096,
         'lr': 0.0005,
-        'lr_embed': 1e-4,
-        'warmup': True,
         'test_ratio': 1 / 7,
-        'test_batch_size': 9012
+        'test_batch_size': 9012,
+        # cowclip params
+        'cowclip': False,
+        'lr_embed': 1e-4,
+        'clip': 1,
+        'bound': 1e-5,
+        'warmup': True,
     },
 
     'model': {
         # embeddings
         'embedding_reg': 0.,
-        'embedding_dim': 8,
+        'sample_size': 10,
         'l2_reg_embedding': 1e-5,
-        'numeric_same_dim': False,  # 表示和categorical数据维度一致
         'embedding_device': 'gpu',
         # deep part
         'hidden_units': [400, 400, 400],

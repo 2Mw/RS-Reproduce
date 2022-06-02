@@ -1,11 +1,8 @@
-import os.path
-
 import tensorflow as tf
-from tensorflow import keras
 from keras.models import Model
-from keras.layers import Embedding, Dense, Input
-from cf.models.base import *
-from cf.layers import crossnet, mlp
+from keras.layers import Dense
+from cf.models.base import get_embedding, model_summary, form_x
+from cf.layers import crossnet, mlp, linear
 from cf.utils import tensor
 
 
@@ -21,6 +18,7 @@ class DCN(Model):
         :param kwargs:
         """
         super(DCN, self).__init__(*args, **kwargs)
+        # model params
         self.directory = directory
         model_cfg = config['model']
         self.feature_column = feature_columns
@@ -29,8 +27,9 @@ class DCN(Model):
         self.dnn_dropout = model_cfg['dropout']
         self.activation = model_cfg['activation']
         self.embedding_dim = model_cfg['embedding_dim']
-        self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        # model layers
+        self.linear = linear.Linear(feature_columns)
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.cross_net = crossnet.CrossNet(self.layer_num, model_cfg['cross_w_reg'], model_cfg['cross_b_reg'])
         self.mlp = mlp.MLP(self.hidden_units, self.activation, self.dnn_dropout)
         self.dense_final = Dense(1, activation=None)
@@ -40,7 +39,9 @@ class DCN(Model):
 
     def call(self, inputs, training=None, mask=None):
         # x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
-        x = form_x(inputs, self.ebd, self.numeric_same)
+        linear_out = self.linear(inputs)
+        x = form_x(inputs, self.ebd, False)
+        x = tensor.to2DTensor(x)
         # Cross Network
         cross_x = self.cross_net(x)
         # DNN
@@ -48,4 +49,5 @@ class DCN(Model):
         # Concatenate
         total_x = tf.concat([cross_x, dnn_x], axis=-1)
         # TODO 未加正则化
-        return tf.nn.sigmoid(self.dense_final(total_x))
+        final = self.dense_final(total_x) + linear_out
+        return tf.nn.sigmoid(final)

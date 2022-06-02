@@ -2,6 +2,7 @@ import copy
 import os.path
 from cf.config.dcnv2 import config
 from cf.utils.config import *
+import cf
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
@@ -26,7 +27,6 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
     sample_size = train_config['sample_size']
-    embedding_dim = cfg['model']['embedding_dim']
     logger.info(f'========= Loading {dataset} Data =========')
     feature_columns, train_data, test_data = dataloader.load_data(dataset, basepath, sample_size,
                                                                   train_config['test_ratio'], train_file)
@@ -45,7 +45,8 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
-    logger.info(f'test AUC: {res[1]}')
+    res = dict(zip(model.metrics_names, res))
+    logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
     export_all(directory, bcfg, model, train_history, res, cost)

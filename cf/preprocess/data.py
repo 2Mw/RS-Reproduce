@@ -2,12 +2,11 @@ import time
 import pickle
 import numpy as np
 import pandas as pd
-import argparse
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
 from cf.preprocess import criteo, datasets
-from feature_column import *
+from cf.preprocess.feature_column import DenseFeat, SparseFeat
 
 # consts
 _pickle = 'pickle'
@@ -140,6 +139,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
                 all_exists = False
                 break
     else:
+        all_exists = False
         os.mkdir(data_dir)
 
     feature_columns, train_data, test_data = None, None, None

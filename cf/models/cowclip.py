@@ -5,7 +5,7 @@ import tensorflow as tf
 
 
 class Cowclip(Model):
-    def __init__(self, sparse_embed_dim: int, clip: float = 0, log: bool = True, log_freq: int = 100, bound: float = 0,
+    def __init__(self, sparse_embed_dim: int, clip: float = 0, bound: float = 0, log: bool = False, log_freq: int = 100,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.clip = clip
@@ -88,21 +88,26 @@ class Cowclip(Model):
         embed_gradients = [gradients[i] for i in embed_index]
         dense_gradients = [gradients[i] for i in dense_index]
         with record_env:
-            tf.summary.scalar(
-                "lr/dense", self.optimizer.optimizer_specs[1]['optimizer']._decayed_lr('float32'))
-            tf.summary.scalar("loss/loss", loss)
-            tf.summary.scalar("global_norm/global", tf.linalg.global_norm(gradients))
-            tf.summary.scalar("global_norm/dense", tf.linalg.global_norm(dense_gradients))
-            tf.summary.scalar("global_norm/embed", tf.linalg.global_norm(embed_vars))
-            tf.summary.scalar("global_norm/var_dense", tf.linalg.global_norm(dense_vars))
-            tf.summary.scalar("global_norm/var_embed", tf.linalg.global_norm(embed_gradients))
-
             if self.log:
+                specs = None
+                if hasattr(self.optimizer, 'optimizer_specs'):
+                    specs = self.optimizer.optimizer_specs
+                else:
+                    specs = self.optimizer.param_groups
+                tf.summary.scalar("lr/dense", specs[1]['optimizer']._decayed_lr('float32'))
+                tf.summary.scalar("loss/loss", loss)
+                tf.summary.scalar("global_norm/global", tf.linalg.global_norm(gradients))
+                tf.summary.scalar("global_norm/dense", tf.linalg.global_norm(dense_gradients))
+                tf.summary.scalar("global_norm/embed", tf.linalg.global_norm(embed_vars))
+                tf.summary.scalar("global_norm/var_dense", tf.linalg.global_norm(dense_vars))
+                tf.summary.scalar("global_norm/var_embed", tf.linalg.global_norm(embed_gradients))
+
+
                 for i, (variable, gradient) in enumerate(zip(trainable_vars, gradients)):
                     name = variable.name
                     opt_index = 0 if i in embed_index else 1
-                    m = self.optimizer.optimizer_specs[opt_index]["optimizer"].get_slot(variable, "m")
-                    v = self.optimizer.optimizer_specs[opt_index]["optimizer"].get_slot(variable, "v")
+                    m = specs[opt_index]["optimizer"].get_slot(variable, "m")
+                    v = specs[opt_index]["optimizer"].get_slot(variable, "v")
 
                     layer_norm = tf.norm(variable)
                     grad_norm = tf.norm(gradient)
