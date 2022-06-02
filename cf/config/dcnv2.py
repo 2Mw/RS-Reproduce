@@ -15,7 +15,7 @@ config = {
         'test_ratio': 1 / 7,
         'test_batch_size': 9012,
         # cowclip params
-        'cowclip': False,
+        'cowclip': True,
         'lr_embed': 1e-4,
         'clip': 1,
         'bound': 1e-5,
@@ -25,7 +25,7 @@ config = {
     'model': {
         # embeddings
         'embedding_reg': 0.,
-        'sample_size': 10,
+        'embedding_dim': 10,
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         # deep part

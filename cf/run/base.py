@@ -12,6 +12,8 @@ from cf.models.cowclip import Cowclip
 
 project_dir = cf.get_project_path()
 
+_RUN_EAGERLY = False
+
 
 def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '', **kwargs):
     """
@@ -53,7 +55,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
             optimizers = get_optimizer(opt, lr, lr_embed, int(steps), warmup, cowclip)
             # map layer and optimizers
             layers = [
-                # TODO 对于layer的名称需要进行修改
+                # 对于layer的名称需要进行修改
                 [x for x in model.layers if "sparse_emb_" in x.name or "linear0sparse_emb_" in x.name],
                 [x for x in model.layers if "sparse_emb_" not in x.name and "linear0sparse_emb_" not in x.name],
             ]
@@ -62,7 +64,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
         else:
             optimizer = get_optimizer(opt, lr)
         loss = tf.keras.losses.BinaryCrossentropy(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)
-        model.compile(loss=loss, optimizer=optimizer, metrics=model_config['metrics'])
+        model.compile(loss=loss, optimizer=optimizer, metrics=model_config['metrics'], run_eagerly=_RUN_EAGERLY)
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):

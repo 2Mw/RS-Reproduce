@@ -29,9 +29,11 @@ class Cowclip(Model):
 
         # assist vars
         name_to_layer = {x.name: x for x in self.trainable_variables}
+        # 前者保存 id，后者保存出现的次数
         uniq_ids, uniq_cnt = dict(), dict()
         for k, v in data[0].items():
             if k[0] != "I":
+                # 对于类别型数据，查看其unique的值和数量
                 y, _, count = tf.unique_with_counts(v)
                 uniq_ids[k] = y
                 uniq_cnt[k] = count
@@ -47,14 +49,13 @@ class Cowclip(Model):
         gradients = tape.gradient(loss, trainable_vars)
 
         # clip
-        name_to_gradient = {
-            x.name: g for x, g in zip(self.trainable_variables, gradients)
-        }
-        embed_index = [
-            i for i, x in enumerate(trainable_vars) if "embeddings" in x.name
-        ]
-        dense_index = [i for i in range(
-            len(trainable_vars)) if i not in embed_index]
+        # name_to_gradient = {
+        #     x.name: g for x, g in zip(self.trainable_variables, gradients)
+        # }
+        # 找到所有的 embedding 在trainable_vars中的索引
+        embed_index = [i for i, x in enumerate(trainable_vars) if "embeddings" in x.name]
+        # 找到所有的 dense 在trainable_vars中的索引
+        dense_index = [i for i in range(len(trainable_vars)) if i not in embed_index]
         embed_vars = [trainable_vars[i] for i in embed_index]
         dense_vars = [trainable_vars[i] for i in dense_index]
         embed_gradients = [gradients[i] for i in embed_index]
@@ -78,17 +79,27 @@ class Cowclip(Model):
             embed_gradients = embed_gradients_clipped
 
         gradients = embed_gradients + dense_gradients
+        # Attention 原来的代码可能会导致 grad 和 feature 不对应，因此在此处修改
+        new_grad = []
+        e, d = 0, 0
+        for i in range(len(trainable_vars)):
+            if i in embed_index:
+                new_grad.append(embed_gradients[e])
+                e += 1
+            elif i in dense_index:
+                new_grad.append(dense_gradients[d])
+                d += 1
 
         # update
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
+        self.optimizer.apply_gradients(zip(new_grad, trainable_vars))
 
         # =====
         # Logging
         # =====
-        embed_gradients = [gradients[i] for i in embed_index]
-        dense_gradients = [gradients[i] for i in dense_index]
         with record_env:
             if self.log:
+                embed_gradients = [gradients[i] for i in embed_index]
+                dense_gradients = [gradients[i] for i in dense_index]
                 specs = None
                 if hasattr(self.optimizer, 'optimizer_specs'):
                     specs = self.optimizer.optimizer_specs
@@ -101,7 +112,6 @@ class Cowclip(Model):
                 tf.summary.scalar("global_norm/embed", tf.linalg.global_norm(embed_vars))
                 tf.summary.scalar("global_norm/var_dense", tf.linalg.global_norm(dense_vars))
                 tf.summary.scalar("global_norm/var_embed", tf.linalg.global_norm(embed_gradients))
-
 
                 for i, (variable, gradient) in enumerate(zip(trainable_vars, gradients)):
                     name = variable.name
@@ -125,6 +135,7 @@ class Cowclip(Model):
         return ret
 
     def cow_clip(self, w, g, ratio=1., ids=None, cnts=None, min_w=0.03, const=False):
+        # 算法的核心部分
         if isinstance(g, tf.IndexedSlices):
             # FIXME: This part is not tested
             values = tf.convert_to_tensor(g.values)
