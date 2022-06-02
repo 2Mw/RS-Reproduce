@@ -2,7 +2,7 @@
 
 The implementation of various recommender system models (Tensorflow).
 
-## 1. The architecture of documents
+## 1. The architecture of the project
 
 ```
 RS
@@ -41,7 +41,8 @@ RS
 
 ## Reference
 
-1. https://deepctr-doc.readthedocs.io/en/latest/Quick-Start.html#getting-started-4-steps-to-deepctr
+1. [DeepCTR](https://deepctr-doc.readthedocs.io/en/latest/Quick-Start.html#getting-started-4-steps-to-deepctr)
+2. [Cowclip](https://github.com/bytedance/LargeBatchCTR)
 
 ## Appendix
 
@@ -50,3 +51,7 @@ RS
 2. In the Callback(keras.callbacks.Callback) of lower version of tensorflow (<=2.4.0), if
    set `self.model.stop_training = True`, the training process will stop in the end of **epoch**, while higher version
    of tf will stop in the end of this **step**.
+3. If you wanna to modify the process of keras function `fit()`, you can inherit the class `keras.model.Model`, then
+   override the function `train_step()`(Learnt from cowclip model).
+4. Some imports such as `from keras.callbacks import Callback` may not work in lower version of tensorflow 2.X(<=2.3.0),
+   then you should replace it with `from tensorflow.keras.callbacks import Callback`

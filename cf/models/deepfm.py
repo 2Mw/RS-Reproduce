@@ -3,9 +3,7 @@ from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp
 from cf.utils import tensor
-from keras.layers import Input
-import os
-from cf.models.base import *
+from cf.models.base import get_embedding, model_summary, form_x
 
 
 class DeepFM(Model):
@@ -13,7 +11,7 @@ class DeepFM(Model):
         # TODO 需要修复
         """
 
-        :param feature_columns:  A list. [{'name':, 'feature_num':, 'dim':}, ...]
+        :param feature_columns:  A list. [{'name':, 'vocab_size':, 'dim':}, ...]
         :param config:  Hyper parameters configurations.
         :param directory: The directory of the model.
         """
@@ -29,19 +27,18 @@ class DeepFM(Model):
         self.map_dict = {}
         self.feature_len = 0
         self.field_num = len(feature_columns)
-        for feature in feature_columns:
-            self.map_dict[feature['name']] = feature['feature_num']
-            self.feature_len += feature['feature_num']
+        for f in feature_columns:
+            self.map_dict[f.name] = f.vocab_size
+            self.feature_len += f.vocab_size
         # Layer initialization
-        self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_columns, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.fm = fm.FMLayer(self.feature_len, model_cfg['fm_w_reg'])
         self.mlp = mlp.MLP(model_cfg['hidden_units'], model_cfg['activation'], model_cfg['dropout'])
         self.dense = keras.layers.Dense(units=1, activation=None)
 
     def call(self, inputs, **kwargs):
         # embedding, (batch_size, embedding_dim*fields)
-        sparse_embedding = form_x(inputs, self.ebd, self.numeric_same)
+        sparse_embedding = form_x(inputs, self.ebd, False)
         sparse_embedding = tensor.to2DTensor(sparse_embedding)
         # wide
         sparse_inputs = self._index_mapping(inputs, self.map_dict)

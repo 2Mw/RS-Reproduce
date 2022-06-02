@@ -1,28 +1,26 @@
 config = {
     'files': {
-        "criteo_base": "data/criteo",
-        "criteo_train": "train.txt",
-        "criteo_test": "test.txt",
+        'criteo_base': 'data/criteo',
+        'criteo_train': 'train.txt',
+        'criteo_test': 'test.txt',
     },
 
     'train': {
-        "epochs": 3,
-        "optimizer": 'Adam',
+        'epochs': 3,
+        'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
-        "sample_size": -1,
-        "batch_size": 4096,
-        "lr": 0.0005,
-        'val_ratio': 0.076,
-        'test_ratio': 0.07,
+        'sample_size': -1,
+        'batch_size': 4096,
+        'lr': 0.0005,
+        'test_ratio': 1/7,
         'test_batch_size': 4096
     },
 
     'model': {
         # embeddings
         'embedding_reg': 0.,
-        "embedding_dim": 8,
+        'sample_size': 10,
         'l2_reg_embedding': 1e-5,
-        'numeric_same_dim': True,  # 表示和categorical数据维度一致
         'embedding_device': 'gpu',
         # deep part
         'dropout': 0,
@@ -40,6 +38,6 @@ config = {
         'agg_order': 3,
         'agg_filters': 64,
         # evaluate part
-        'metrics': ['AUC']
+        'metrics': ['AUC', 'BCE']
     }
 }

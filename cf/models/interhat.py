@@ -1,27 +1,29 @@
 import tensorflow as tf
-from tensorflow import keras
 from keras.models import Model
 from cf.layers.attention import MultiheadAttention, AggregationAttention
 from cf.layers.mlp import MLP
-import os
-from keras.layers import Input, Embedding, Conv1D, Dense
-from cf.models.base import *
+from keras.layers import Conv1D, Dense
+from cf.models.base import model_summary, form_x, get_embedding
+from cf.preprocess.feature_column import SparseFeat
 
 
 class InterHAt(Model):
     def __init__(self, feature_column, config, directory: str = '', *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # model params
         self.feature_column = feature_column
         self.directory = directory
         model_cfg = config['model']
         self.embedding_dim = model_cfg['embedding_dim']
         dk = model_cfg['att_dk']
         head_num = model_cfg['att_head_num']
-        self.attention = MultiheadAttention(dk, head_num, model_cfg['att_dropout'])
         self.trim_dense = Dense(dk, 'relu')
-        self.ff = MLP([4 * dk, dk], model_cfg['activation'], model_cfg['dropout'],
-                      model_cfg['use_bn'], model_cfg['use_residual'])
         agg_order = model_cfg['agg_order']
+        self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_column)))
+        # model layers
+        self.attention = MultiheadAttention(dk, head_num, model_cfg['att_dropout'])
+        self.ff = MLP([4 * dk, dk], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+                      model_cfg['use_residual'])
         self.agg = [AggregationAttention(dk, model_cfg['regularization']) for _ in range(agg_order)]
         self.pool = Conv1D(model_cfg['agg_filters'], 1)
         self.weighted_dense = Dense(1, None, False)
@@ -29,18 +31,17 @@ class InterHAt(Model):
             Dense(self.embedding_dim // 2, model_cfg['activation'], use_bias=False),
             Dense(1, use_bias=False)
         ]
-
-        self.numeric_same = model_cfg['numeric_same_dim']
-        self.ebd = get_embedding(self, feature_column, self.embedding_dim, self.numeric_same, model_cfg['embedding_device'])
+        self.ebd = get_embedding(feature_column, self.embedding_dim, model_cfg['embedding_device'])
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
+        # TODO dense_x 未计算
         # get embedding
-        embedding = form_x(inputs, self.ebd, self.numeric_same)
+        sparse_x, dense_x = form_x(inputs, self.ebd, True)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
-        x = tf.reshape(embedding, [-1, len(self.feature_column), self.embedding_dim])
+        x = tf.reshape(sparse_x, [-1, len(self.feature_column), self.embedding_dim])
 
         x = self.attention(x)  # (batch, F, dk*head)
 
@@ -64,7 +65,7 @@ class InterHAt(Model):
         mapped_feature = self.pool(all_feature)
 
         # context vector
-        weights = tf.nn.softmax(self.weighted_dense(mapped_feature))    # (Batch, agg_order)
+        weights = tf.nn.softmax(self.weighted_dense(mapped_feature))  # (Batch, agg_order)
 
         # weighted sum
         weighted_sum_feature = tf.reduce_sum(tf.multiply(all_feature, weights), axis=1)  # (agg_order)

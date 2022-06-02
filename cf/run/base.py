@@ -5,14 +5,14 @@ import keras.optimizers
 import tensorflow as tf
 import cf
 from cf.models import MODULES as pool
-from cf.preprocess.criteo import *
+import tensorflow_addons as tfa
 from cf.utils.logger import logger
-from tensorflow._api.v2.compat.v1 import RunOptions, RunMetadata
+from cf.utils.config import get_date
+from cf.models.cowclip import Cowclip
 
 project_dir = cf.get_project_path()
 
-
-def initModel(model_name: str, cfg, feature_columns, directory, weights: str = ''):
+def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '', **kwargs):
     """
     有机的加载模型，可以从已有权重中继续训练模型
 
@@ -25,13 +25,43 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     """
     train_config = cfg['train']
     model_config = cfg['model']
-    # mirrored_strategy = tf.distribute.MirroredStrategy()
-    # with mirrored_strategy.scope():
-    ins = pool.get(model_name)
-    model = ins(feature_columns, cfg, directory)
-    model.summary()
-    optimizer = get_optimizer(train_config['optimizer'], train_config['lr'])
-    model.compile(loss=train_config['loss'], optimizer=optimizer, metrics=model_config['metrics'])
+    cowclip = train_config.get('cowclip')
+    opt = train_config['optimizer']
+    lr = train_config['lr']
+    lr_embed, warmup = 0, 0
+    if cowclip is True:
+        lr_embed = train_config['lr_embed']
+        warmup = train_config['warmup']
+
+    mirrored_strategy = tf.distribute.MirroredStrategy()
+    with mirrored_strategy.scope():
+        ins = pool.get(model_name)
+        model = ins(feature_columns, cfg, directory)
+        model.summary()
+        if cowclip:
+            if not isinstance(model, Cowclip):
+                e = 'The model is not subclass of Cowclip but set cowclip true.'
+                logger.error(e)
+                raise RuntimeError(e)
+            # warmup 的步数
+            steps = kwargs.get('steps')
+            if steps is None:
+                e = '`steps` is not set when cowclip is True'
+                logger.error(e)
+                raise ValueError(e)
+            optimizers = get_optimizer(opt, lr, lr_embed, int(steps), warmup, cowclip)
+            # map layer and optimizers
+            layers = [
+                # TODO 对于layer的名称需要进行修改
+                [x for x in model.layers if "sparse_emb_" in x.name or "linear0sparse_emb_" in x.name],
+                [x for x in model.layers if "sparse_emb_" not in x.name and "linear0sparse_emb_" not in x.name],
+            ]
+            optimizers_and_layers = list(zip(optimizers, layers))
+            optimizer = tfa.optimizers.MultiOptimizer(optimizers_and_layers)
+        else:
+            optimizer = get_optimizer(opt, lr)
+        loss = tf.keras.losses.BinaryCrossentropy(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)
+        model.compile(loss=loss, optimizer=optimizer, metrics=model_config['metrics'])
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):
@@ -61,42 +91,45 @@ def evaluate(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     logger.info(res)
 
 
-def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, train_file, embedding_dim):
+def create_result_dir(name, project_dir):
+    date = get_date()
+    dirs = [name, date]
+    directory = os.path.join(project_dir, 'cf/result')
+    for d in dirs:
+        directory = os.path.join(directory, d)
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+    return directory
+
+
+def get_optimizer(name, lr, lr_emb=None, steps=None, warmup=False, cowclip=False, clipnorm: float = 10):
     """
-    Load feature columns, train data, test data from files.
+    Get optimizer for name. If cowclip is True, lr_emb is required.
 
-    :param dataset: The name of dataset
-    :param base: The base filepath of dataset.
-    :param sample_size: The size of train data.
-    :param test_ratio: The ratio of test data.
-    :param train_file: The name of train data file.
-    :param embedding_dim: The dimension of embedding.
-    :return: feature_columns, train_data, test_data
+    :param name: optimizer name
+    :param lr: learning rate
+    :param lr_emb: learning rate for embedding
+    :param steps: steps per epoch if cowclip is true
+    :param cowclip: if True, use cowclip to train, return a list of optimizers for embedding and dense training.
+    :param clipnorm: clipnorm
+    :return:
     """
-    if sample_size == -1:
-        data_dir = os.path.join(base, f'data_all_{embedding_dim}')
+    if cowclip:
+        if lr_emb is None or steps is None:
+            e = f'You must set lr_embed and steps if cowclip is True'
+            logger.error(e)
+            raise ValueError(e)
+        if name.lower() != 'adam':
+            e = f'Cowclip only support optmizer adam, so we change optimizer to adam.'
+            logger.warning(e)
+        lr_fn = tf.keras.optimizers.schedules.PolynomialDecay(1e-8, steps, lr, power=1) if warmup else lr
+        optimizers = [
+            tf.keras.optimizers.Adam(learning_rate=lr_emb),
+            tf.keras.optimizers.Adam(learning_rate=lr_fn)
+        ]
+        return optimizers
     else:
-        data_dir = os.path.join(base, f'data_{sample_size}_{embedding_dim}')
-    if os.path.exists(data_dir):
-        logger.info(f'读取已保存数据')
-        feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
-        train_data = pickle.load(open(f'{data_dir}/train_data.pkl', 'rb'))
-        test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
-    else:
-        logger.info(f'数据处理中')
-        feature_columns, train_data, test_data = None, None, None
-        if dataset.lower() == 'criteo':
-            feature_columns, train_data, test_data = create_criteo_dataset(train_file, sample_size, test_ratio)
-        os.mkdir(data_dir)
-        pickle.dump(feature_columns, open(f'{data_dir}/feature.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
-        pickle.dump(train_data, open(f'{data_dir}/train_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
-        pickle.dump(test_data, open(f'{data_dir}/test_data.pkl', 'wb'), pickle.HIGHEST_PROTOCOL)
-        logger.info(f'保存数据')
-    return feature_columns, train_data, test_data
-
-
-def get_optimizer(name, lr, clipnorm: float = 10):
-    opt = keras.optimizers.get(name)
-    opt.learning_rate = lr
-    # opt.clipnorm = clipnorm if clipnorm is not None else 10
-    return opt
+        opt = keras.optimizers.get(name)
+        opt.learning_rate = lr
+        # opt.clipnorm = clipnorm if clipnorm is not None else 10
+        return opt
