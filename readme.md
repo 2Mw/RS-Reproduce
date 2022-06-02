@@ -32,6 +32,9 @@ RS
     4. [AutoInt 2018](https://arxiv.org/pdf/1810.11921.pdf)
     5. [InterHAt 2020](https://dl.acm.org/doi/pdf/10.1145/3336191.3371785)
 
+* Other:
+    1. [CowClip](https://arxiv.org/pdf/2204.06240)
+
 ## Dataset
 
 1. criteo
@@ -53,5 +56,9 @@ RS
    of tf will stop in the end of this **step**.
 3. If you wanna to modify the process of keras function `fit()`, you can inherit the class `keras.model.Model`, then
    override the function `train_step()`(Learnt from cowclip model).
-4. Some imports such as `from keras.callbacks import Callback` may not work in lower version of tensorflow 2.X(<=2.3.0),
-   then you should replace it with `from tensorflow.keras.callbacks import Callback`
+4. Some imports such as `from keras.callbacks import Callback` may not work in lower version of tensorflow 2.X(<2.4.0),
+   then you should replace it with `from tensorflow.keras.callbacks import Callback`.
+5. If you want to debug training process gracefully, you should set the flag `run_eagerly=True` in the `compile()`
+   function when construct the model.
+6. Original cowclip source code will crash when gradient because there are mismatch between gradient and trainable
+   variables(In the `train_step` function).

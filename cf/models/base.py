@@ -6,6 +6,8 @@ from tensorflow import keras
 import os
 from cf.utils.logger import logger
 from cf.preprocess.feature_column import SparseFeat
+from cf.models.cowclip import Cowclip
+from cf.utils.logger import logger
 
 
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
@@ -71,7 +73,16 @@ def form_x(inputs, embedding, divide: bool):
     if divide:
         return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
     else:
-        return tf.concat(ebd_x+dense_x, axis=-1)
+        return tf.concat(ebd_x + dense_x, axis=-1)
+
+
+def checkCowclip(instance, cowclip_flag):
+    if isinstance(instance, Cowclip) and cowclip_flag:
+        return
+    else:
+        e = f'The setting of cowclip mismatch. You should inherit Cowclip class and set cowclip flag `True` together.'
+        logger.error(e)
+        raise e
 
 
 if __name__ == '__main__':

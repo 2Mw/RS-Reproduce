@@ -4,10 +4,12 @@ from keras.models import Model
 from cf.layers import fm, mlp
 from cf.utils import tensor
 from cf.models.base import get_embedding, model_summary, form_x
+from cf.models.cowclip import Cowclip
+from cf.models.base import checkCowclip
 
 
-class DeepFM(Model):
-    def __init__(self, feature_columns, config, directory: str = ''):
+class DeepFM(Cowclip):
+    def __init__(self, feature_columns, config, directory: str = '', *args, **kwargs):
         # TODO 需要修复
         """
 
@@ -15,14 +17,12 @@ class DeepFM(Model):
         :param config:  Hyper parameters configurations.
         :param directory: The directory of the model.
         """
-        super(DeepFM, self).__init__()
+        # model params
         self.directory = directory
         self.feature_column = feature_columns
-        # Load configuration
         self.config = config
         model_cfg = config['model']
-        self.training_cfg = config['train']
-        # Load parameters
+        train_cfg = config['train']
         self.embedding_dim = model_cfg['embedding_dim']
         self.map_dict = {}
         self.feature_len = 0
@@ -30,6 +30,14 @@ class DeepFM(Model):
         for f in feature_columns:
             self.map_dict[f.name] = f.vocab_size
             self.feature_len += f.vocab_size
+        # cowclip params
+        if train_cfg['cowclip']:
+            checkCowclip(self, train_cfg['cowclip'])
+            clip = train_cfg['clip']
+            bound = train_cfg['bound']
+            super(DeepFM, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
+        else:
+            super(DeepFM, self).__init__(*args, **kwargs)
         # Layer initialization
         self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.fm = fm.FMLayer(self.feature_len, model_cfg['fm_w_reg'])

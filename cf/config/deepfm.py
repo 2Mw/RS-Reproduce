@@ -6,14 +6,20 @@ config = {
     },
 
     'train': {
-        'epochs': 3,
+        'epochs': 10,
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
         'sample_size': -1,
         'batch_size': 4096,
         'lr': 0.001,
-        'test_ratio': 1/7,
-        'test_batch_size': 9012
+        'test_ratio': 1 / 7,
+        'test_batch_size': 9012,
+        # cowclip params
+        'cowclip': True,
+        'lr_embed': 1e-4,
+        'clip': 1,
+        'bound': 1e-5,
+        'warmup': True,
     },
 
     'model': {
@@ -24,7 +30,7 @@ config = {
         'fm_w_reg': 0.,
         'embedding_reg': 0.,
         'activation': 'relu',
-        'sample_size': 10,
+        'embedding_dim': 10,
         'metrics': ['AUC', 'BCE']
     }
 }

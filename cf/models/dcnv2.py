@@ -6,10 +6,10 @@ from keras.layers import Dense
 from cf.models.base import get_embedding, form_x, model_summary
 from cf.layers import crossnet, mlp, linear
 from cf.utils.tensor import to2DTensor
+from cf.models.base import checkCowclip
 
 
-class DCNv2(Model):
-    # TODO 继承 Cowclip
+class DCNv2(Cowclip):
     def __init__(self, feature_column, config, directory="", *args, **kwargs):
         # model params
         self.directory = directory
@@ -19,6 +19,7 @@ class DCNv2(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         # cowclip params
         if train_cfg['cowclip']:
+            checkCowclip(self, train_cfg['cowclip'])
             clip = train_cfg['clip']
             bound = train_cfg['bound']
             super(DCNv2, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)

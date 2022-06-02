@@ -22,7 +22,6 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     basepath = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
     train_file = os.path.join(basepath, cfg['files'][f'{dataset}_train'])
     train_config = cfg['train']
-
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
     sample_size = train_config['sample_size']

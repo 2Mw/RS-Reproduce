@@ -5,21 +5,30 @@ from cf.layers.mlp import MLP
 from keras.layers import Conv1D, Dense
 from cf.models.base import model_summary, form_x, get_embedding
 from cf.preprocess.feature_column import SparseFeat
+from cf.models.cowclip import Cowclip
+from cf.models.base import checkCowclip
 
 
-class InterHAt(Model):
+class InterHAt(Cowclip):
     def __init__(self, feature_column, config, directory: str = '', *args, **kwargs):
-        super().__init__(*args, **kwargs)
         # model params
         self.feature_column = feature_column
         self.directory = directory
         model_cfg = config['model']
+        train_cfg = config['train']
         self.embedding_dim = model_cfg['embedding_dim']
         dk = model_cfg['att_dk']
         head_num = model_cfg['att_head_num']
-        self.trim_dense = Dense(dk, 'relu')
         agg_order = model_cfg['agg_order']
         self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_column)))
+        # cowclip params
+        if train_cfg['cowclip']:
+            checkCowclip(self, train_cfg['cowclip'])
+            clip = train_cfg['clip']
+            bound = train_cfg['bound']
+            super(InterHAt, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
+        else:
+            super(InterHAt, self).__init__(*args, **kwargs)
         # model layers
         self.attention = MultiheadAttention(dk, head_num, model_cfg['att_dropout'])
         self.ff = MLP([4 * dk, dk], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
@@ -27,6 +36,7 @@ class InterHAt(Model):
         self.agg = [AggregationAttention(dk, model_cfg['regularization']) for _ in range(agg_order)]
         self.pool = Conv1D(model_cfg['agg_filters'], 1)
         self.weighted_dense = Dense(1, None, False)
+        self.trim_dense = Dense(dk, 'relu')
         self.final_dense = [
             Dense(self.embedding_dim // 2, model_cfg['activation'], use_bias=False),
             Dense(1, use_bias=False)
@@ -41,7 +51,7 @@ class InterHAt(Model):
         # get embedding
         sparse_x, dense_x = form_x(inputs, self.ebd, True)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
-        x = tf.reshape(sparse_x, [-1, len(self.feature_column), self.embedding_dim])
+        x = tf.reshape(sparse_x, [-1, self.sparse_len, self.embedding_dim])
 
         x = self.attention(x)  # (batch, F, dk*head)
 

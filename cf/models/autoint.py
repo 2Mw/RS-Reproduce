@@ -6,9 +6,12 @@ from cf.models.base import get_embedding, model_summary, form_x
 from cf.layers import linear, mlp
 from cf.preprocess.feature_column import SparseFeat
 from cf.utils.tensor import to2DTensor
+from cf.models.cowclip import Cowclip
+from cf.models.base import checkCowclip
 
 
-class AutoInt(Model):
+class AutoInt(Cowclip):
+    # TODO Attention base model may has not good performance.
     def __init__(self, feature_columns, config, directory: str = "", *args, **kwargs):
         """
         AutoInt model
@@ -17,13 +20,21 @@ class AutoInt(Model):
         :param feature_columns: The feature columns.
         :param directory: The output directory.
         """
-        super(AutoInt, self).__init__(*args, **kwargs)
         # parameters
         model_cfg = config['model']
+        train_cfg = config['train']
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
         self.feature_column = feature_columns
         self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
+        # cowclip params
+        if train_cfg['cowclip']:
+            checkCowclip(self, train_cfg['cowclip'])
+            clip = train_cfg['clip']
+            bound = train_cfg['bound']
+            super(AutoInt, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
+        else:
+            super(AutoInt, self).__init__(*args, **kwargs)
         # att params
         self.att_size = model_cfg['att_size']
         self.head_num = model_cfg['att_head_num']
@@ -40,7 +51,6 @@ class AutoInt(Model):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        # TODO 未使用 dense_x
         linear_out = self.linear(inputs)
         # Attention
         att_x, dense_x = form_x(inputs, self.ebd, True)

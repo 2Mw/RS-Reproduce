@@ -4,9 +4,11 @@ from keras.layers import Dense
 from cf.models.base import get_embedding, model_summary, form_x
 from cf.layers import crossnet, mlp, linear
 from cf.utils import tensor
+from cf.models.cowclip import Cowclip
+from cf.models.base import checkCowclip
 
 
-class DCN(Model):
+class DCN(Cowclip):
     def __init__(self, feature_columns, config, directory: str = '', *args, **kwargs):
         """
         Deep & Cross Network
@@ -17,16 +19,24 @@ class DCN(Model):
         :param args:
         :param kwargs:
         """
-        super(DCN, self).__init__(*args, **kwargs)
         # model params
         self.directory = directory
         model_cfg = config['model']
+        train_cfg = config['train']
         self.feature_column = feature_columns
         self.hidden_units = model_cfg['hidden_units']
         self.layer_num = len(self.hidden_units)
         self.dnn_dropout = model_cfg['dropout']
         self.activation = model_cfg['activation']
         self.embedding_dim = model_cfg['embedding_dim']
+        # cowclip params
+        if train_cfg['cowclip']:
+            checkCowclip(self, train_cfg['cowclip'])
+            clip = train_cfg['clip']
+            bound = train_cfg['bound']
+            super(DCN, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
+        else:
+            super(DCN, self).__init__(*args, **kwargs)
         # model layers
         self.linear = linear.Linear(feature_columns)
         self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
