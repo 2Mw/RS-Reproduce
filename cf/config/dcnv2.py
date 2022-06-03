@@ -10,7 +10,7 @@ config = {
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
         'sample_size': -1,
-        'batch_size': 4096,
+        'batch_size': 15360,
         'lr': 0.0005,
         'test_ratio': 1 / 7,
         'test_batch_size': 9012,
@@ -19,7 +19,7 @@ config = {
         'lr_embed': 1e-4,
         'clip': 1,
         'bound': 1e-5,
-        'warmup': True,
+        'warmup': False,
     },
 
     'model': {

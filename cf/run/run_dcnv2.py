@@ -2,6 +2,7 @@ import copy
 import os.path
 from cf.config.dcnv2 import config
 from cf.utils.config import *
+import cf
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
@@ -39,9 +40,9 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     earlyStop = EarlyStopping(min_delta=0.0001, patience=1)
     aucStop = AbnormalAUC(0.82, steps=2000, directory=directory, gap_steps=800)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
-    tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
+    # tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
-                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
+                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
     logger.info(f'Result: {res}')

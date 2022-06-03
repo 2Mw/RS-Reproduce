@@ -12,8 +12,8 @@ config=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/config.y
 weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/weights.004-0.46825.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/config.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220527180953-/weights.004-0.46825.hdf5
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220603130159/0.yaml
+t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)*.log | sort -r | head -n 1)
@@ -21,7 +21,7 @@ lastlog=$(shell ls -f $(proj)/log/$(model)*.log | sort -r | head -n 1)
 pdir=
 port=6006
 ## Tune order
-name=
+name=dcn
 tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:
