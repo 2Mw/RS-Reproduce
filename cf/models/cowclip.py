@@ -141,6 +141,14 @@ class Cowclip(Model):
             ret[m.name] = m.result()
         return ret
 
+    def test_step(self, data):
+        y_pred = self(data[0], training=False)
+        # Updates stateful loss metrics.
+        self.compiled_loss(data[1], y_pred, regularization_losses=self.losses)
+
+        self.compiled_metrics.update_state(data[1], y_pred)
+        return {m.name: m.result() for m in self.metrics}
+
     def cow_clip(self, w, g, ratio=1., ids=None, cnts=None, min_w=0.03, const=False):
         # 算法的核心部分
         isIdxSlice = False
@@ -173,7 +181,7 @@ class Cowclip(Model):
         l2norm_row = tf.sqrt(l2sum_row_safe)
         intermediate = values * tf.expand_dims(clip_t, -1)
         del g
-        gc.collect()
+        # gc.collect()
         g_clip = intermediate / tf.expand_dims(tf.maximum(l2norm_row, clip_t), -1)
 
         if isIdxSlice:
