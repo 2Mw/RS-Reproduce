@@ -4,7 +4,6 @@ from keras.regularizers import l2
 import tensorflow as tf
 from tensorflow import keras
 import os
-from cf.utils.logger import logger
 from cf.preprocess.feature_column import SparseFeat
 from cf.models.cowclip import Cowclip
 from cf.utils.logger import logger
@@ -20,10 +19,7 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
     :param prefix: The prefix of embedding name.
     :return: Embedding set, {'C1': Embedding(), 'C2': Embedding(), ... }.
     """
-    device = device.lower()
-    device = f'/{device}:0' if device == 'cpu' else device
-    logger.info(f'Set embedding in device: {device}')
-    with tf.device(device):
+    with tf.device(device.lower()):
         ebd = {}
         for f in feature_columns:
             if isinstance(f, SparseFeat):
