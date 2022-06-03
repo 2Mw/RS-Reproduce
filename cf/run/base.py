@@ -9,6 +9,7 @@ import tensorflow_addons as tfa
 from cf.utils.logger import logger
 from cf.utils.config import get_date
 from cf.models.cowclip import Cowclip
+import json
 
 project_dir = cf.get_project_path()
 
@@ -48,8 +49,8 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
                 raise RuntimeError(e)
             # warmup 的步数
             steps = kwargs.get('steps')
-            if steps is None:
-                e = '`steps` is not set when cowclip is True'
+            if steps is None and warmup:
+                e = '`steps` is not set when warmup is True'
                 logger.error(e)
                 raise ValueError(e)
             optimizers = get_optimizer(opt, lr, lr_embed, int(steps), warmup, cowclip)
@@ -89,8 +90,12 @@ def evaluate(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     else:
         raise FileNotFoundError(f'{data_dir} not found.')
     train_config = cfg['train']
-    model = initModel(model_name, cfg, feature_columns, '', weight)
+    model = initModel(model_name, cfg, feature_columns, '', weight, steps=100)
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
+    res = dict(zip(model.metrics_names, res))
+    res['weight'] = weight
+    f = open(os.path.join(os.path.dirname(weight), f'evaluate-{get_date()[4:]}.json'), 'w')
+    json.dump(res, f)
     logger.info(res)
 
 

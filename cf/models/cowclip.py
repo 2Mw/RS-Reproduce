@@ -180,3 +180,11 @@ class Cowclip(Model):
             return tf.IndexedSlices(g_clip, indices, shape)
         else:
             return g_clip
+
+    def test_step(self, data):
+        y_pred = self(data[0], training=False)
+        # Updates stateful loss metrics.
+        self.compiled_loss(data[1], y_pred, regularization_losses=self.losses)
+
+        self.compiled_metrics.update_state(data[1], y_pred)
+        return {m.name: m.result() for m in self.metrics}

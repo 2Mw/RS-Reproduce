@@ -62,3 +62,5 @@ RS
    function when construct the model.
 6. Original cowclip source code will crash when gradient because there are mismatch between gradient and trainable
    variables(In the `train_step` function).
+7. For cowclip model in lower version of tensorflow 2.X(<2.4.0), you should also implement the function `test_step`
+   otherwise it will cause OOM error because of bad conversion of tensor.
