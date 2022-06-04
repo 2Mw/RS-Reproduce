@@ -12,7 +12,7 @@ config = {
         'sample_size': -1,
         'batch_size': 4096,
         'lr': 0.001,
-        'test_ratio': 1 / 7,
+        'test_ratio': 1 / 14,
         'test_batch_size': 9012,
         # cowclip params
         'cowclip': True,
