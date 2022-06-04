@@ -5,8 +5,9 @@ import pandas as pd
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
-from cf.preprocess import criteo, datasets
+from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick
 from cf.preprocess.feature_column import DenseFeat, SparseFeat
+from sklearn.model_selection import train_test_split
 
 # consts
 _pickle = 'pickle'
@@ -18,7 +19,7 @@ data_types = [_pickle, _feather]
 
 def read_data(file: str, sample_size, sep, names=None):
     """
-    Read dataset from files.
+    Read dataset from files by pandas.
 
     :param sep: The delimiter of row items.
     :param file: The filepath of source.
@@ -36,6 +37,31 @@ def read_data(file: str, sample_size, sep, names=None):
     else:
         df = df.get_chunk()
     return df
+
+
+def read_raw_data(file: str, sample_num, sep: str):
+    """
+    Read file by builtin function.
+
+    :param file: The filepath of source.
+    :param sample_num: The number of rows you want to read, -1 means all.
+    :param sep: The delimiter of row items.
+    :return: a group seperated by `sep`
+    """
+    if not os.path.exists(file):
+        e = f'File:{file} not exists'
+        logger.error(e)
+        raise FileNotFoundError(e)
+    content = []
+    length = 0
+    with open(file, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        for line in lines:
+            if length == sample_num:
+                break
+            content.append(line.strip().split(sep))
+            length += 1
+    return content
 
 
 def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: str = 'mms'):
@@ -158,6 +184,12 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         logger.info(f'=== Start to preprocess {dataset} data ===')
         if dataset == 'criteo':
             feature_columns, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio)
+        elif dataset == 'ml':
+            feature_columns, train_data, test_data = movielens.create_dataset(train_file, sample_size, test_ratio)
+        elif dataset == 'avazu':
+            feature_columns, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio)
+        elif dataset == 'tbadclick':
+            feature_columns, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio)
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:
@@ -169,3 +201,25 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             logger.error(e)
             raise NotImplementedError(e)
     return feature_columns, train_data, test_data
+
+
+def split_dataset(df, fc, test_size):
+    """
+    Split dataset to train and test dataset according to test_size.
+
+    :param df: The dataframe of dataset.
+    :param fc: The feature columns of dataset.
+    :param test_size: The ratio of test data.
+    :return: train_data, test_data
+    """
+    if test_size > 0:
+        train, test = train_test_split(df, test_size=test_size)
+        train_x = {f.name: train[f.name].values.astype(f.dtype) for f in fc}
+        train_y = train['label'].values.astype('int32')
+        test_x = {f.name: test[f.name].values.astype(f.dtype) for f in fc}
+        test_y = test['label'].values.astype('int32')
+        return fc, (train_x, train_y), (test_x, test_y)
+    else:
+        train_x = {f.name: df[f.name].values.astype(f.dtype) for f in fc}
+        train_y = df['label'].values.astype('float32')
+        return fc, (train_x, train_y)

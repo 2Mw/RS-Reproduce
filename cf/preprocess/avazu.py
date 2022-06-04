@@ -1,12 +1,8 @@
-import gc
-from sklearn.model_selection import train_test_split
 import cf.preprocess.data as base
 
-# IXX 表示数值型数据, CXX表示类别型数据
-dense_features = [f'I{i}' for i in range(1, 14)]  # 数值型数据
-sparse_features = [f'C{i}' for i in range(1, 27)]  # 分类型数据
-label = ['label']
-NAMES = label + dense_features + sparse_features
+sparse_features = [f'C{i}' for i in range(1, 22)]
+dense_features = []
+NAMES = ['id', 'label', 'hour'] + sparse_features + dense_features
 
 
 def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
@@ -23,7 +19,11 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     if test_size >= 1 or test_size < 0:
         raise ValueError(f'The test_size must in the range of (0,1), but your is {test_size}')
 
-    df = base.read_data(file, sample_num, '\t', NAMES)
+    df = base.read_data(file, sample_num, ',', NAMES)
+
+    df = df.iloc[1:, :]
+
+    df = df.astype('str')
 
     df = base.process(df, sparse_features, dense_features, numeric_process)
 

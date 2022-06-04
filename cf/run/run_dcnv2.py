@@ -45,10 +45,11 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
                               validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
+    res['dataset'] = dataset
     logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
-    export_all(directory, bcfg, model, train_history, res, cost)
+    export_all(directory, bcfg, model, train_history, res, cost, dataset)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 

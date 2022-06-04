@@ -29,6 +29,7 @@ class DCN(Cowclip):
         self.dnn_dropout = model_cfg['dropout']
         self.activation = model_cfg['activation']
         self.embedding_dim = model_cfg['embedding_dim']
+        self.linear_res = model_cfg['linear_res']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -49,7 +50,6 @@ class DCN(Cowclip):
 
     def call(self, inputs, training=None, mask=None):
         # x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
-        linear_out = self.linear(inputs)
         x = form_x(inputs, self.ebd, False)
         x = tensor.to2DTensor(x)
         # Cross Network
@@ -58,6 +58,8 @@ class DCN(Cowclip):
         dnn_x = self.mlp(x)
         # Concatenate
         total_x = tf.concat([cross_x, dnn_x], axis=-1)
-        # TODO 未加正则化
-        final = self.dense_final(total_x) + linear_out
-        return tf.nn.sigmoid(final)
+        y = self.dense_final(total_x)
+        if self.linear_res:
+            linear_out = self.linear(inputs)
+            y = y + linear_out
+        return tf.nn.sigmoid(y)

@@ -94,6 +94,7 @@ def evaluate(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
     res['weight'] = weight
+    res['dataset'] = dataset
     f = open(os.path.join(os.path.dirname(weight), f'evaluate-{get_date()[4:]}.json'), 'w')
     json.dump(res, f)
     logger.info(res)

@@ -1,8 +1,20 @@
 config = {
     'files': {
+        # Criteo
         'criteo_base': 'data/criteo',
         'criteo_train': 'train.txt',
         'criteo_test': 'test.txt',
+        # Movielens
+        'ml_base': 'data/movielens',
+        'ml_train': 'ratings.dat',
+        'ml_movie': 'movies.dat',
+        'ml_users': 'users.dat',
+        # Avazu
+        'avazu_base': 'data/avazu',
+        'avazu_train': 'train.csv',
+        # taobao click
+        'tbadclick_base': 'data/tb_adclick',
+        'tbadclick_train': 'raw_sample.csv'
     },
 
     'train': {
@@ -12,6 +24,7 @@ config = {
         'sample_size': -1,
         'batch_size': 7168,
         'lr': 0.001,
+        'val_ratio': 1 / 14,
         'test_ratio': 1 / 14,
         'test_batch_size': 9012,
         # cowclip params
@@ -27,6 +40,8 @@ config = {
         'embedding_reg': 0.,
         'embedding_dim': 10,
         'embedding_device': 'gpu',
+        # Linear residual:
+        'linear_res': False,
         # deep part
         'hidden_units': [512, 256, 128, 64],
         'dropout': 0.5,

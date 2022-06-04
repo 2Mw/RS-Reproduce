@@ -7,6 +7,8 @@ cli=$(proj)/cf/run/run_cli.py
 
 # Configs
 model=dcnv2
+# Dataset (criteo, ml, avazu)
+dataset=criteo
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220604102905/0.yaml
 weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220604211451/weights.0.8115-0.81377-4800.hdf5
@@ -26,11 +28,11 @@ tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:
 	@cd $(proj)
-	$(evcmd)
+	@$(evcmd)
 
 train:
 	@cd $(proj)
-	$(trcmd)
+	@$(trcmd)
 
 clear:
 	@clear
