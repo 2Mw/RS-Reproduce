@@ -37,18 +37,20 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     model = initModel(cfg, feature_columns, directory, weights, steps=steps)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
-    earlyStop = EarlyStopping(min_delta=0.0001, patience=1)
+    earlyStop = EarlyStopping(min_delta=0.0001, patience=2)
     aucStop = AbnormalAUC(0.82, steps=2000, directory=directory, gap_steps=800)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
     tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
+    logger.info(f'Train result: \n{train_history.history}\n')
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
+    res['dataset'] = dataset
     logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
-    export_all(directory, bcfg, model, train_history, res, cost)
+    export_all(directory, bcfg, model, train_history, res, cost, dataset)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 

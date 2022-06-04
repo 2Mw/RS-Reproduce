@@ -27,6 +27,7 @@ class AutoInt(Cowclip):
         self.directory = directory
         self.feature_column = feature_columns
         self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
+        self.linear_res = model_cfg['linear_res']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -51,7 +52,6 @@ class AutoInt(Cowclip):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        linear_out = self.linear(inputs)
         # Attention
         att_x, dense_x = form_x(inputs, self.ebd, True)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
@@ -63,5 +63,8 @@ class AutoInt(Cowclip):
         if len(self.units) > 0:
             dnn_out = self.mlp(tf.concat([att_x, dense_x], axis=-1))
             out = tf.concat([out, dnn_out], axis=-1)
-        out = self.final(out) + linear_out
-        return tf.nn.sigmoid(out)
+        y = self.final(out)
+        if self.linear_res:
+            linear_out = self.linear(inputs)
+            y = y + linear_out
+        return tf.nn.sigmoid(y)

@@ -54,7 +54,7 @@ def get_date() -> str:
     return time.strftime("%Y%m%d%H%M%S", time.localtime())
 
 
-def export_result(train_hist, val_res, directory: str, cost: float, model):
+def export_result(train_hist, val_res, directory: str, cost: float, model, dataset):
     """
     Export model training result to specified file. {directory}/result.json
 
@@ -63,9 +63,11 @@ def export_result(train_hist, val_res, directory: str, cost: float, model):
     :param train_hist: train_hist from model.fit()
     :param val_res: test result from model.evaluate()
     :param directory: the directory to export.
+    :param dataset: the dataset name.
     :return:
     """
     info = {
+        'dataset': dataset,
         'cost_seconds': cost,
         "params": {
             'builtin': model.count_params(),
@@ -86,7 +88,7 @@ def export_result(train_hist, val_res, directory: str, cost: float, model):
 
 
 def export_all(directory: str, config: object, model: keras.models.Model, train_hist: keras.callbacks.History, val_res,
-               cost):
+               cost, dataset):
     """
     Export all information of model.
 
@@ -96,10 +98,11 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     :param train_hist: train_hist from model.fit()
     :param val_res: test result from model.evaluate()
     :param cost: cost seconds.
+    :param dataset: the dataset name.
     :return:
     """
     export_config(config, directory)
-    export_result(train_hist, val_res, directory, cost, model)
+    export_result(train_hist, val_res, directory, cost, model, dataset)
     logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 

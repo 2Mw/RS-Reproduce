@@ -17,6 +17,7 @@ class DCNv2(Cowclip):
         train_cfg = config['train']
         self.feature_column = feature_column
         self.embedding_dim = model_cfg['embedding_dim']
+        self.linear_res = model_cfg['linear_res']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -39,11 +40,13 @@ class DCNv2(Cowclip):
 
     def call(self, inputs, training=None, mask=None):
         # 对于 类别型数据使用 embedding，对于数值型数值不使用 embedding
-        linear_out = self.linear(inputs)
         x = form_x(inputs, self.ebd, False)
         x = to2DTensor(x)
         cross_out = self.cross(x)
         dnn_out = self.mlp(x)
         total_x = tf.concat([cross_out, dnn_out], axis=-1)
-        y = self.final_dense(total_x) + linear_out
+        y = self.final_dense(total_x)
+        if self.linear_res:
+            linear_out = self.linear(inputs)
+            y = y + linear_out
         return tf.nn.sigmoid(y)

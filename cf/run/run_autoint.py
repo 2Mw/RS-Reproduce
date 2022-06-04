@@ -43,12 +43,13 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
+    logger.info(f'Train result: \n{train_history.history}\n')
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
     logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
-    export_all(directory, bcfg, model, train_history, res, cost)
+    export_all(directory, bcfg, model, train_history, res, cost, dataset)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 

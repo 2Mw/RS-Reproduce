@@ -91,12 +91,13 @@ class MetricsMonitor(Callback):
             with open(os.path.join(self.directory, f'{self.metric}_{epoch}.pickle'), 'wb') as f:
                 pickle.dump(self.records, f, pickle.HIGHEST_PROTOCOL)
             plt.figure()
-            plt.plot(self.records)
+            l = len(self.records)
+            plt.plot(np.linspace(0, l * self.sample_step, l), self.records)
             # plt.legend(f'epoch-{epoch}')
             plt.title(f'epoch-{epoch}')
             if epoch == 0:
                 m = np.max(self.records)
-                plt.ylim(m - 0.015, m + 0.003)
+                plt.ylim(m - 0.02, m)
             plt.xlabel('steps')
             plt.ylabel(self.metric)
             plt.savefig(os.path.join(self.directory, f'{self.metric}_curve_{epoch}.png'))
