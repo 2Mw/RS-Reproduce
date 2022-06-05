@@ -123,7 +123,8 @@ def gen_feature_columns(data, sparse_features, dense_features):
     return sparse + dense
 
 
-def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, train_file, data_type='pickle'):
+def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, train_file, data_type='pickle',
+              num_process: str = 'mms'):
     """
     Load feature columns, train data, test data from files.
 
@@ -133,6 +134,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
     :param test_ratio: The ratio of test data.
     :param train_file: The name of train data file.
     :param data_type: data store type, feather or pickle
+    :param num_process: The way of processing numerical feature ln-LogNormalize, kbd-KBinsDiscretizer, mms-MinMaxScaler
     :return: feature_columns, train_data, test_data
     """
     dataset = dataset.lower()
@@ -168,12 +170,12 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         all_exists = False
         os.mkdir(data_dir)
 
-    feature_columns, train_data, test_data = None, None, None
+    fc, train_data, test_data = None, None, None
     if all_exists:
         # files all exist
         logger.info(f'=== Read stored data ===')
         if data_type == _pickle:
-            feature_columns = pickle.load(open(f'{data_dir}/{files[0]}', 'rb'))
+            fc = pickle.load(open(f'{data_dir}/{files[0]}', 'rb'))
             train_data = pickle.load(open(f'{data_dir}/{files[1]}', 'rb'))
             test_data = pickle.load(open(f'{data_dir}/{files[2]}', 'rb'))
         elif data_type == _feather:
@@ -183,24 +185,24 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
     else:
         logger.info(f'=== Start to preprocess {dataset} data ===')
         if dataset == 'criteo':
-            feature_columns, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio)
+            fc, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'ml':
-            feature_columns, train_data, test_data = movielens.create_dataset(train_file, sample_size, test_ratio)
+            fc, train_data, test_data = movielens.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'avazu':
-            feature_columns, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio)
+            fc, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'tbadclick':
-            feature_columns, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio)
+            fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process)
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:
-            pickle.dump(feature_columns, open(f'{data_dir}/{files[0]}', 'wb'), pickle.HIGHEST_PROTOCOL)
+            pickle.dump(fc, open(f'{data_dir}/{files[0]}', 'wb'), pickle.HIGHEST_PROTOCOL)
             pickle.dump(train_data, open(f'{data_dir}/{files[1]}', 'wb'), pickle.HIGHEST_PROTOCOL)
             pickle.dump(test_data, open(f'{data_dir}/{files[2]}', 'wb'), pickle.HIGHEST_PROTOCOL)
         elif data_type == _feather:
             e = 'Dumping the type of feather files currently not supported.'
             logger.error(e)
             raise NotImplementedError(e)
-    return feature_columns, train_data, test_data
+    return fc, train_data, test_data
 
 
 def split_dataset(df, fc, test_size):

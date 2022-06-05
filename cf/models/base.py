@@ -7,6 +7,7 @@ import os
 from cf.preprocess.feature_column import SparseFeat
 from cf.models.cowclip import Cowclip
 from cf.utils.logger import logger
+from cf.layers.mlp import MLP
 
 
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
@@ -26,6 +27,8 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
                 ebd[f.name] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
                                         embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
                                         name=f'{prefix}_emb_{f.name}')
+            else:
+                ebd[f.name] = MLP([dim], None, 0, use_bn=True)
 
     return ebd
 
@@ -65,6 +68,7 @@ def form_x(inputs, embedding, divide: bool):
         if f[0] == 'C':
             ebd_x.append(embedding[f](v))
         else:
+            # TODO 解决注意力机制中数值型特征 Embedding 处理
             dense_x.append(tf.expand_dims(v, 1))
     if divide:
         return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
