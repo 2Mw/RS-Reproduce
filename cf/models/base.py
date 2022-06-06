@@ -7,6 +7,7 @@ import os
 from cf.preprocess.feature_column import SparseFeat
 from cf.models.cowclip import Cowclip
 from cf.utils.logger import logger
+from cf.layers.mlp import MLP
 
 
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
@@ -26,6 +27,8 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
                 ebd[f.name] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
                                         embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
                                         name=f'{prefix}_emb_{f.name}')
+            else:
+                ebd[f.name] = MLP([dim], None, 0, use_bn=True)
 
     return ebd
 
@@ -49,15 +52,16 @@ def model_summary(instance, feature_column, directory):
     model.summary()
 
 
-def form_x(inputs, embedding, divide: bool):
+def form_x(inputs, embedding, divide: bool, same_dim=False):
     """
     Generate the input `x` to the model， if attention_based is True, return (embedding_x, dense_x); if False return
     the concatenation of both.
 
-    :param inputs:
+
     :param embedding: The embedding lookup set.
     :param divide: If True return value is (embedding_x, dense_x), else return the concatenation of both.
-    :return:
+    :param same_dim: If the dimension of numeric features are same with sparse features, default False.
+    :return: if divide is True return `sparse_x, dense_x`, else return `concat(sparse_x, dense_x)`
     """
     ebd_x = []
     dense_x = []
@@ -65,7 +69,11 @@ def form_x(inputs, embedding, divide: bool):
         if f[0] == 'C':
             ebd_x.append(embedding[f](v))
         else:
-            dense_x.append(tf.expand_dims(v, 1))
+            if same_dim:
+                # 解决注意力机制中数值型特征 Embedding 处理
+                dense_x.append(embedding[f](v))
+            else:
+                dense_x.append(tf.expand_dims(v, 1))
     if divide:
         return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
     else:

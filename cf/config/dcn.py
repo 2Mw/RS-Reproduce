@@ -40,6 +40,7 @@ config = {
         'embedding_reg': 0.,
         'embedding_dim': 10,
         'embedding_device': 'gpu',
+        'numeric_same_dim': False,
         # Linear residual:
         'linear_res': False,
         # deep part

@@ -36,6 +36,7 @@ config = {
     },
 
     'model': {
+        'numeric_same_dim': False,
         'embedding_device': 'gpu',
         'hidden_units': [256, 128, 64],
         'dropout': 0.5,

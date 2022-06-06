@@ -48,7 +48,7 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
-    export_all(directory, bcfg, model, train_history, res, cost, dataset)
+    export_all(directory, bcfg, model, train_history, res, cost, dataset, weights)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 

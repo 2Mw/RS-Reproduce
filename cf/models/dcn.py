@@ -30,6 +30,7 @@ class DCN(Cowclip):
         self.activation = model_cfg['activation']
         self.embedding_dim = model_cfg['embedding_dim']
         self.linear_res = model_cfg['linear_res']
+        self.numeric_same_dim = model_cfg['numeric_same_dim']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])

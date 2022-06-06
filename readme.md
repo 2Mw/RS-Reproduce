@@ -65,3 +65,5 @@ RS
    variables(In the `train_step` function).
 7. For cowclip model in lower version of tensorflow 2.X(<2.4.0), you should also implement the function `test_step`
    otherwise it will cause OOM error because of bad conversion of tensor.
+8. For recommendation system, the numerical feature have large variance and hurt algorithms, so we should normalize
+   them(AutoInt C5.1).

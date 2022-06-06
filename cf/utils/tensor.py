@@ -2,7 +2,7 @@ import tensorflow as tf
 
 
 def to2DTensor(tensor):
-    """Keep 1st dimension, reshape to 2 dimension.
+    """Keep 1st dimension, reshape other dimensions to 2nd dimension.
 
     Args:
         tensor: tensor

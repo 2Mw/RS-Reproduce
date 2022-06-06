@@ -11,7 +11,6 @@ from cf.models.base import checkCowclip
 
 
 class AutoInt(Cowclip):
-    # TODO Attention base model may has not good performance.
     def __init__(self, feature_columns, config, directory: str = "", *args, **kwargs):
         """
         AutoInt model
@@ -28,6 +27,8 @@ class AutoInt(Cowclip):
         self.feature_column = feature_columns
         self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
         self.linear_res = model_cfg['linear_res']
+        # if numeric_same_dim = True, means model can take numeric feature into calculation directly.
+        self.numeric_same_dim = model_cfg['numeric_same_dim']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -53,13 +54,17 @@ class AutoInt(Cowclip):
 
     def call(self, inputs, training=None, mask=None):
         # Attention
-        att_x, dense_x = form_x(inputs, self.ebd, True)
-        # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
-        x = tf.reshape(att_x, [-1, self.sparse_len, self.embedding_dim])
+        att_x, dense_x = form_x(inputs, self.ebd, True, self.numeric_same_dim)
+        # 对于注意力机制层需要将shape修改为 (batch, feature, embedding)
+        if self.numeric_same_dim:
+            x = tf.concat([att_x, dense_x], axis=-1)
+            x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])
+        else:
+            x = tf.reshape(att_x, [-1, self.sparse_len, self.embedding_dim])
         for att in self.attention:
             x = att(x)
         out = to2DTensor(x)
-        # dnn
+        # dnn if AutoInt+ to model implicit features.
         if len(self.units) > 0:
             dnn_out = self.mlp(tf.concat([att_x, dense_x], axis=-1))
             out = tf.concat([out, dnn_out], axis=-1)

@@ -21,6 +21,7 @@ class InterHAt(Cowclip):
         head_num = model_cfg['att_head_num']
         agg_order = model_cfg['agg_order']
         self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_column)))
+        self.numeric_same_dim = model_cfg['numeric_same_dim']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -47,11 +48,14 @@ class InterHAt(Cowclip):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        # TODO dense_x 未计算
         # get embedding
-        sparse_x, dense_x = form_x(inputs, self.ebd, True)
+        sparse_x, dense_x = form_x(inputs, self.ebd, True, self.numeric_same_dim)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
-        x = tf.reshape(sparse_x, [-1, self.sparse_len, self.embedding_dim])
+        if self.numeric_same_dim:
+            x = tf.concat([sparse_x, dense_x], axis=-1)
+            x = tf.reshape(x, [-1, len(self.feature_column), self.embedding_dim])
+        else:
+            x = tf.reshape(sparse_x, [-1, self.sparse_len, self.embedding_dim])
 
         x = self.attention(x)  # (batch, F, dk*head)
 

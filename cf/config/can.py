@@ -41,6 +41,7 @@ config = {
         'embedding_dim': 10,
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
+        'numeric_same_dim': True,
         # Linear residual:
         'linear_res': False,
         # deep part
@@ -49,6 +50,7 @@ config = {
         'activation': 'relu',
         'use_bn': False,
         'use_residual': True,
+        'hidden_units': [256, 128, 64],
         # cross part
         'cross_layers': 4,
         'cross_w_reg': 0.,

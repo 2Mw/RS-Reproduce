@@ -47,15 +47,18 @@ class AbnormalAUC(Callback):
 
 
 class MetricsMonitor(Callback):
-    def __init__(self, metric, mode: str, directory: str = '', sample_step: int = 3):
+    def __init__(self, metric, mode: str, directory: str = '', sample_step: int = 3, dump_file: bool = False):
         """
         每个 train_batch_end，观察对应基准指标的最佳值以及变化趋势
 
         :param metric: 想要监控的指标
         :param mode: 监控模式，max or min
         :param directory: 输出变化趋势到对应目录
+        :param sample_step: 每隔多少个batch记录一次
+        :param dump_file: 是否将记录写入文件
         """
         super(MetricsMonitor, self).__init__()
+        self.dump_file = dump_file
         self.directory = directory
         mode = mode.lower()
         if mode not in ['min', 'max']:
@@ -88,8 +91,9 @@ class MetricsMonitor(Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         if self.directory != '' and os.path.exists(self.directory):
-            with open(os.path.join(self.directory, f'{self.metric}_{epoch}.pickle'), 'wb') as f:
-                pickle.dump(self.records, f, pickle.HIGHEST_PROTOCOL)
+            if self.dump_file:
+                with open(os.path.join(self.directory, f'{self.metric}_{epoch}.pickle'), 'wb') as f:
+                    pickle.dump(self.records, f, pickle.HIGHEST_PROTOCOL)
             plt.figure()
             l = len(self.records)
             plt.plot(np.linspace(0, l * self.sample_step, l), self.records)
