@@ -69,11 +69,12 @@ def form_x(inputs, embedding, divide: bool, same_dim=False):
         if f[0] == 'C':
             ebd_x.append(embedding[f](v))
         else:
+            v = tf.expand_dims(v, 1)
             if same_dim:
                 # 解决注意力机制中数值型特征 Embedding 处理
                 dense_x.append(embedding[f](v))
             else:
-                dense_x.append(tf.expand_dims(v, 1))
+                dense_x.append(v)
     if divide:
         return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
     else:
