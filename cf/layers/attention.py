@@ -10,7 +10,7 @@ from cf.utils.logger import logger
 class MultiheadAttention(Layer):
     """
     A Layer used in AutoInt that the model the correlation between different feature fields by multi-head
-    self-attention mechanism.
+    **self-attention** mechanism.
 
     Input shape:
         - A 3D tensor with shape ``(batch_size, field_size, embedding_size)``
@@ -70,8 +70,6 @@ class MultiheadAttention(Layer):
 
         # scaled dot product attention
         weight = tf.matmul(querys, tf.transpose(keys, [0, 2, 1]))  # (head_num*batch, F, F)
-        # inner_product = tf.matmul(querys, keys, transpose_b=True)  # transpose_b b在乘法前进行转置
-
         weight /= self.dk ** 0.5
 
         att_scores = tf.nn.softmax(weight, axis=-1)  # (head_num*batch, F, F)
@@ -85,7 +83,7 @@ class MultiheadAttention(Layer):
         result += tf.tensordot(inputs, self.res, axes=(-1, 0))
 
         # BatchNormalization
-        result = self.bn(result)
+        result = self.bn(tf.nn.relu(result))
 
         return result
 

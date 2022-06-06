@@ -52,15 +52,16 @@ def model_summary(instance, feature_column, directory):
     model.summary()
 
 
-def form_x(inputs, embedding, divide: bool):
+def form_x(inputs, embedding, divide: bool, same_dim=False):
     """
     Generate the input `x` to the model， if attention_based is True, return (embedding_x, dense_x); if False return
     the concatenation of both.
 
-    :param inputs:
+
     :param embedding: The embedding lookup set.
     :param divide: If True return value is (embedding_x, dense_x), else return the concatenation of both.
-    :return:
+    :param same_dim: If the dimension of numeric features are same with sparse features, default False.
+    :return: if divide is True return `sparse_x, dense_x`, else return `concat(sparse_x, dense_x)`
     """
     ebd_x = []
     dense_x = []
@@ -68,8 +69,11 @@ def form_x(inputs, embedding, divide: bool):
         if f[0] == 'C':
             ebd_x.append(embedding[f](v))
         else:
-            # TODO 解决注意力机制中数值型特征 Embedding 处理
-            dense_x.append(tf.expand_dims(v, 1))
+            if same_dim:
+                # 解决注意力机制中数值型特征 Embedding 处理
+                dense_x.append(embedding[f](v))
+            else:
+                dense_x.append(tf.expand_dims(v, 1))
     if divide:
         return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
     else:

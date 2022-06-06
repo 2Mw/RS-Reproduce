@@ -29,6 +29,7 @@ class DeepFM(Cowclip):
         for f in feature_columns:
             self.map_dict[f.name] = f.vocab_size
             self.feature_len += f.vocab_size
+        self.numeric_same_dim = model_cfg['numeric_same_dim']
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])

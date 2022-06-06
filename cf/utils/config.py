@@ -54,7 +54,7 @@ def get_date() -> str:
     return time.strftime("%Y%m%d%H%M%S", time.localtime())
 
 
-def export_result(train_hist, val_res, directory: str, cost: float, model, dataset):
+def export_result(train_hist, val_res, directory: str, cost: float, model, dataset, weight, **kwargs):
     """
     Export model training result to specified file. {directory}/result.json
 
@@ -64,11 +64,13 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
     :param val_res: test result from model.evaluate()
     :param directory: the directory to export.
     :param dataset: the dataset name.
+    :param weight: the pretrain model's weight.
     :return:
     """
     info = {
         'dataset': dataset,
         'cost_seconds': cost,
+        'weight': weight,
         "params": {
             'builtin': model.count_params(),
             'mine': num_params(model),
@@ -80,7 +82,8 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
         },
         'test': {
             'result': val_res
-        }
+        },
+        **kwargs
     }
     f = open(os.path.join(directory, 'result.json'), 'w')
     json.dump(info, f)
@@ -88,7 +91,7 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
 
 
 def export_all(directory: str, config: object, model: keras.models.Model, train_hist: keras.callbacks.History, val_res,
-               cost, dataset):
+               cost, dataset, weight, **kwargs):
     """
     Export all information of model.
 
@@ -99,10 +102,11 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     :param val_res: test result from model.evaluate()
     :param cost: cost seconds.
     :param dataset: the dataset name.
+    :param weight: the pretrain model's weight.
     :return:
     """
     export_config(config, directory)
-    export_result(train_hist, val_res, directory, cost, model, dataset)
+    export_result(train_hist, val_res, directory, cost, model, dataset, weight, **kwargs)
     logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 

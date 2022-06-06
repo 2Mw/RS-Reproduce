@@ -145,7 +145,7 @@ class Cowclip(Model):
         # 算法的核心部分
         isIdxSlice = False
         if isinstance(g, tf.IndexedSlices):
-            # FIXME: This part is not tested
+            # This part is not tested
             isIdxSlice = True
             indices, shape = g.indices, g.dense_shape
             values = tf.convert_to_tensor(g.values)

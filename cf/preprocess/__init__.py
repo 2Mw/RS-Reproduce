@@ -1,1 +1,1 @@
-datasets = ['criteo', 'ml', 'avazu', 'tbadclick']
+datasets = ['criteo', 'ml', 'avazu', 'tbadclick', 'fliggy']

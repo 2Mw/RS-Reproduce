@@ -192,6 +192,8 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             fc, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'tbadclick':
             fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process)
+        elif dataset == 'fliggy':
+            pass
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:

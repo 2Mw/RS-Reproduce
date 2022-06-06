@@ -6,7 +6,6 @@ from cf.models.base import get_embedding, form_x
 
 
 class Linear(Layer):
-    # TODO 为所有未添加 linear 层的模型进行补充添加
     def __init__(self, feature_column, use_bias=False, initializer=None, **kwargs):
         super().__init__(**kwargs)
         # params
