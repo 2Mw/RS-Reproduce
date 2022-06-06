@@ -42,7 +42,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         # Linear residual:
-        'linear_res': False,
+        'linear_res': True,
         # deep part
         'hidden_units': [256, 128, 64],
         'dropout': 0.5,
