@@ -14,7 +14,11 @@ config = {
         'avazu_train': 'train.csv',
         # taobao click
         'tbadclick_base': 'data/tb_adclick',
-        'tbadclick_train': 'raw_sample.csv'
+        'tbadclick_train': 'raw_sample.csv',
+        # fliggy click
+        'fliggy_base': 'data/fliggy',
+        'fliggy_train': 'user_item_behavior_history.csv'
+
     },
 
     'train': {

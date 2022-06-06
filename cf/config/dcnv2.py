@@ -14,14 +14,17 @@ config = {
         'avazu_train': 'train.csv',
         # taobao click
         'tbadclick_base': 'data/tb_adclick',
-        'tbadclick_train': 'raw_sample.csv'
+        'tbadclick_train': 'raw_sample.csv',
+        # fliggy click
+        'fliggy_base': 'data/fliggy',
+        'fliggy_train': 'user_item_behavior_history.csv'
     },
 
     'train': {
         'epochs': 10,
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
-        'sample_size': -1,
+        'sample_size': 100000,
         'batch_size': 4096,
         'lr': 0.0005,
         'val_ratio': 1 / 14,
