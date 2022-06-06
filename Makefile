@@ -14,8 +14,8 @@ config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint/20220604224032/0.yaml
 weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/autoint/20220605111541/weights.001-0.45331.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint/20220604224032/0.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/autoint/20220604224130/weights.009-0.45155.hdf5
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint/20220606172211/0.yaml
+t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)*.log | sort -r | head -n 1)
