@@ -38,7 +38,7 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping(min_delta=0.0001, patience=1)
-    aucStop = AbnormalAUC(0.8115, steps=800, directory=directory, gap_steps=800)
+    aucStop = AbnormalAUC(0.8115, steps=50000, directory=directory, gap_steps=4000)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
     # tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
