@@ -37,12 +37,12 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     model = initModel(cfg, feature_columns, directory, weights, steps=steps)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
-    earlyStop = EarlyStopping(min_delta=0.0001, patience=3)
-    aucStop = AbnormalAUC(0.8115, steps=800, directory=directory, gap_steps=500)
+    earlyStop = EarlyStopping(min_delta=0.0001, patience=5)
+    aucStop = AbnormalAUC(0.812, steps=3000, directory=directory, gap_steps=500)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
-    tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[3, steps])
+    # tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
-                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
+                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
     logger.info(f'Train result: \n{train_history.history}\n')
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
