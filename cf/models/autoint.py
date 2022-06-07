@@ -3,7 +3,7 @@ from keras.models import Model
 from keras.layers import Dense
 from cf.layers.attention import MultiheadAttention
 from cf.models.base import get_embedding, model_summary, form_x
-from cf.layers import linear, mlp
+from cf.layers import linear, mlp, gate
 from cf.preprocess.feature_column import SparseFeat
 from cf.utils.tensor import to2DTensor
 from cf.models.cowclip import Cowclip
@@ -42,12 +42,16 @@ class AutoInt(Cowclip):
         self.head_num = model_cfg['att_head_num']
         self.att_layer = model_cfg['att_layer_num']
         self.units = model_cfg['hidden_units']
+        # Optional params
+        self.use_embed_gate = model_cfg['use_embed_gate']
         # networks
         self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.attention = [MultiheadAttention(self.att_size, self.head_num) for i in range(self.att_layer)]
         self.final = Dense(1, use_bias=False)
         self.linear = linear.Linear(feature_columns)
         self.mlp = mlp.MLP(self.units, model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
+        if self.use_embed_gate:
+            self.embed_gate = gate.EmbeddingGate(self.sparse_len, self.embedding_dim)
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         model_summary(self, self.feature_column, self.directory)
@@ -55,6 +59,8 @@ class AutoInt(Cowclip):
     def call(self, inputs, training=None, mask=None):
         # Attention
         att_x, dense_x = form_x(inputs, self.ebd, True, self.numeric_same_dim)
+        if self.use_embed_gate:
+            att_x = self.embed_gate(att_x)
         # 对于注意力机制层需要将shape修改为 (batch, feature, embedding)
         if self.numeric_same_dim:
             x = tf.concat([att_x, dense_x], axis=-1)

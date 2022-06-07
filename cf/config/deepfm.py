@@ -14,7 +14,10 @@ config = {
         'avazu_train': 'train.csv',
         # taobao click
         'tbadclick_base': 'data/tb_adclick',
-        'tbadclick_train': 'raw_sample.csv'
+        'tbadclick_train': 'raw_sample.csv',
+        # fliggy click
+        'fliggy_base': 'data/fliggy',
+        'fliggy_train': 'user_item_behavior_history.csv'
     },
 
     'train': {
@@ -33,20 +36,24 @@ config = {
         'clip': 1,
         'bound': 1e-5,
         'warmup': True,
+        # Metrics
+        'metrics': ['AUC', 'BCE']
     },
 
     'model': {
+        # Embedding params
         'numeric_same_dim': False,
+        'use_embed_gate': False,
         'embedding_device': 'gpu',
+        'embedding_reg': 0.,
+        'embedding_dim': 10,
+        # Linear residual:
+        'linear_res': False,
+        # DNN params
         'hidden_units': [256, 128, 64],
         'dropout': 0.5,
         'use_bn': False,
         'fm_w_reg': 0.,
-        'embedding_reg': 0.,
         'activation': 'relu',
-        'embedding_dim': 10,
-        'metrics': ['AUC', 'BCE'],
-        # Linear residual:
-        'linear_res': False,
     }
 }

@@ -2,10 +2,11 @@ import tensorflow as tf
 from keras.models import Model
 from keras.layers import Dense
 from cf.models.base import get_embedding, model_summary, form_x
-from cf.layers import crossnet, mlp, linear
+from cf.layers import crossnet, mlp, linear, gate
 from cf.utils import tensor
 from cf.models.cowclip import Cowclip
 from cf.models.base import checkCowclip
+from cf.preprocess.feature_column import SparseFeat
 
 
 class DCN(Cowclip):
@@ -31,6 +32,7 @@ class DCN(Cowclip):
         self.embedding_dim = model_cfg['embedding_dim']
         self.linear_res = model_cfg['linear_res']
         self.numeric_same_dim = model_cfg['numeric_same_dim']
+        self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
         # cowclip params
         if train_cfg['cowclip']:
             checkCowclip(self, train_cfg['cowclip'])
@@ -39,19 +41,27 @@ class DCN(Cowclip):
             super(DCN, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
         else:
             super(DCN, self).__init__(*args, **kwargs)
+        # Optional params
+        self.use_embed_gate = model_cfg['use_embed_gate']
         # model layers
         self.linear = linear.Linear(feature_columns)
         self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
         self.cross_net = crossnet.CrossNet(self.layer_num, model_cfg['cross_w_reg'], model_cfg['cross_b_reg'])
         self.mlp = mlp.MLP(self.hidden_units, self.activation, self.dnn_dropout)
         self.dense_final = Dense(1, activation=None)
+        if self.use_embed_gate:
+            self.embed_gate = gate.EmbeddingGate(self.sparse_len, self.embedding_dim)
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
         # x = tf.concat([self.ebd[f](v) if f[0] == 'C' else tf.expand_dims(v, 1) for f, v in inputs.items()], axis=1)
-        x = form_x(inputs, self.ebd, False)
+        sparse_x, dense_x = form_x(inputs, self.ebd, True)
+        # Embedding Gate
+        if self.use_embed_gate:
+            sparse_x = self.embed_gate(sparse_x)
+        x = tf.concat([sparse_x, dense_x], axis=-1)
         x = tensor.to2DTensor(x)
         # Cross Network
         cross_x = self.cross_net(x)

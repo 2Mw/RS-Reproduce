@@ -14,7 +14,10 @@ config = {
         'avazu_train': 'train.csv',
         # taobao click
         'tbadclick_base': 'data/tb_adclick',
-        'tbadclick_train': 'raw_sample.csv'
+        'tbadclick_train': 'raw_sample.csv',
+        # fliggy click
+        'fliggy_base': 'data/fliggy',
+        'fliggy_train': 'user_item_behavior_history.csv'
     },
 
     'train': {
@@ -33,6 +36,8 @@ config = {
         'clip': 1,
         'bound': 1e-5,
         'warmup': False,
+        # Metrics
+        'metrics': ['AUC', 'BCE']
     },
 
     'model': {
@@ -42,6 +47,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         'numeric_same_dim': False,
+        'use_embed_gate': True,
         # Linear residual:
         'linear_res': False,
         # deep part
@@ -57,7 +63,5 @@ config = {
         'low_rank': 258,
         'num_experts': 4,
         'l2_reg_cross': 1e-5,
-        # evaluate part
-        'metrics': ['AUC', 'BCE']
     }
 }

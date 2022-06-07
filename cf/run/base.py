@@ -28,7 +28,6 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     :return:
     """
     train_config = cfg['train']
-    model_config = cfg['model']
     cowclip = train_config.get('cowclip')
     opt = train_config['optimizer']
     lr = train_config['lr']
@@ -65,7 +64,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
         else:
             optimizer = get_optimizer(opt, lr)
         loss = tf.keras.losses.BinaryCrossentropy(reduction=tf.keras.losses.Reduction.SUM_OVER_BATCH_SIZE)
-        model.compile(loss=loss, optimizer=optimizer, metrics=model_config['metrics'], run_eagerly=_RUN_EAGERLY)
+        model.compile(loss=loss, optimizer=optimizer, metrics=train_config['metrics'], run_eagerly=_RUN_EAGERLY)
     if weights == '' or weights is None:
         return model
     if os.path.exists(weights):

@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
-from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick
+from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy
 from cf.preprocess.feature_column import DenseFeat, SparseFeat
 from sklearn.model_selection import train_test_split
 
@@ -55,12 +55,15 @@ def read_raw_data(file: str, sample_num, sep: str):
     content = []
     length = 0
     with open(file, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+        lines = []
+        if sample_num > 0:
+            while length < sample_num:
+                lines.append(f.readline())
+                length += 1
+        else:
+            lines = f.readlines()
         for line in lines:
-            if length == sample_num:
-                break
             content.append(line.strip().split(sep))
-            length += 1
     return content
 
 
@@ -193,7 +196,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         elif dataset == 'tbadclick':
             fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'fliggy':
-            pass
+            fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process)
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:
