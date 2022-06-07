@@ -36,6 +36,8 @@ config = {
         'clip': 1,
         'bound': 1e-5,
         'warmup': True,
+        # Metrics
+        'metrics': ['AUC', 'BCE']
     },
 
     'model': {
@@ -44,6 +46,7 @@ config = {
         'embedding_dim': 10,
         'embedding_device': 'gpu',
         'numeric_same_dim': False,
+        'use_embed_gate': False,
         # Linear residual:
         'linear_res': False,
         # deep part
@@ -55,7 +58,5 @@ config = {
         'cross_layer': 3,
         'cross_w_reg': 0.,
         'cross_b_reg': 0.,
-        # evaluate part
-        'metrics': ['AUC', 'BCE']
     }
 }

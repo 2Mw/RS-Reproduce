@@ -16,9 +16,9 @@ evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220604102905/0.yaml
 t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220604114351/weights.005-0.45186.hdf5
-trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight)
+trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## Other
-lastlog=$(shell ls -f $(proj)/log/$(model)*.log | sort -r | head -n 1)
+lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)
 ## profile dir
 pdir=
 port=6006

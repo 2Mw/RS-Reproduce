@@ -31,9 +31,10 @@ RS
     3. [DCN-v2 2020](https://arxiv.org/pdf/2008.13535.pdf)
     4. [AutoInt 2018](https://arxiv.org/pdf/1810.11921.pdf)
     5. [InterHAt 2020](https://dl.acm.org/doi/pdf/10.1145/3336191.3371785)
+    6. [GateNet 2020](https://arxiv.org/pdf/2007.03519.pdf)
 
 * Other:
-    1. [CowClip](https://arxiv.org/pdf/2204.06240)
+    1. [CowClip 2022](https://arxiv.org/pdf/2204.06240)
 
 ## Dataset
 
@@ -43,7 +44,7 @@ RS
 4. [Ad Display/Click Data](https://tianchi.aliyun.com/dataset/dataDetail?dataId=56#1)
 5. [Fliggy](https://tianchi.aliyun.com/dataset/dataDetail?dataId=113649)
 
-## Reference
+## Code Reference
 
 1. [DeepCTR](https://deepctr-doc.readthedocs.io/en/latest/Quick-Start.html#getting-started-4-steps-to-deepctr)
 2. [Cowclip](https://github.com/bytedance/LargeBatchCTR)
@@ -51,8 +52,8 @@ RS
 ## Appendix
 
 1. Without MirroredStrategy in lower tf version, it will come with unknown shape warning, even sometimes it will affect
-   the training speed.
-2. In the Callback(keras.callbacks.Callback) of lower version of tensorflow (<=2.4.0), if
+   the training speed. You can ignore the warning.
+2. In the Callback(keras.callbacks.Callback) of lower version of tensorflow (<2.4.0), if
    set `self.model.stop_training = True`, the training process will stop in the end of **epoch**, while higher version
    of tf will stop in the end of this **step**.
 3. If you wanna to modify the process of keras function `fit()`, you can inherit the class `keras.model.Model`, then
@@ -66,4 +67,5 @@ RS
 7. For cowclip model in lower version of tensorflow 2.X(<2.4.0), you should also implement the function `test_step`
    otherwise it will cause OOM error because of bad conversion of tensor.
 8. For recommendation system, the numerical feature have large variance and hurt algorithms, so we should normalize
-   them(AutoInt C5.1).
+   them(AutoInt C5.1). If we consider training numerical feature with sparse feature in the attention based model, the
+   performance may not well.

@@ -1,7 +1,7 @@
 import tensorflow as tf
 from keras.models import Model
 from cf.layers.attention import MultiheadAttention, AggregationAttention
-from cf.layers.mlp import MLP
+from cf.layers import gate, mlp
 from keras.layers import Conv1D, Dense
 from cf.models.base import model_summary, form_x, get_embedding
 from cf.preprocess.feature_column import SparseFeat
@@ -30,10 +30,12 @@ class InterHAt(Cowclip):
             super(InterHAt, self).__init__(self.embedding_dim, clip, bound, *args, **kwargs)
         else:
             super(InterHAt, self).__init__(*args, **kwargs)
+        # Optional params
+        self.use_embed_gate = model_cfg['use_embed_gate']
         # model layers
         self.attention = MultiheadAttention(dk, head_num, model_cfg['att_dropout'])
-        self.ff = MLP([4 * dk, dk], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
-                      model_cfg['use_residual'])
+        self.ff = mlp.MLP([4 * dk, dk], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+                          model_cfg['use_residual'])
         self.agg = [AggregationAttention(dk, model_cfg['regularization']) for _ in range(agg_order)]
         self.pool = Conv1D(model_cfg['agg_filters'], 1)
         self.weighted_dense = Dense(1, None, False)
@@ -43,6 +45,8 @@ class InterHAt(Cowclip):
             Dense(1, use_bias=False)
         ]
         self.ebd = get_embedding(feature_column, self.embedding_dim, model_cfg['embedding_device'])
+        if self.use_embed_gate:
+            self.embed_gate = gate.EmbeddingGate(self.sparse_len, self.embedding_dim)
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         model_summary(self, self.feature_column, self.directory)
@@ -50,6 +54,9 @@ class InterHAt(Cowclip):
     def call(self, inputs, training=None, mask=None):
         # get embedding
         sparse_x, dense_x = form_x(inputs, self.ebd, True, self.numeric_same_dim)
+        # Embedding Gate
+        if self.use_embed_gate:
+            sparse_x = self.embed_gate(sparse_x)
         # 对于注意力机制层需要将shape修改为 (batch, future, embedding)
         if self.numeric_same_dim:
             x = tf.concat([sparse_x, dense_x], axis=-1)

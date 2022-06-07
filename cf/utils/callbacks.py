@@ -101,7 +101,8 @@ class MetricsMonitor(Callback):
             plt.title(f'epoch-{epoch}')
             if epoch == 0:
                 m = np.max(self.records)
-                plt.ylim(m - 0.02, m)
+                n = np.min(self.records)
+                plt.ylim(max(n, m - 0.03), m)
             plt.xlabel('steps')
             plt.ylabel(self.metric)
             plt.savefig(os.path.join(self.directory, f'{self.metric}_curve_{epoch}.png'))

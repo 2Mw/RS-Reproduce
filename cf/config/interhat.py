@@ -36,6 +36,8 @@ config = {
         'clip': 1,
         'bound': 1e-5,
         'warmup': False,
+        # Metrics
+        'metrics': ['AUC', 'BCE']
     },
 
     'model': {
@@ -45,6 +47,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         'numeric_same_dim': True,
+        'use_embed_gate': False,
         # Linear residual:
         'linear_res': False,
         # deep part
@@ -62,7 +65,5 @@ config = {
         'regularization': 0.0002,
         'agg_order': 3,
         'agg_filters': 64,
-        # evaluate part
-        'metrics': ['AUC', 'BCE']
     }
 }

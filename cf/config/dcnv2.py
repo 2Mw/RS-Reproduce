@@ -24,7 +24,7 @@ config = {
         'epochs': 10,
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
-        'sample_size': 100000,
+        'sample_size': -1,
         'batch_size': 4096,
         'lr': 0.0005,
         'val_ratio': 1 / 14,
@@ -36,6 +36,8 @@ config = {
         'clip': 1,
         'bound': 1e-5,
         'warmup': True,
+        # Metrics
+        'metrics': ['AUC', 'BCE']
     },
 
     'model': {
@@ -45,6 +47,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         'numeric_same_dim': False,
+        'use_embed_gate': True,
         # Linear residual:
         'linear_res': False,
         # deep part
@@ -60,7 +63,5 @@ config = {
         'low_rank': 258,
         'num_experts': 4,
         'l2_reg_cross': 1e-5,
-        # evaluate part
-        'metrics': ['AUC', 'BCE']
     }
 }

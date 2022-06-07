@@ -1,6 +1,6 @@
 model,criteo-auc,criteo-loss,criteo-auc-m,criteo-loss-m,avazu-auc,avazu-loss,avazu-auc-m,avazu-loss-m,ml-auc,ml-loss,ml-auc-m,ml-loss-m,fliggy-auc,fliggy-loss,fliggy-auc-m,fliggy-loss-m,tb_adclick-auc,tb_adclick-loss,tb_adclick-auc-m,tb_adclick-loss-m
-autoint,0.8061,0.4455,0.8062,0.4453,0.7752,0.3824,,,0.8456,0.3797,,,,,,,,,,
-autoint+,0.8083,0.4434,,,0.7774,0.3811,,,0.8848,0.3753,,,,,,,,,,
+autoint,0.8061,0.4455,"","",0.7752,0.3824,,,0.8456,0.3797,,,,,,,,,,
+autoint+,0.8083,0.4434,0.8062,0.4453,0.7774,0.3811,,,0.8848,0.3753,,,,,,,,,,
 dcn,0.8099,0.4419,,,,,,,,,,,,,,,,,,
 dcnv2,0.8115,0.4406,0.8082,0.444,,,,,0.8964,0.316,,,,,,,,,,
 deepfm,0.8007,0.4508,,,,,,,,,,,,,,,,,,
