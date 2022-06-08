@@ -1,6 +1,5 @@
-import gc
-from sklearn.model_selection import train_test_split
 import cf.preprocess.data as base
+import numpy as np
 
 # IXX 表示数值型数据, CXX表示类别型数据
 dense_features = [f'I{i}' for i in range(1, 14)]  # 数值型数据
@@ -25,8 +24,18 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
 
     df = base.read_data(file, sample_num, '\t', NAMES)
 
-    df = base.process(df, sparse_features, dense_features, numeric_process)
+    fn = logNormalize if numeric_process == 'ln' else None
+
+    df = base.process(df, sparse_features, dense_features, numeric_process, fn)
 
     fc = base.gen_feature_columns(df, sparse_features, dense_features)
 
     return base.split_dataset(df, fc, test_size)
+
+
+def logNormalize(df, dense_feature):
+    for f in dense_feature:
+        if f == 'I2':
+            df[f] = np.log(df[f] + 4)
+        else:
+            df[f] = np.log(df[f] + 1)

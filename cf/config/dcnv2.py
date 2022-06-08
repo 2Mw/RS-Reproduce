@@ -1,30 +1,11 @@
-config = {
-    'files': {
-        # Criteo
-        'criteo_base': 'data/criteo',
-        'criteo_train': 'train.txt',
-        'criteo_test': 'test.txt',
-        # Movielens
-        'ml_base': 'data/movielens',
-        'ml_train': 'ratings.dat',
-        'ml_movie': 'movies.dat',
-        'ml_users': 'users.dat',
-        # Avazu
-        'avazu_base': 'data/avazu',
-        'avazu_train': 'train.csv',
-        # taobao click
-        'tbadclick_base': 'data/tb_adclick',
-        'tbadclick_train': 'raw_sample.csv',
-        # fliggy click
-        'fliggy_base': 'data/fliggy',
-        'fliggy_train': 'user_item_behavior_history.csv'
-    },
+from cf.config.dataset import ds_config
 
+config = {
     'train': {
         'epochs': 10,
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
-        'sample_size': -1,
+        'sample_size': 120000,
         'batch_size': 4096,
         'lr': 0.0005,
         'val_ratio': 1 / 14,
@@ -47,6 +28,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         'numeric_same_dim': False,
+        'numeric_process': 'ln',
         'use_embed_gate': True,
         # Linear residual:
         'linear_res': False,
@@ -65,3 +47,5 @@ config = {
         'l2_reg_cross': 1e-5,
     }
 }
+
+config.update(ds_config)
