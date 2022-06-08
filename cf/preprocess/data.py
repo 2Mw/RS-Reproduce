@@ -67,7 +67,7 @@ def read_raw_data(file: str, sample_num, sep: str):
     return content
 
 
-def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: str = 'mms'):
+def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: str = 'mms', numeric_fn=None):
     """
     Process sparse features and dense features.
 
@@ -75,6 +75,7 @@ def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: 
     :param sparse_features: Sparse features columns name.
     :param dense_features: Dense features columns name.
     :param numeric_process: The way of processing numerical feature ln-LogNormalize, kbd-KBinsDiscretizer, mms-MinMaxScaler
+    :param numeric_fn: The customized numeric process function
     :return:
     """
     s = time.time()
@@ -93,15 +94,20 @@ def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: 
             df[dense_features] = est.fit_transform(df[dense_features])  # 对每一列进行数值离散化处理
         elif numeric_process == 'ln':
             # The way of processing numerical feature in DCNv2
-            for f in dense_features:
-                if f == 'I2':
-                    df[f] = np.log(df[f] + 4)
-                else:
-                    df[f] = np.log(df[f] + 1)
+            if numeric_fn is None:
+                for f in dense_features:
+                    df[f] = np.log(df[f])
+            else:
+                # Use the way of customized numeric processing.
+                numeric_fn(df, dense_features)
         elif numeric_process == 'mms':
             # The way of processing numerical feature in cowclip
             mms = MinMaxScaler()  # scale all values in (0,1)
             df[dense_features] = mms.fit_transform(df[dense_features])
+        else:
+            e = f'The way {numeric_process} of process numeric features is not supported.'
+            logger.error(e)
+            raise NotImplementedError(e)
     logger.info("=== Process categorical feature ===")
     for feature in sparse_features:  # 对于分类型数据进行处理，将对应的类别型数据转为唯一的数字编号
         le = LabelEncoder()
