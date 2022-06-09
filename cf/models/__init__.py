@@ -7,6 +7,7 @@ from cf.models.can import *
 from cf.models.deepfm import *
 from cf.models.interhat import *
 from cf.models.autoint import *
+from cf.models.edcn import *
 
 MODULES = {
     'dcn': DCN,
@@ -14,5 +15,6 @@ MODULES = {
     'dcnv2': DCNv2,
     'deepfm': DeepFM,
     'interhat': InterHAt,
-    'autoint': AutoInt
+    'autoint': AutoInt,
+    'edcn': EDCN
 }

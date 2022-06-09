@@ -1,19 +1,19 @@
 import copy
 import os.path
-from cf.config.deepfm import config
+from cf.config.edcn import config
 from cf.utils.config import *
+import cf
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader
 from cf.utils.logger import logger
-import cf
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'deepfm'
+__model__ = 'edcn'
 
 
 def train(cfg, dataset: str = 'criteo', weights: str = ''):
@@ -39,14 +39,15 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}-{val_loss:.5f}.hdf5'), save_weights_only=True)
     earlyStop = EarlyStopping('val_BCE', min_delta=0.0001, patience=2)
-    aucStop = AbnormalAUC(0.8115, steps=steps // 2, directory=directory, gap_steps=steps // 10)
+    aucStop = AbnormalAUC(0.82, steps=steps // 2, directory=directory, gap_steps=steps // 10)
     aucMonitor = MetricsMonitor('auc', 'max', directory)
-    # tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=10, profile_batch=[3, steps])
+    tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
-                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor])
+                              validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
     logger.info(f'Train result: \n{train_history.history}\n')
     res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     res = dict(zip(model.metrics_names, res))
+    res['dataset'] = dataset
     logger.info(f'Result: {res}')
     logger.info('========= Export Model Information =========')
     cost = time.time() - start

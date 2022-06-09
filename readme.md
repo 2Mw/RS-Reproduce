@@ -32,6 +32,7 @@ RS
     4. [AutoInt 2018](https://arxiv.org/pdf/1810.11921.pdf)
     5. [InterHAt 2020](https://dl.acm.org/doi/pdf/10.1145/3336191.3371785)
     6. [GateNet 2020](https://arxiv.org/pdf/2007.03519.pdf)
+    7. [EDCN 2021](https://dl.acm.org/doi/pdf/10.1145/3459637.3481915)
 
 * Other:
     1. [CowClip 2022](https://arxiv.org/pdf/2204.06240)
@@ -69,3 +70,5 @@ RS
 8. For recommendation system, the numerical feature have large variance and hurt algorithms, so we should normalize
    them(AutoInt C5.1). If we consider training numerical feature with sparse feature in the attention based model, the
    performance may not well.
+9. In EDCN, using `BatchNormalization` is required, other than it will occur **gradient vanishing** problems because small
+   number matrix hadamard product in bridge module, and use **residual shortcut** optionally.

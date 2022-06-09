@@ -4,6 +4,7 @@ import time
 import yaml
 from tensorflow import keras
 from cf.utils.logger import logger
+import random
 
 'The utils of configuration export and import'
 
@@ -52,6 +53,15 @@ def get_date() -> str:
     :return: example - 20220517110856
     """
     return time.strftime("%Y%m%d%H%M%S", time.localtime())
+
+
+def get_random_num(l, r) -> float:
+    """
+    Get a random float from [l, r]
+    """
+    if r <= l:
+        raise ValueError(f'r must greater than l')
+    return random.random() * (r-l) + l
 
 
 def export_result(train_hist, val_res, directory: str, cost: float, model, dataset, weight, **kwargs):
