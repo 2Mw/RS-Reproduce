@@ -6,7 +6,7 @@ config = {
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
         'sample_size': 100000,
-        'batch_size': 4096,
+        'batch_size': 256,
         'lr': 0.001,
         'val_ratio': 1 / 14,
         'test_ratio': 1 / 14,
@@ -20,23 +20,37 @@ config = {
         # Metrics
         'metrics': ['AUC', 'BCE']
     },
+    # anonymecitoyen
 
     'model': {
-        # Embedding params
+        # embeddings
+        'embedding_reg': 0.,
+        'embedding_dim': 10,
+        'l2_reg_embedding': 1e-5,
+        'embedding_device': 'gpu',
         'numeric_same_dim': False,
         'numeric_process': 'mms',
         'use_embed_gate': False,
-        'embedding_device': 'gpu',
-        'embedding_reg': 0.,
-        'embedding_dim': 10,
         # Linear residual:
         'linear_res': False,
-        # DNN params
-        'hidden_units': [256, 128, 64],
+        # deep part
+        'hidden_units': [400, 400, 400],
         'dropout': 0.5,
-        'use_bn': False,
         'fm_w_reg': 0.,
         'activation': 'relu',
+        'use_bn': True,
+        'use_residual': True,
+        # cross part
+        'cross_layers': 4,
+        'cross_w_reg': 0.,
+        'cross_b_reg': 0.,
+        'low_rank': 258,
+        'num_experts': 4,
+        'l2_reg_cross': 1e-5,
+        # bridge and regularization
+        'bridge_type': 'hadamard_product',
+        'use_regulation_module': False,
+        'tau': 1,
     }
 }
 

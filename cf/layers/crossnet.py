@@ -42,8 +42,11 @@ class CrossNet(Layer):
 
     def call(self, inputs, *args, **kwargs):
         # input dim: (Batch, dim)
-        x_0 = tf.expand_dims(inputs, axis=2)  # (batch, dim, 1)
-        x_l = x_0
+        if len(args) > 0:
+            x_0 = tf.expand_dims(args[0], axis=2)
+        else:
+            x_0 = tf.expand_dims(inputs, axis=2)  # (batch, dim, 1)
+        x_l = tf.expand_dims(inputs, axis=2)
         for i in range(self.layer_num):
             x_l1 = tf.tensordot(x_l, self.cross_weights[i], axes=[1, 0])  # (batch, 1, 1)
             x_l = tf.matmul(x_0, x_l1) + self.cross_bias[i] + x_l  # (batch, dim, 1)

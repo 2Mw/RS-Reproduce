@@ -3,7 +3,7 @@ from cf.utils.logger import logger
 import tensorflow as tf
 from pynvml.smi import nvidia_smi as smi
 import time
-from cf.utils.config import get_date
+from cf.utils.config import get_date, get_random_num
 
 
 def get_available_gpu(ins):
@@ -25,9 +25,9 @@ if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
         SELECTED_GPU = get_available_gpu(ins)
         if SELECTED_GPU == '':
             print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
-            time.sleep(5)
+            time.sleep(get_random_num(5, 8))
         else:
-            time.sleep(3)
+            time.sleep(get_random_num(3, 5))
             a = get_available_gpu(ins)
             if a == SELECTED_GPU:
                 break
