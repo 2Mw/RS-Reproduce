@@ -15,7 +15,7 @@ weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220607202118/weights.0
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220608162719/0.yaml
-t_weight=''
+t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220612202617/weights.003-0.45901.hdf5
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)
