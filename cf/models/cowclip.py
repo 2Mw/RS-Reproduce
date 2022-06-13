@@ -3,6 +3,7 @@ import math
 
 from keras.models import Model
 import tensorflow as tf
+from cf.utils.logger import logger
 
 
 class Cowclip(Model):
@@ -15,6 +16,7 @@ class Cowclip(Model):
         self.bound = bound
         self.sparse_embed_dim = sparse_embed_dim
         self.cur_step = tf.Variable(0, trainable=False, dtype=tf.int64)
+        logger.info('========= Using Cowclip Model =========')
 
     def train_step(self, data):
         ret = dict()

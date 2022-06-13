@@ -34,9 +34,9 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     """
     dirname = os.path.dirname(file)
     user_file, movie_file = [os.path.join(dirname, i) for i in ['users.dat', 'movies.dat']]
-    rating = base.read_data(file, sample_num, SEP)
-    users = base.read_data(user_file, sample_num, SEP)
-    movies = base.read_data(movie_file, sample_num, SEP)
+    rating = base.read_raw_data(file, sample_num, SEP)
+    users = base.read_raw_data(user_file, sample_num, SEP)
+    movies = base.read_raw_data(movie_file, sample_num, SEP)
     data = []
     # get dict
     users_dict = {}
