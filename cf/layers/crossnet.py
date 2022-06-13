@@ -145,30 +145,30 @@ class CrossNetMix(Layer):
             logger.error(e)
             raise ValueError(e)
 
-        x_0 = tf.expand_dims(inputs, axis=2)
+        x_0 = tf.expand_dims(inputs, axis=2)  # (Batch, dim, 1)
         x_l = x_0
         for i in range(self.layer_num):
-            output_of_experts = []
+            output_of_experts = []  # (Batch, dim, num_experts)
             gating_score = []
             for eid in range(self.num_experts):
-                gating_score.append(self.gating[eid](tf.squeeze(x_l, axis=2)))
+                gating_score.append(self.gating[eid](tf.squeeze(x_l, axis=2)))  # (Batch, 1)
 
-                v_x = tf.einsum('ij,bjk->bik', tf.transpose(self.V_list[i][eid]), x_l)  # 爱因斯坦求和
+                v_x = tf.einsum('ij,bjk->bik', tf.transpose(self.V_list[i][eid]), x_l)  # 爱因斯坦求和 (Batch, low_rank, 1)
 
                 v_x = tf.nn.tanh(v_x)
-                v_x = tf.einsum('ij,bjk->bik', self.C_list[i][eid], v_x)
+                v_x = tf.einsum('ij,bjk->bik', self.C_list[i][eid], v_x)  # (Batch, low_rank, 1)
                 v_x = tf.nn.tanh(v_x)
 
-                uv_x = tf.einsum('ij,bjk->bik', self.U_list[i][eid], v_x)
+                uv_x = tf.einsum('ij,bjk->bik', self.U_list[i][eid], v_x)  # (Batch, dim, 1)
 
                 dot_ = uv_x + self.bias[i]
-                dot_ = x_0 * dot_
+                dot_ = x_0 * dot_  # (Batch, dim, 1)
                 output_of_experts.append(tf.squeeze(dot_, axis=2))
 
             # mixture of low-rank experts
             output_of_experts = tf.stack(output_of_experts, 2)  # (bs, dim, num_experts)
             gating_score = tf.stack(gating_score, 1)  # (bs, num_experts, 1)
-            moe_out = tf.matmul(output_of_experts, tf.nn.softmax(gating_score, 1))
+            moe_out = tf.matmul(output_of_experts, tf.nn.softmax(gating_score, 1))  # (bs, dim, 1)
             x_l = moe_out + x_l
         x_l = tf.squeeze(x_l, 2)
         return x_l

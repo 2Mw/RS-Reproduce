@@ -28,7 +28,7 @@ config = {
         'l2_reg_embedding': 1e-5,
         'embedding_device': 'gpu',
         'numeric_same_dim': False,
-        'numeric_process': 'ln',
+        'numeric_process': 'mms',
         'use_embed_gate': True,
         # Linear residual:
         'linear_res': False,

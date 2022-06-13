@@ -6,14 +6,22 @@ import time
 from cf.utils.config import get_date, get_random_num
 
 
-def get_available_gpu(ins):
+def get_available_gpu(ins, num=1):
+    """
+    Return the available numbers of gpus,
+
+    :param ins: The instance of smi
+    :param num: The number of gpu you want to select.
+    :return: "0", "0,1", "0,2,3"
+    """
     g = ''
     res = ins.DeviceQuery('memory.free')
     for idx, i in enumerate(res['gpu']):
         if i['fb_memory_usage']['free'] > MEMORY_LIMIT:
-            g = f'{idx}'
-            break
-    return g
+            g += f'{idx},'
+            if len(g) / 2 == num:
+                break
+    return g[0:-1]
 
 
 MEMORY_LIMIT = 10240  # MiB

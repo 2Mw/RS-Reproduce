@@ -9,6 +9,7 @@ import tensorflow_addons as tfa
 from cf.utils.logger import logger
 from cf.utils.config import get_date
 from cf.models.cowclip import Cowclip
+from keras.models import Model
 import json
 
 project_dir = cf.get_project_path()
@@ -39,6 +40,12 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
     mirrored_strategy = tf.distribute.MirroredStrategy()
     with mirrored_strategy.scope():
         ins = pool.get(model_name)
+        if cowclip:
+            if not issubclass(ins, Cowclip):
+                ins.__bases__ = (Cowclip,)
+        else:
+            if not issubclass(ins, Model):
+                ins.__bases__ = (Model,)
         model = ins(feature_columns, cfg, directory)
         model.summary()
         if cowclip:
