@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-from keras.layers import Layer, BatchNormalization
+from keras.layers import Layer, BatchNormalization, Softmax
 from keras.regularizers import l2
 from cf.utils.tensor import to2DTensor
 from cf.utils.logger import logger
@@ -55,7 +55,7 @@ class HiddenGate(Layer):
 
 # ============================  2. EDCN part =========================================
 class BridgeModule(Layer):
-    def __init__(self, hidden_dim, bridge_type='hadamard_product', **kwargs):
+    def __init__(self, bridge_type='hadamard_product', hidden_dim=0, **kwargs):
         """
         The bridge module in EDCN.
 
@@ -65,11 +65,12 @@ class BridgeModule(Layer):
         """
         super().__init__(**kwargs)
         supported_bridge_type = ['hadamard_product', 'pointwise_addition', 'concat', 'attention_pooling']
+        implemented_bridge_type = ['hadamard_product', 'concat']
         if bridge_type not in supported_bridge_type:
             raise ValueError('The bridge_type must be one of {}'.format(supported_bridge_type))
         self.hidden_dim = hidden_dim
         self.bridge_type = bridge_type
-        if bridge_type != 'hadamard_product':
+        if bridge_type not in implemented_bridge_type:
             raise NotImplementedError('The bridge_type {} is not implemented yet'.format(bridge_type))
 
     def call(self, inputs: list, *args, **kwargs):
@@ -81,6 +82,8 @@ class BridgeModule(Layer):
         if self.bridge_type == 'hadamard_product':
             # 但是这需要两个维度保持一致才可以
             return tf.multiply(ax, bx)
+        elif self.bridge_type == 'concat':
+            return tf.concat([ax, bx], axis=-1)
         else:
             raise NotImplementedError
 
@@ -107,14 +110,15 @@ class RegulationModule(Layer):
             self.dim = dim
             self.use_bn = use_bn
             self.sparse_len = sparse_len
-            initializer = keras.initializers.he_normal
-            self.g1 = self.add_weight('g1', shape=[self.num_fields], initializer=initializer)
-            self.g2 = self.add_weight('g2', shape=[self.num_fields], initializer=initializer)
+            self.initializer = keras.initializers.he_normal
+            self.softmax = Softmax()
             if use_bn:
                 self.bn1 = BatchNormalization()
                 self.bn2 = BatchNormalization()
 
     def build(self, input_shape):
+        self.g1 = self.add_weight('g1', shape=[self.num_fields], initializer=self.initializer)
+        self.g2 = self.add_weight('g2', shape=[self.num_fields], initializer=self.initializer)
         super(RegulationModule, self).build(input_shape)
 
     def call(self, inputs, *args, **kwargs):
@@ -122,8 +126,8 @@ class RegulationModule(Layer):
         x = inputs
         if self.use_regulation:
             # g1: (F, dim), 原文中 g_1^b 是scalar, 为了对每个field对应embedding中每个维度进行相乘，使用repeat
-            x1 = tf.expand_dims(tf.nn.softmax(self.g1 / self.tau), axis=-1)  # x1 = (F, 1)
-            x2 = tf.expand_dims(tf.nn.softmax(self.g2 / self.tau), axis=-1)
+            x1 = tf.expand_dims(self.softmax(self.g1 / self.tau), axis=-1)  # x1 = (F, 1)
+            x2 = tf.expand_dims(self.softmax(self.g2 / self.tau), axis=-1)
             sparse_x1 = tf.repeat(x1[0:self.sparse_len, :], self.dim, axis=-1)  # sparse_x1 = (F, dim)
             sparse_x2 = tf.repeat(x2[0:self.sparse_len, :], self.dim, axis=-1)
             # g1: (1, F * dim)

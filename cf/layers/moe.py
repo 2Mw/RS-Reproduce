@@ -7,7 +7,7 @@ from cf.layers import mlp
 
 
 class MMOE(Layer):
-    def __init__(self, num_experts, expert_dnn_units, num_gates, gate_dnn_units, activation='relu', dropout=0.,
+    def __init__(self, num_experts, expert_dnn_units, num_gates, gate_dnn_units=[], activation=None, dropout=0.,
                  use_bn=False, residual=False, initializer=None, **kwargs):
         """
         Multi-Mixture of Experts model, return the gates(task) numbers output.

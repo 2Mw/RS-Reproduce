@@ -16,28 +16,27 @@ config = {
         'lr_embed': 1e-4,
         'clip': 1,
         'bound': 1e-5,
-        'warmup': False,
+        'warmup': True,
         # Metrics
         'metrics': ['AUC', 'BCE']
     },
-    # anonymecitoyen
 
     'model': {
-        # embeddings
-        'embedding_reg': 0.,
-        'embedding_dim': 10,
-        'l2_reg_embedding': 1e-5,
-        'embedding_device': 'gpu',
-        'numeric_same_dim': False,
+        # preprocess
         'numeric_process': 'mms',
-        'use_embed_gate': False,
+        # embeddings
+        'embedding_dim': 10,
+        'embedding_device': 'gpu',
+        'embedding_reg': 0.,
+        'l2_reg_embedding': 1e-5,
+        'numeric_same_dim': False,
         # Linear residual:
         'linear_res': False,
         # deep part
         'hidden_units': [400, 400, 400],
         'dropout': 0.5,
         'fm_w_reg': 0.,
-        'activation': 'gelu',
+        'activation': 'relu',
         'use_bn': True,
         'use_residual': False,
         # cross part
@@ -47,10 +46,10 @@ config = {
         'low_rank': 258,
         'num_experts': 4,
         'l2_reg_cross': 1e-5,
-        # bridge and regularization
-        'bridge_type': 'hadamard_product',
-        'use_regulation_module': False,
-        'tau': 1,
+        # bridge and broker
+        'bridge_type': 'concat',
+        'broker_experts': 4,
+        'broker_gates': 2,
     }
 }
 

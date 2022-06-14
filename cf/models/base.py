@@ -82,12 +82,16 @@ def form_x(inputs, embedding, divide: bool, same_dim=False):
 
 
 def checkCowclip(instance, cowclip_flag):
-    if isinstance(instance, Cowclip) and cowclip_flag:
-        return
+    if cowclip_flag:
+        if not isinstance(instance, Cowclip):
+            e = f'The setting of cowclip mismatch. You should inherit Cowclip class and set cowclip flag `True` together.'
+            logger.error(e)
+            raise ValueError(e)
     else:
-        e = f'The setting of cowclip mismatch. You should inherit Cowclip class and set cowclip flag `True` together.'
-        logger.error(e)
-        raise e
+        if isinstance(instance, Cowclip):
+            e = f'The cowclip flag is `False`, but you inherit Cowclip class.'
+            logger.error(e)
+            raise ValueError(e)
 
 
 if __name__ == '__main__':

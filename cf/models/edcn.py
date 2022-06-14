@@ -25,6 +25,7 @@ class EDCN(Model):
         :param args:
         :param kwargs:
         """
+        raise RuntimeError('Need repair.')
         # model params
         self.directory = directory
         model_cfg = config['model']
@@ -53,7 +54,7 @@ class EDCN(Model):
                             model_cfg['use_residual'], initializer) for _ in range(self.num_cross_layer)]
         self.cross = [crossnet.CrossNet(1) for _ in range(self.num_cross_layer)]
         # bridge and regulation
-        self.bridges = [gate.BridgeModule(x_dim, model_cfg['bridge_type']) for _ in range(self.num_cross_layer)]
+        self.bridges = [gate.BridgeModule(model_cfg['bridge_type'], x_dim) for _ in range(self.num_cross_layer)]
         self.regulations = [gate.RegulationModule(len(feature_column), self.embedding_dim, self.sparse_len,
                                                   model_cfg['tau']) for _ in range(self.num_cross_layer)]
         self.final_dense = Dense(1, activation=None)

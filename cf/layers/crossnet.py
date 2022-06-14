@@ -145,8 +145,12 @@ class CrossNetMix(Layer):
             logger.error(e)
             raise ValueError(e)
 
-        x_0 = tf.expand_dims(inputs, axis=2)  # (Batch, dim, 1)
-        x_l = x_0
+        if len(args) > 0:
+            x_0 = tf.expand_dims(args[0], axis=2)
+            x_l = tf.expand_dims(inputs, axis=2)
+        else:
+            x_0 = tf.expand_dims(inputs, axis=2)  # (batch, dim, 1)
+            x_l = x_0
         for i in range(self.layer_num):
             output_of_experts = []  # (Batch, dim, num_experts)
             gating_score = []

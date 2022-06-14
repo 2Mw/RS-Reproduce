@@ -44,7 +44,7 @@ def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '
             if not issubclass(ins, Cowclip):
                 ins.__bases__ = (Cowclip,)
         else:
-            if not issubclass(ins, Model):
+            if issubclass(ins, Cowclip):
                 ins.__bases__ = (Model,)
         model = ins(feature_columns, cfg, directory)
         model.summary()

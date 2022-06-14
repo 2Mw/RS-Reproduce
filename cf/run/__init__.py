@@ -7,6 +7,7 @@ from cf.run.run_dcnv2 import *
 from cf.run.run_deepfm import *
 from cf.run.run_interhat import *
 from cf.run.run_edcn import *
+from cf.run.run_medcn import *
 
 
 class Instance:
