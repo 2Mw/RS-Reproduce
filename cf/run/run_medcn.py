@@ -3,7 +3,7 @@ import os.path
 from cf.config.medcn import config
 from cf.utils.config import *
 import cf
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader
