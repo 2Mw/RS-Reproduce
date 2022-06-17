@@ -6,26 +6,28 @@ from cf.utils.logger import logger
 
 
 class CrossNet(Layer):
-    def __init__(self, layer_num, reg_w=0., reg_b=0., **kwargs):
+    def __init__(self, layer_num, reg_w=0., reg_b=0., initializer=None, **kwargs):
         """
         CrossNetwork for Deep & Cross
 
         :param layer_num: The depth of layers.
         :param reg_w: The regularization coefficient of weights.
         :param reg_b: The regularization coefficient of biases.
+        :param initializer: The initializer
         :param kwargs: Other parameters.
         """
         super().__init__(**kwargs)
         self.layer_num = layer_num
         self.reg_w = reg_w
         self.reg_b = reg_b
+        self.initializer = keras.initializers.glorot_normal if initializer is None else initializer
 
     def build(self, input_shape):
         dim = int(input_shape[-1])
         self.cross_weights = [
             self.add_weight(name=f'w_{i}',
                             shape=(dim, 1),
-                            initializer='random_normal',
+                            initializer=self.initializer,
                             regularizer=l2(self.reg_w),
                             trainable=True)
             for i in range(self.layer_num)
@@ -34,7 +36,7 @@ class CrossNet(Layer):
         self.cross_bias = [
             self.add_weight(name=f'b_{i}',
                             shape=(dim, 1),
-                            initializer='random_normal',
+                            initializer=self.initializer,
                             regularizer=l2(self.reg_b),
                             trainable=True)
             for i in range(self.layer_num)
