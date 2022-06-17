@@ -8,6 +8,8 @@ from cf.run.run_deepfm import *
 from cf.run.run_interhat import *
 from cf.run.run_edcn import *
 from cf.run.run_medcn import *
+from cf.run.run_dcn_me import *
+from cf.run.run_autoint_me import *
 import os
 from cf.utils.logger import logger
 import tensorflow as tf
@@ -27,7 +29,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT = 8192  # MiB
+MEMORY_LIMIT = 1024  # MiB
 USE_CPU_ONLY = False
 
 
