@@ -23,8 +23,6 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
 
     df = df.iloc[1:, :]
 
-    df = df.astype('str')
-
     df = base.process(df, sparse_features, dense_features, numeric_process)
 
     fc = base.gen_feature_columns(df, sparse_features, dense_features)
