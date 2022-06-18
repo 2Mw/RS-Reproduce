@@ -19,11 +19,9 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     if test_size >= 1 or test_size < 0:
         raise ValueError(f'The test_size must in the range of (0,1), but your is {test_size}')
 
-    df = base.read_data(file, sample_num, ',', NAMES)
+    df = base.read_data(file, sample_num, ',', NAMES, 'str')
 
     df = df.iloc[1:, :]
-
-    df = df.astype('str')
 
     df = base.process(df, sparse_features, dense_features, numeric_process)
 

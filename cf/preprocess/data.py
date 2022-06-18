@@ -17,7 +17,7 @@ numeric_process_way = ['ln', 'kbd', 'mms']
 data_types = [_pickle, _feather]
 
 
-def read_data(file: str, sample_size, sep, names=None):
+def read_data(file: str, sample_size, sep, names=None, dtype=None):
     """
     Read dataset from files by pandas.
 
@@ -25,13 +25,14 @@ def read_data(file: str, sample_size, sep, names=None):
     :param file: The filepath of source.
     :param sample_size: The number of rows you want to read, -1 means all.
     :param names: The columns name.
+    :param dtype: The type of columns.
     :return:
     """
     if not os.path.exists(file):
         e = f'The file: {file} not exists.'
         logger.error(e)
         raise FileNotFoundError(e)
-    df = pd.read_csv(file, iterator=True, names=names, sep=sep)
+    df = pd.read_csv(file, iterator=True, names=names, sep=sep, dtype=dtype)
     if sample_size > 0:
         df = df.get_chunk(sample_size)
     else:
