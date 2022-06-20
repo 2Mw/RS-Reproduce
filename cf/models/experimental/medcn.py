@@ -60,6 +60,8 @@ class MEDCN(Cowclip):
         self.bridges = [gate.BridgeModule(self.bridge_type) for _ in range(cross_layers)]
         self.brokers = [moe.MMOE(self.broker_experts, [x_dim], self.broker_gates, dropout=model_cfg['dropout'],
                                  use_bn=True, residual=False) for _ in range(cross_layers)]
+        self.using_embedding_broker = model_cfg['using_embedding_broker']
+        self.using_feature_broker = model_cfg['using_feature_broker']
 
         # final dense
         self.final_dense = Dense(1, activation=None)
@@ -70,15 +72,19 @@ class MEDCN(Cowclip):
     def call(self, inputs, training=None, mask=None):
         x = form_x(inputs, self.ebd, False)
         x = tensor.to2DTensor(x)
-        cross_x, dnn_x = self.brokers[0](x)
+        if self.using_embedding_broker:
+            cross_x, dnn_x = self.brokers[0](x)
+        else:
+            cross_x = dnn_x = x
         cross_0 = cross_x
         bridge_x = None
         for i in range(self.cross_layers):
             cross_x = self.cross[i](cross_x, cross_0)
             dnn_x = self.mlp[i](dnn_x)
-            bridge_x = self.bridges[i]([cross_x, dnn_x])
-            if i + 1 < self.cross_layers:
-                cross_x, dnn_x = self.brokers[i + 1](bridge_x)
+            if self.using_feature_broker:
+                bridge_x = self.bridges[i]([cross_x, dnn_x])
+                if i + 1 < self.cross_layers:
+                    cross_x, dnn_x = self.brokers[i + 1](bridge_x)
 
         out = tf.concat([cross_x, dnn_x], axis=-1)
         return tf.nn.sigmoid(self.final_dense(out))

@@ -8,8 +8,8 @@ config = {
         'sample_size': -1,
         'batch_size': 4096,
         'lr': 0.001,
-        'val_ratio': 1 / 14,
-        'test_ratio': 1 / 14,
+        'val_ratio': 0.1,
+        'test_ratio': 0.1,
         'test_batch_size': 9012,
         # cowclip params
         'cowclip': True,
@@ -50,6 +50,8 @@ config = {
         'bridge_type': 'concat',
         'broker_experts': 4,
         'broker_gates': 2,
+        'using_embedding_broker': True,
+        'using_feature_broker': True,
     }
 }
 
