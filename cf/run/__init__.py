@@ -29,7 +29,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT = 1024  # MiB
+MEMORY_LIMIT = 8192  # MiB
 USE_CPU_ONLY = False
 
 

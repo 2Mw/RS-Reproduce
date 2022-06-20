@@ -8,14 +8,14 @@ cli=$(proj)/cf/run/run_cli.py
 # Configs
 model=medcn
 # Dataset (criteo, ml, avazu)
-dataset=avazu
+dataset=ml
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220607163757/0.yaml
 weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220607202118/weights.0.8115-0.81210-5700.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/20220614225934/0.yaml
-t_weight=''
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/movielens/0.yaml
+t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/medcn/20220620140838/weights.005-0.33130.hdf5
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)
