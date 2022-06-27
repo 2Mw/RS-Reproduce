@@ -2,7 +2,7 @@ from cf.config.dataset import ds_config
 
 config = {
     'train': {
-        'epochs': 10,
+        'epochs': 15,
         'optimizer': 'Adam',
         'loss': 'binary_crossentropy',
         'sample_size': -1,
