@@ -29,26 +29,29 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT = 8192  # MiB
+MEMORY_LIMIT_RATIO = 0.80  # MiB
 USE_CPU_ONLY = False
+ASSIGNED_GPU = os.environ.get("CUDA_VISIBLE_DEVICES")
 
 
-def get_available_gpu(ins, num=1):
+def get_available_gpu(ins, stringify=False):
     """
-    Return the available numbers of gpus,
+    Return a list of available gpus,
 
     :param ins: The instance of smi
-    :param num: The number of gpu you want to select.
-    :return: "0", "0,1", "0,2,3"
+    :param stringify: Weather you want to stringify list.
+    :return: "0", "0,1", "0,2,3" or [0], [0,1]
     """
-    g = ''
-    res = ins.DeviceQuery('memory.free')
+    g = []
+    res = ins.DeviceQuery('memory.free,memory.total')
     for idx, i in enumerate(res['gpu']):
-        if i['fb_memory_usage']['free'] > MEMORY_LIMIT:
-            g += f'{idx},'
-            if len(g) / 2 == num:
-                break
-    return g[0:-1]
+        if i['fb_memory_usage']['free'] / i['fb_memory_usage']['total'] >= MEMORY_LIMIT_RATIO:
+            g.append(idx)
+    g = list(map(str, g))
+    if stringify:
+        return ','.join(g)
+    else:
+        return g
 
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -56,22 +59,23 @@ if USE_CPU_ONLY:
     os.environ["CUDA_VISIBLE_DEVICES"] = ''
     logger.info(f'You selected CPU only.')
 else:
-    if os.environ.get("CUDA_VISIBLE_DEVICES") is None:
-        SELECTED_GPU = ''
-        ins = smi.getInstance()
-        while SELECTED_GPU == '':
-            SELECTED_GPU = get_available_gpu(ins)
-            if SELECTED_GPU == '':
-                print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
-                time.sleep(get_random_num(5, 8))
-            else:
-                time.sleep(get_random_num(3, 5))
-                a = get_available_gpu(ins)
-                if a == SELECTED_GPU:
+    ins = smi.getInstance()
+    while True:
+        SELECTED_GPU = get_available_gpu(ins)
+        if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in SELECTED_GPU):
+            print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
+            time.sleep(get_random_num(5, 8))
+        else:
+            time.sleep(get_random_num(10, 15))
+            a = get_available_gpu(ins)
+            if ASSIGNED_GPU is None:
+                if a[0] == SELECTED_GPU[0]:  # 只选取一个GPU
+                    ASSIGNED_GPU = SELECTED_GPU[0]
                     break
-                else:
-                    SELECTED_GPU = ''
-        os.environ["CUDA_VISIBLE_DEVICES"] = SELECTED_GPU
+            else:
+                if ASSIGNED_GPU in a:
+                    break
+    os.environ["CUDA_VISIBLE_DEVICES"] = ASSIGNED_GPU
     # 设置 gpu 现存使用策略
     gpus = tf.config.experimental.list_physical_devices("GPU")
     for gpu in gpus:
