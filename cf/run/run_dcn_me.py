@@ -63,5 +63,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    train(config, weights=r'E:\Notes\DeepLearning\practice\rs\cf\result\dcn_me\20220617213620\weights.010-0.58089.hdf5')
+    train(config)
     # evaluate(config, r'')
