@@ -63,5 +63,5 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
 
 
 if __name__ == '__main__':
-    # train(config)
-    evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\autoint_me\20220617214840\weights.008-0.51019.hdf5')
+    train(config)
+    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\autoint_me\20220617214840\weights.008-0.51019.hdf5')

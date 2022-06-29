@@ -69,6 +69,8 @@ else:
             time.sleep(get_random_num(10, 15))
             a = get_available_gpu(ins)
             if ASSIGNED_GPU is None:
+                if len(a) == 0 or len(SELECTED_GPU) == 0:
+                    continue
                 if a[0] == SELECTED_GPU[0]:  # 只选取一个GPU
                     ASSIGNED_GPU = SELECTED_GPU[0]
                     break
