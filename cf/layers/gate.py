@@ -65,7 +65,7 @@ class BridgeModule(Layer):
         """
         super().__init__(**kwargs)
         supported_bridge_type = ['hadamard_product', 'pointwise_addition', 'concat', 'attention_pooling']
-        implemented_bridge_type = ['hadamard_product', 'concat']
+        implemented_bridge_type = ['hadamard_product', 'pointwise_addition', 'concat']
         if bridge_type not in supported_bridge_type:
             raise ValueError('The bridge_type must be one of {}'.format(supported_bridge_type))
         self.hidden_dim = hidden_dim
@@ -84,6 +84,8 @@ class BridgeModule(Layer):
             return tf.multiply(ax, bx)
         elif self.bridge_type == 'concat':
             return tf.concat([ax, bx], axis=-1)
+        elif self.bridge_type == 'pointwise_addition':
+            return tf.add(ax, bx)
         else:
             raise NotImplementedError
 
