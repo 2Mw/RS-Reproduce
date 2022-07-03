@@ -29,7 +29,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT_RATIO = 0.80  # MiB
+MEMORY_LIMIT_RATIO = 0.90  # MiB
 USE_CPU_ONLY = False
 ASSIGNED_GPU = os.environ.get("CUDA_VISIBLE_DEVICES")
 
