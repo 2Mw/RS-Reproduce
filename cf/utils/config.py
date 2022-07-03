@@ -5,6 +5,9 @@ import yaml
 from tensorflow import keras
 from cf.utils.logger import logger
 import random
+import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
 
 'The utils of configuration export and import'
 
@@ -61,7 +64,7 @@ def get_random_num(l, r) -> float:
     """
     if r <= l:
         raise ValueError(f'r must greater than l')
-    return random.random() * (r-l) + l
+    return random.random() * (r - l) + l
 
 
 def export_result(train_hist, val_res, directory: str, cost: float, model, dataset, weight, **kwargs):
@@ -95,9 +98,24 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
         },
         **kwargs
     }
+    plt.figure()
+    fig = plot_curve(train_hist.history)
+    fig.get_figure().savefig(os.path.join(directory, 'judge_curve'), dpi=1200)
     f = open(os.path.join(directory, 'result.json'), 'w')
     json.dump(info, f)
     f.close()
+
+
+def plot_curve(history):
+    df = pd.DataFrame(
+        {
+            'BCE': history['BCE'],
+            'val_BCE': history['val_BCE'],
+            'AUC': history['auc'],
+            'val_auc': history['val_auc']
+        }
+    )
+    return sns.lineplot(data=df)
 
 
 def export_all(directory: str, config: object, model: keras.models.Model, train_hist: keras.callbacks.History, val_res,
