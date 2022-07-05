@@ -98,24 +98,31 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
         },
         **kwargs
     }
-    plt.figure()
-    fig = plot_curve(train_hist.history)
-    fig.get_figure().savefig(os.path.join(directory, 'judge_curve'), dpi=1200)
+
+    plot_curve(train_hist.history, directory)
     f = open(os.path.join(directory, 'result.json'), 'w')
     json.dump(info, f)
     f.close()
 
 
-def plot_curve(history):
-    df = pd.DataFrame(
+def plot_curve(history, directory):
+    bce_df = pd.DataFrame(
         {
             'BCE': history['BCE'],
             'val_BCE': history['val_BCE'],
-            'AUC': history['auc'],
-            'val_auc': history['val_auc']
         }
     )
-    return sns.lineplot(data=df)
+
+    loss_df = pd.DataFrame(
+        {
+            'AUC': history['auc'],
+            'val_auc': history['val_auc'],
+        }
+    )
+    plt.figure()
+    sns.lineplot(data=bce_df).get_figure().savefig(os.path.join(directory, 'BCE_curve'), dpi=1000)
+    plt.figure()
+    sns.lineplot(data=loss_df).get_figure().savefig(os.path.join(directory, 'AUC_curve'), dpi=1000)
 
 
 def export_all(directory: str, config: object, model: keras.models.Model, train_hist: keras.callbacks.History, val_res,
