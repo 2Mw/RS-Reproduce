@@ -8,6 +8,7 @@ from cf.preprocess.feature_column import SparseFeat
 from cf.models.cowclip import Cowclip
 from cf.utils.logger import logger
 from cf.layers.mlp import MLP
+from cf.utils.tensor import to2DTensor
 
 
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
@@ -67,12 +68,12 @@ def form_x(inputs, embedding, divide: bool, same_dim=False):
     dense_x = []
     for f, v in inputs.items():
         if f[0] == 'C':
-            ebd_x.append(embedding[f](v))
+            ebd_x.append(to2DTensor(embedding[f](to2DTensor(v))))
         else:
             v = tf.expand_dims(v, 1)
             if same_dim:
                 # 解决注意力机制中数值型特征 Embedding 处理
-                dense_x.append(embedding[f](v))
+                dense_x.append(embedding[f](to2DTensor(v)))
             else:
                 dense_x.append(v)
     if divide:
