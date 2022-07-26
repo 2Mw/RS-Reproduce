@@ -79,7 +79,7 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
                 # 解决注意力机制中数值型特征 Embedding 处理
                 dense_x.append(embedding[f](to2DTensor(v)))
             else:
-                dense_x.append(v)
+                dense_x.append(to2DTensor(v))
         elif f[0] == 'S':
             if len(seq_split) == 0 or seq_split is None:
                 e = f'The split string is null'
@@ -93,7 +93,7 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
                 for item in arr[0]:
                     o = tf.expand_dims(item, axis=-1)
                     vs.append(tf.reduce_mean(embedding[f](o), axis=0))
-                seq_x.append(tf.stack(vs))
+                seq_x.append(to2DTensor(tf.stack(vs)))
 
     if divide:
         return tf.concat(ebd_x + seq_x, axis=-1), tf.concat(dense_x, axis=-1)

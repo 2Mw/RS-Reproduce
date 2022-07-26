@@ -23,6 +23,7 @@ class Instance:
         module = getattr(obj, f'run_{name}')
         self.train = getattr(module, 'train')
         self.evaluate = getattr(module, 'evaluate')
+        self.predict = getattr(module, 'predict')
 
 
 MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
@@ -81,6 +82,6 @@ else:
     # 设置 gpu 现存使用策略
     gpus = tf.config.experimental.list_physical_devices("GPU")
     for gpu in gpus:
-        tf.config.experimental.set_memory_growth(gpu, True)
+        tf.config.experimental.set_memory_growth(gpu, False)
 
     logger.info(f'You selected gpu:{os.environ.get("CUDA_VISIBLE_DEVICES")}')
