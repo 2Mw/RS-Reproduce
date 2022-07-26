@@ -23,6 +23,7 @@ class Instance:
         module = getattr(obj, f'run_{name}')
         self.train = getattr(module, 'train')
         self.evaluate = getattr(module, 'evaluate')
+        self.predict = getattr(module, 'predict')
 
 
 MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}

@@ -29,7 +29,8 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     logger.info(f'========= Loading {dataset} Data =========')
     num_process = cfg['model']['numeric_process']
     feature_columns, train_data, test_data = dataloader.load_data(dataset, basepath, sample_size,
-                                                                  train_config['test_ratio'], train_file, num_process=num_process)
+                                                                  train_config['test_ratio'], train_file,
+                                                                  num_process=num_process)
     logger.info(f'========= Build Model =========')
     steps = int(len(train_data[1]) / batch_size)
     # 创建输出结果目录
@@ -60,6 +61,10 @@ def initModel(cfg, feature_columns, directory, weights: str = '', **kwargs):
 
 def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     base.evaluate(__model__, cfg, weight, dataset)
+
+
+def predict(cfg, weight: str, dataset: str = 'criteo'):
+    base.predict(__model__, cfg, weight, dataset)
 
 
 if __name__ == '__main__':

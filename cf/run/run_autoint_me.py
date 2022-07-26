@@ -62,6 +62,9 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     base.evaluate(__model__, cfg, weight, dataset)
 
 
+def predict(cfg, weight: str, dataset: str = 'criteo'):
+    base.predict(__model__, cfg, weight, dataset)
+
 if __name__ == '__main__':
     train(config)
     # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\autoint_me\20220617214840\weights.008-0.51019.hdf5')

@@ -62,6 +62,9 @@ def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     base.evaluate(__model__, cfg, weight, dataset)
 
 
+def predict(cfg, weight: str, dataset: str = 'criteo'):
+    base.predict(__model__, cfg, weight, dataset)
+
 if __name__ == '__main__':
     train(config)
     # evaluate(config, '/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn/20220526220154/weights.001-0.45153.hdf5')
