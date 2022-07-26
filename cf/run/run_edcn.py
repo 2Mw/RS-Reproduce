@@ -62,6 +62,8 @@ def initModel(cfg, feature_columns, directory, weights: str = '', **kwargs):
 def evaluate(cfg, weight: str, dataset: str = 'criteo'):
     base.evaluate(__model__, cfg, weight, dataset)
 
+def predict(cfg, weight: str, dataset: str = 'criteo'):
+    base.predict(__model__, cfg, weight, dataset)
 
 if __name__ == '__main__':
     train(config)
