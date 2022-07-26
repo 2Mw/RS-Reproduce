@@ -52,6 +52,8 @@ config = {
         'broker_gates': 2,
         'using_embedding_broker': True,
         'using_feature_broker': True,
+        # sequence feature
+        'seq_split': '^',
     }
 }
 

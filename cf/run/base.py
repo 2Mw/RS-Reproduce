@@ -2,6 +2,7 @@ import os
 import pickle
 
 import keras.optimizers
+import pandas as pd
 import tensorflow as tf
 import cf
 from cf.models import MODULES as pool
@@ -104,6 +105,25 @@ def evaluate(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     f = open(os.path.join(os.path.dirname(weight), f'evaluate-{get_date()[4:]}.json'), 'w')
     json.dump(res, f)
     logger.info(res)
+
+
+def predict(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
+    base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
+    sample_size = cfg['train']['sample_size']
+    if sample_size == -1:
+        data_dir = os.path.join(base, f'data_all')
+    else:
+        data_dir = os.path.join(base, f'data_{sample_size}')
+    if os.path.exists(data_dir):
+        feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
+        test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
+    else:
+        raise FileNotFoundError(f'{data_dir} not found.')
+    train_config = cfg['train']
+    model = initModel(model_name, cfg, feature_columns, '', weight, steps=100)
+    pred = model.predict(test_data[0], batch_size=train_config['test_batch_size'])
+    filename = os.path.join(os.path.join(os.path.dirname(weight), f'pred-{weight}.csv'), 'pred.csv')
+    pd.DataFrame(pred).to_csv(os.path.join(filename, 'pred.csv'))
 
 
 def create_result_dir(name, project_dir):

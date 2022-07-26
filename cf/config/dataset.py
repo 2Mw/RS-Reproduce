@@ -17,6 +17,9 @@ ds_config = {
         'tbadclick_train': 'raw_sample.csv',
         # fliggy click
         'fliggy_base': 'data/fliggy',
-        'fliggy_train': 'user_item_behavior_history.csv'
+        'fliggy_train': 'user_item_behavior_history.csv',
+        # huawei dataset:
+        'huawei_base': 'data/huawei',
+        'huawei_train': 'train/train_data_ads.csv'
     }
 }

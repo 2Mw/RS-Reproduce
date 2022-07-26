@@ -46,6 +46,7 @@ RS
 4. [User Behavior Data from Taobao](https://tianchi.aliyun.com/dataset/dataDetail?dataId=649)
 5. [Ad Display/Click Data](https://tianchi.aliyun.com/dataset/dataDetail?dataId=56#1)
 6. [Fliggy](https://tianchi.aliyun.com/dataset/dataDetail?dataId=113649)
+7. [Huawei Competition](https://developer.huawei.com/consumer/cn/activity/starAI2022/algo/competition.html) --- [data_3.zip](https://digix-algo-challenge.obs.cn-east-2.myhuaweicloud.com/2022/AI/238143c8f2b211ec84305c80b6c7dac5/2022_3_data.zip)
 
 ## Code Reference
 

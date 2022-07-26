@@ -2,6 +2,7 @@ from collections import namedtuple
 
 SparseFeat = namedtuple('SparseFeat', ['name', 'vocab_size', 'dtype'])
 DenseFeat = namedtuple('DenseFeat', ['name', 'dim', 'dtype'])
+SequenceFeat = namedtuple('SequenceFeat', ['name', 'vocab_size', 'dtype'])
 
 # class SparseFeat:
 #     def __init__(self, name, vocab_size, dtype='int32'):

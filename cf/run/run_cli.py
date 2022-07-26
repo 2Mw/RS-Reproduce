@@ -75,13 +75,13 @@ def checkArgs(args):
             sys.exit(0)
 
     mode = args.type.lower()
-    if mode not in ['train', 'test']:
+    if mode not in ['train', 'test', 'predict']:
         logger.error(f'The mode: {args.type} is invalid.')
         sys.exit(0)
 
-    if mode == 'test' and args.pretrain == '':
+    if (mode == 'test' or mode == 'predict') and args.pretrain == '':
         # 测试必须指定预训练权重
-        logger.error(f'The `pretrain` weight is required if mode is test.')
+        logger.error(f'The `pretrain` weight is required if mode is test or predict.')
         sys.exit(0)
 
     return config
@@ -101,9 +101,12 @@ if __name__ == '__main__':
         raise ModuleNotFoundError(e)
 
     dataset = arg.dataset.lower()
-    if arg.type.lower() == 'train':
+    run_type = arg.type.lower()
+    if run_type == 'train':
         model.train(cfg, dataset, arg.pretrain)
-    else:
+    elif run_type == 'test':
         model.evaluate(cfg, arg.pretrain, dataset)
+    elif run_type == 'predict':
+        model.predict(cfg, arg.pretrain, dataset)
 
 # print(arg.config)
