@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 from keras.layers import Embedding, Input
 from keras.models import Model
 from keras.regularizers import l2
@@ -44,7 +46,7 @@ def model_summary(instance, feature_column, directory):
     :return:
     """
     inputs = {
-        f.name: Input(shape=(), dtype=tf.float32, name=f.name)
+        f.name: Input(shape=(), dtype=tf.string if f.dtype == np.str else f.dtype, name=f.name)
         for f in feature_column
     }
     model = Model(inputs, outputs=instance.call(inputs))
@@ -53,7 +55,7 @@ def model_summary(instance, feature_column, directory):
     model.summary()
 
 
-def form_x(inputs, embedding, divide: bool, same_dim=False):
+def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
     """
     Generate the input `x` to the model， if attention_based is True, return (embedding_x, dense_x); if False return
     the concatenation of both.
@@ -62,24 +64,41 @@ def form_x(inputs, embedding, divide: bool, same_dim=False):
     :param embedding: The embedding lookup set.
     :param divide: If True return value is (embedding_x, dense_x), else return the concatenation of both.
     :param same_dim: If the dimension of numeric features are same with sparse features, default False.
+    :param seq_split: The split string of sequence feature
     :return: if divide is True return `sparse_x, dense_x`, else return `concat(sparse_x, dense_x)`
     """
     ebd_x = []
     dense_x = []
+    seq_x = []
     for f, v in inputs.items():
         if f[0] == 'C':
             ebd_x.append(to2DTensor(embedding[f](to2DTensor(v))))
-        else:
+        elif f[0] == 'I':
             v = tf.expand_dims(v, 1)
             if same_dim:
                 # 解决注意力机制中数值型特征 Embedding 处理
                 dense_x.append(embedding[f](to2DTensor(v)))
             else:
                 dense_x.append(v)
+        elif f[0] == 'S':
+            if len(seq_split) == 0 or seq_split is None:
+                e = f'The split string is null'
+                logger.error(e)
+                raise ValueError(e)
+
+            if v.get_shape().as_list()[0] is not None:
+                c = pd.DataFrame(v.numpy())
+                arr = c.apply(lambda x: x.apply(lambda y: list(map(int, y.decode().split(',')))))
+                vs = []
+                for item in arr[0]:
+                    o = tf.expand_dims(item, axis=-1)
+                    vs.append(tf.reduce_mean(embedding[f](o), axis=0))
+                seq_x.append(tf.stack(vs))
+
     if divide:
-        return tf.concat(ebd_x, axis=-1), tf.concat(dense_x, axis=-1)
+        return tf.concat(ebd_x + seq_x, axis=-1), tf.concat(dense_x, axis=-1)
     else:
-        return tf.concat(ebd_x + dense_x, axis=-1)
+        return tf.concat(ebd_x + dense_x + seq_x, axis=-1)
 
 
 def checkCowclip(instance, cowclip_flag):

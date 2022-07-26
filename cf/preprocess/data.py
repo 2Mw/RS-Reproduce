@@ -5,9 +5,10 @@ import pandas as pd
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
-from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy
-from cf.preprocess.feature_column import DenseFeat, SparseFeat
+from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy, huawei
+from cf.preprocess.feature_column import DenseFeat, SparseFeat, SequenceFeat
 from sklearn.model_selection import train_test_split
+import tensorflow as tf
 
 # consts
 _pickle = 'pickle'
@@ -68,21 +69,27 @@ def read_raw_data(file: str, sample_num, sep: str):
     return content
 
 
-def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: str = 'mms', numeric_fn=None):
+def process(df: pd.DataFrame, sparse_features, dense_features, sequence_features=None, numeric_process: str = 'mms',
+            numeric_fn=None):
     """
     Process sparse features and dense features.
 
     :param df: The data frame of pandas.
     :param sparse_features: Sparse features columns name.
     :param dense_features: Dense features columns name.
+    :param sequence_features: Sparse features with multi-values
     :param numeric_process: The way of processing numerical feature ln-LogNormalize, kbd-KBinsDiscretizer, mms-MinMaxScaler
     :param numeric_fn: The customized numeric process function
     :return:
     """
+    if sequence_features is None:
+        sequence_features = []
     s = time.time()
     logger.info("=== Padding NAN value ===")
     df[sparse_features] = df[sparse_features].fillna('-1')
     df[dense_features] = df[dense_features].fillna(0)
+    if sequence_features is not None:
+        df[sequence_features] = df[sequence_features].fillna('-1')
     if len(dense_features) > 0:
         logger.info("=== Process numeric feature ===")
         numeric_process = numeric_process.lower()
@@ -113,24 +120,41 @@ def process(df: pd.DataFrame, sparse_features, dense_features, numeric_process: 
     for feature in sparse_features:  # 对于分类型数据进行处理，将对应的类别型数据转为唯一的数字编号
         le = LabelEncoder()
         df[feature] = le.fit_transform(df[feature])  # 输入的数据必须是一维向量
+    for feature in sequence_features:
+        # Do nothing
+        pass
     logger.info(f'=== Process data over, cost: {time.time() - s:.2f} seconds. ===')
     return df
 
 
-def gen_feature_columns(data, sparse_features, dense_features):
+def gen_feature_columns(data, sparse_features, dense_features, sequence_features=None, seq_map=None):
     """
     Generate a list of feature columns.
 
     :param data: data
     :param sparse_features: The names of sparse features.
     :param dense_features: The names of dense features.
-    :return: [SparseFeat, ..., DenseFeat, ...]
+    :param sequence_features: The names of sequence features.
+    :param seq_map: if sequence_features is not None, you should assign seq seq_division
+    :return: [SparseFeat, ..., DenseFeat, ..., SequenceFeat]
     """
     # sparse = [SparseFeat(f, data[f].max()+1) for f in sparse_features]
     # dense = [DenseFeat(feat, 1, None) for feat in dense_features]
-    sparse = [SparseFeat(name, data[name].max() + 1, 'int32') for name in sparse_features]
-    dense = [DenseFeat(name, 1, 'float32') for name in dense_features]
-    return sparse + dense
+    if sequence_features is None:
+        sequence_features = []
+    else:
+        if seq_map is None or len(seq_map) == 0:
+            e = 'if sequence_features is not None, you should assign seq seq_division'
+            logger.error(e)
+            raise ValueError(e)
+    sparse = [SparseFeat(name, data[name].max() + 1, np.int32) for name in sparse_features]
+    dense = [DenseFeat(name, 1, np.float32) for name in dense_features]
+    seq = []
+    # 这里不应该扫描全表了，应该直接使用 seq_map 变量
+    for name in sequence_features:
+        cnt = len(seq_map[name]) + 1
+        seq.append(SequenceFeat(name, cnt, np.str))
+    return sparse + dense + seq
 
 
 def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, train_file, data_type='pickle',
@@ -204,6 +228,9 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'fliggy':
             fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process)
+        elif dataset == 'huawei':
+            fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process)
+
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:
@@ -224,7 +251,7 @@ def split_dataset(df, fc, test_size):
     :param df: The dataframe of dataset.
     :param fc: The feature columns of dataset.
     :param test_size: The ratio of test data.
-    :return: train_data, test_data
+    :return: if test_size > 0 return fc, (train_x, train_y), (test_x, test_y); if test_size = 0 return fc, (train_x, train_y)
     """
     if test_size > 0:
         train, test = train_test_split(df, test_size=test_size)
@@ -235,5 +262,8 @@ def split_dataset(df, fc, test_size):
         return fc, (train_x, train_y), (test_x, test_y)
     else:
         train_x = {f.name: df[f.name].values.astype(f.dtype) for f in fc}
-        train_y = df['label'].values.astype('float32')
-        return fc, (train_x, train_y)
+        if df.get('label') is not None:
+            train_y = df['label'].values.astype('int32')
+            return fc, (train_x, train_y)
+        else:
+            return fc, (train_x,)

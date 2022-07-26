@@ -17,6 +17,10 @@ evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/autoint_me/avazu/0.yaml
 t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/autoint_me/20220713233337/weights.010-0.38727.hdf5
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
+## pred config
+p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcnv2/20220604102905/0.yaml
+p_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcnv2/20220604114351/weights.005-0.45186.hdf5
+prcmd=$(py) $(cli) -m $(model) -c $(p_cfg) -t predict -p $(p_weight) -d $(dataset)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)
 ## profile dir
@@ -54,3 +58,7 @@ tune:
 
 show:
 	@echo $(trcmd)
+
+predict:
+	@cd $(proj)
+	@$(prcmd)

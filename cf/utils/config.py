@@ -67,7 +67,7 @@ def get_random_num(l, r) -> float:
     return random.random() * (r - l) + l
 
 
-def export_result(train_hist, val_res, directory: str, cost: float, model, dataset, weight, **kwargs):
+def export_result(train_hist, val_res, directory: str, cost: float, model, dataset, weight, pred=None, **kwargs):
     """
     Export model training result to specified file. {directory}/result.json
 
@@ -78,6 +78,7 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
     :param directory: the directory to export.
     :param dataset: the dataset name.
     :param weight: the pretrain model's weight.
+    :param pred: the prediction of models
     :return:
     """
     info = {
@@ -103,6 +104,8 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
     f = open(os.path.join(directory, 'result.json'), 'w')
     json.dump(info, f)
     f.close()
+    if pred is not None:
+        pd.DataFrame(pred).to_csv(os.path.join(directory, 'pred.csv'))
 
 
 def plot_curve(history, directory):
@@ -126,7 +129,7 @@ def plot_curve(history, directory):
 
 
 def export_all(directory: str, config: object, model: keras.models.Model, train_hist: keras.callbacks.History, val_res,
-               cost, dataset, weight, **kwargs):
+               cost, dataset, weight, pred=None, **kwargs):
     """
     Export all information of model.
 
@@ -138,10 +141,11 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     :param cost: cost seconds.
     :param dataset: the dataset name.
     :param weight: the pretrain model's weight.
+    :param pred: The prediction of models
     :return:
     """
     export_config(config, directory)
-    export_result(train_hist, val_res, directory, cost, model, dataset, weight, **kwargs)
+    export_result(train_hist, val_res, directory, cost, model, dataset, weight, pred, **kwargs)
     logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 

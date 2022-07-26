@@ -4,7 +4,7 @@ from keras.layers import Dense
 from cf.layers import crossnet, mlp, gate, moe
 from cf.utils import tensor
 from cf.models.base import get_embedding, form_x, model_summary
-from cf.preprocess.feature_column import SparseFeat
+from cf.preprocess.feature_column import SparseFeat, SequenceFeat
 from cf.models.cowclip import Cowclip
 from cf.models.base import checkCowclip
 from tensorflow import keras
@@ -27,7 +27,8 @@ class MEDCN(Cowclip):
         train_cfg = cfg['train']
         self.embedding_dim = model_cfg['embedding_dim']
         self.directory = directory
-        self.sparse_len = len(list(filter(lambda x: isinstance(x, SparseFeat), feature_columns)))
+        self.sparse_len = len(
+            list(filter(lambda x: isinstance(x, SparseFeat) or isinstance(x, SequenceFeat), feature_columns)))
         initializer = keras.initializers.he_normal
         # dcn-m params
         low_rank = model_cfg['low_rank']
@@ -48,6 +49,7 @@ class MEDCN(Cowclip):
         self.broker_gates = model_cfg['broker_gates']
         # Optional params
         x_dim = self.sparse_len * self.embedding_dim + len(feature_columns) - self.sparse_len
+        self.seq_split = model_cfg.get('seq_split')
         # model layers
         # embedding part
         self.ebd = get_embedding(feature_columns, self.embedding_dim, model_cfg['embedding_device'])
@@ -70,7 +72,7 @@ class MEDCN(Cowclip):
         model_summary(self, self.feature_column, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        x = form_x(inputs, self.ebd, False)
+        x = form_x(inputs, self.ebd, False, seq_split=self.seq_split)
         x = tensor.to2DTensor(x)
         if self.using_embedding_broker:
             cross_x, dnn_x = self.brokers[0](x)
