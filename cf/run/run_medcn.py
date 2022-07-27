@@ -1,5 +1,8 @@
 import copy
 import os.path
+
+import pandas as pd
+
 from cf.config.medcn import config
 from cf.utils.config import *
 import cf
@@ -51,6 +54,10 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     logger.info(f'Train result: \n{train_history.history}\n')
     # res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     pred = model.predict(test_data[0], train_config['test_batch_size'])
+    if dataset == 'huawei':
+        log_id = pd.read_csv(os.path.join(basepath, 'log_id.csv'))
+        pred = pd.DataFrame(pred)
+        pred['log_id'] = log_id['log_id']
 
     # res = dict(zip(model.metrics_names, res))
     res = {'dataset': dataset}

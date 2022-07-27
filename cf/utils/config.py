@@ -105,7 +105,7 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
     json.dump(info, f)
     f.close()
     if pred is not None:
-        pd.DataFrame(pred).to_csv(os.path.join(directory, 'pred.csv'))
+        pd.DataFrame(pred).to_csv(os.path.join(directory, 'pred.csv'), index=False, header=['log_id', 'pctr'])
 
 
 def plot_curve(history, directory):

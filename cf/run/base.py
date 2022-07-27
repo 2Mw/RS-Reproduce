@@ -122,8 +122,14 @@ def predict(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     train_config = cfg['train']
     model = initModel(model_name, cfg, feature_columns, '', weight, steps=100)
     pred = model.predict(test_data[0], batch_size=train_config['test_batch_size'])
-    filename = os.path.join(os.path.join(os.path.dirname(weight), f'pred-{weight}.csv'), 'pred.csv')
-    pd.DataFrame(pred).to_csv(os.path.join(filename, 'pred.csv'))
+    filename = os.path.join(os.path.dirname(weight), f'pred-{os.path.basename(weight)}.csv')
+    pred = pd.DataFrame(pred)
+    if dataset == 'huawei':
+        log_id = pd.read_csv(os.path.join(base, 'log_id.csv'))
+        pred['log_id'] = log_id['log_id']
+        pred.to_csv(filename, index=False, header=['log_id', 'pctr'])
+    else:
+        pred.to_csv(filename)
 
 
 def create_result_dir(name, project_dir):

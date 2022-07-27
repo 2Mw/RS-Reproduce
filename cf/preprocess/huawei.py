@@ -63,6 +63,8 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     train_data_ads_df = base.read_data(ads_file, sample_num, SEP, None, dtype=str)
     train_data_feeds_df = base.read_data(feeds_file, sample_num, SEP, None, dtype=str)
     test_data_df = base.read_data(os.path.realpath(test_file), sample_num, SEP, None, dtype=str)
+    # Export test log_id info
+    test_data_df['log_id'].to_csv(os.path.join(os.path.dirname(dirname), 'log_id.csv'), index=False)
     # ====== preprocess ads data
     ads_feature = ADS_SPARSE_FEATURE_NAME + ADS_DENSE_FEATURE_NAME + ADS_SEQUENCE_FEATURE_NAME
     # train_data_ads_df['date_flg'] = train_data_ads_df.pt_d.str[0:8]
