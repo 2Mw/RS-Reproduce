@@ -126,7 +126,7 @@ def predict(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
     pred = pd.DataFrame(pred)
     if dataset == 'huawei':
         log_id = pd.read_csv(os.path.join(base, 'log_id.csv'))
-        pred['log_id'] = log_id['log_id']
+        log_id['pctr'] = pred.iloc[:, 0]
         pred.to_csv(filename, index=False, header=['log_id', 'pctr'])
     else:
         pred.to_csv(filename)
