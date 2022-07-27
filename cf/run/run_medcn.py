@@ -57,7 +57,8 @@ def train(cfg, dataset: str = 'criteo', weights: str = ''):
     if dataset == 'huawei':
         log_id = pd.read_csv(os.path.join(basepath, 'log_id.csv'))
         pred = pd.DataFrame(pred)
-        pred['log_id'] = log_id['log_id']
+        log_id['pctr'] = pred.iloc[:, 0]
+        pred = log_id
 
     # res = dict(zip(model.metrics_names, res))
     res = {'dataset': dataset}
