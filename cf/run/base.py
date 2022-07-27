@@ -128,6 +128,7 @@ def predict(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
         log_id = pd.read_csv(os.path.join(base, 'log_id.csv'))
         log_id['pctr'] = pred.iloc[:, 0]
         pred = log_id
+        pred.sort_values(by='log_id')
         pred.to_csv(filename, index=False, header=['log_id', 'pctr'])
     else:
         pred.to_csv(filename)
