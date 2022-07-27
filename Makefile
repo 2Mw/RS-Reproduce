@@ -15,7 +15,7 @@ weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn_me/20220713153831/weights.
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/medcn/20220726215919/weights.007-0.07477.hdf5
+t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config
 p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
