@@ -37,6 +37,7 @@ RS
 
 * Recall models
   1. [YoutubeDNN](https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/45530.pdf)
+  2. [YoutubeSBC](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/6c8a86c981a62b0126a11896b7f6ae0dae4c3566.pdf)
 
 * Other:
     1. [CowClip 2022](https://arxiv.org/pdf/2204.06240)
@@ -57,6 +58,7 @@ RS
 2. [Cowclip](https://github.com/bytedance/LargeBatchCTR)
 3. [FuxiCTR](https://github.com/xue-pai/FuxiCTR)
 4. [DeepMatch](https://github.com/shenweichen/deepmatch)
+5. [Torch-rechub](https://github.com/datawhalechina/torch-rechub)
 
 ## Appendix
 
