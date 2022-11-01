@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow import keras
-from cf.models.cowclip import Cowclip
+from cf.models.ctr.cowclip import Cowclip
 from keras.models import Model
 from keras.layers import Dense
 from cf.models.base import get_embedding, form_x, model_summary

@@ -1,17 +1,12 @@
 import tensorflow as tf
 from keras.models import Model
-from keras.layers import Dense
-from cf.layers import crossnet, mlp, gate, moe
-from cf.utils import tensor
+from cf.layers import mlp
 from cf.models.base import get_embedding, form_x, model_summary
-from cf.preprocess.feature_column import SparseFeat, SequenceFeat
-from cf.models.cowclip import Cowclip
-from cf.models.base import checkCowclip
-from tensorflow import keras
 from keras.losses import cosine_similarity
 
+# Youtube DNN 分为两部分：recall 和 rank
 
-class YoutubeDNN(Model):
+class YoutubeDNNRecall(Model):
     def __init__(self, user_features, item_features, neg_item_features, config, directory="", *args,
                  **kwargs):
         super().__init__(*args, **kwargs)

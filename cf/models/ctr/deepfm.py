@@ -3,7 +3,6 @@ from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp, linear
 from cf.models.base import get_embedding, model_summary, form_x
-from cf.models.cowclip import Cowclip
 from cf.models.base import checkCowclip
 from cf.preprocess.feature_column import SparseFeat
 

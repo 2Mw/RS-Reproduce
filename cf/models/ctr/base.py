@@ -7,7 +7,7 @@ import tensorflow as tf
 from tensorflow import keras
 import os
 from cf.preprocess.feature_column import SparseFeat, SequenceFeat, DenseFeat
-from cf.models.cowclip import Cowclip
+from cf.models.ctr.cowclip import Cowclip
 from cf.utils.logger import logger
 from cf.layers.mlp import MLP
 

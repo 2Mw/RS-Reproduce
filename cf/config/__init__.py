@@ -8,6 +8,7 @@ from cf.config.edcn import *
 from cf.config.medcn import *
 from cf.config.autoint_me import *
 from cf.config.dcn_me import *
+from cf.config.youtubednn import *
 from cf.config.youtubesbc import *
 from cf.models import MODULES as pool
 import cf.config as obj
