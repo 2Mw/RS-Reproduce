@@ -72,7 +72,13 @@ def read_raw_data(file: str, sample_num, sep: str):
 def process(df: pd.DataFrame, sparse_features, dense_features, sequence_features=None, numeric_process: str = 'mms',
             numeric_fn=None):
     """
-    Process sparse features and dense features.
+    Process sparse features, dense features and sequence_features.
+
+    Process sparse feature with LabelEncode().
+
+    Process dense feature with KBinsDiscretizer / LogNormalize / MinMaxScaler
+
+    Process sequence feature with nothing
 
     :param df: The data frame of pandas.
     :param sparse_features: Sparse features columns name.
@@ -129,7 +135,15 @@ def process(df: pd.DataFrame, sparse_features, dense_features, sequence_features
 
 def gen_feature_columns(data, sparse_features, dense_features, sequence_features=None, seq_map=None):
     """
-    Generate a list of feature columns.
+    Generate a list of feature columns as format [SparseFeat, ..., DenseFeat, ..., SequenceFeat]
+
+    SparseFeat format like namedtuple('SparseFeat', ['name', 'vocab_size', 'dtype'])
+
+    DenseFeat = namedtuple('DenseFeat', ['name', 'dim', 'dtype'])
+
+    SequenceFeat = namedtuple('SequenceFeat', ['name', 'vocab_size', 'dtype'])
+
+    **对于共享 Embedding 的 feature, 应该采用 "xxx::key"的形式**，比如 C1::item
 
     :param data: data
     :param sparse_features: The names of sparse features.

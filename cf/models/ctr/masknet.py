@@ -1,5 +1,5 @@
 from keras.models import Model
-from cf.models.base import checkCowclip
+from cf.models.ctr.base import checkCowclip
 from cf.preprocess.feature_column import SparseFeat
 
 

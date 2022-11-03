@@ -1,10 +1,10 @@
 import tensorflow as tf
 from keras.layers import Dense
-from cf.models.base import get_embedding, model_summary, form_x
+from cf.models.ctr.base import get_embedding, model_summary, form_x
 from cf.layers import crossnet, mlp, gate, moe
 from cf.utils import tensor
 from cf.models.ctr.cowclip import Cowclip
-from cf.models.base import checkCowclip
+from cf.models.ctr.base import checkCowclip
 from cf.preprocess.feature_column import SparseFeat
 from tensorflow import keras
 

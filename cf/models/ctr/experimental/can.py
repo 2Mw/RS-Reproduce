@@ -3,10 +3,10 @@ from keras.models import Model
 from keras.layers import Dense
 from cf.layers import crossnet, attention, mlp, gate
 from cf.utils import tensor
-from cf.models.base import get_embedding, form_x, model_summary
+from cf.models.ctr.base import get_embedding, form_x, model_summary
 from cf.preprocess.feature_column import SparseFeat
 from cf.models.ctr.cowclip import Cowclip
-from cf.models.base import checkCowclip
+from cf.models.ctr.base import checkCowclip
 
 
 class CAN(Cowclip):

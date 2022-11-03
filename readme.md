@@ -61,7 +61,7 @@ RS
 3. [FuxiCTR](https://github.com/xue-pai/FuxiCTR)
 4. [DeepMatch](https://github.com/shenweichen/deepmatch)
 5. [Torch-rechub](https://github.com/datawhalechina/torch-rechub)
-6. [Deep-Youtube-Recommendations](https://github.com/hyez/Deep-Youtube-Recommendations) 韩国小改改
+6. [Deep-Youtube-Recommendations](https://github.com/hyez/Deep-Youtube-Recommendations) 한국의 미녀
 
 ## Appendix
 

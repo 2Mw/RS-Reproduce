@@ -23,6 +23,6 @@ MODULES = {
     'dcn_me': DCNME,
     'autoint_me': AutoIntME,
     'youtubednn_recall': YoutubeDNNRecall,
-    'youtubednn_rank': None,
+    # 'youtubednn_rank': None,
     'youtubesbc': YoutubeSBC
 }

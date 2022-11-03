@@ -31,3 +31,29 @@ class MaskBlock(Layer):
         v_mask = self.mask_layer[1](self.mask_layer[0](inputs))
         v_out = self.dropout(tf.nn.relu(self.layer_norm(self.hidden_layer(v_mask * args[0]))))
         return v_out
+
+
+class MaskedEmbeddingsAggregator(Layer):
+    def __init__(self, agg_mode='mean', *args, **kwargs):
+        """
+        MaskedEmbeddingAggregator For YouTube DNN recall part to prevent feature cross.
+
+        :param agg_mode: The mode of aggregation, default `mean`.
+        :param args:
+        :param kwargs:
+        """
+        super().__init__(**kwargs)
+        if agg_mode not in ['sum', 'mean']:
+            raise NotImplementedError
+        self.agg_mode = agg_mode
+
+    @tf.function
+    def call(self, inputs, mask=None, *args, **kwargs):
+        # 对不规则张量进行 mask 操作
+        masked_embeddings = tf.ragged.boolean_mask(inputs, mask)
+        aggregated = None
+        if self.agg_mode == 'sum':
+            aggregated = tf.reduce_sum(masked_embeddings, axis=1)
+        elif self.agg_mode == 'mean':
+            aggregated = tf.reduce_mean(masked_embeddings, axis=1)
+        return aggregated

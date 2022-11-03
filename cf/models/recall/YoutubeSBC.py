@@ -1,5 +1,5 @@
 from keras.models import Model
-from cf.models.base import model_summary
+from cf.models.ctr.base import model_summary
 
 
 class YoutubeSBC(Model):

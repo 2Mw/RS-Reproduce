@@ -15,6 +15,7 @@ from cf.layers.mlp import MLP
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
     """
     Get the embedding according to dimensions for sparse features. 由于 embedding 占用参数过多，因此提供在 cpu 中训练的方法
+    # 对于共享 Embedding 的 feature, name 应该采用 "xxx::key"的形式
 
     :param feature_columns: list of feature columns
     :param dim: Embedding dimension
@@ -24,19 +25,31 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse'):
     """
     with tf.device(device.lower()):
         ebd = {}
+        key_set = {}
         for f in feature_columns:
+            key = f.name
+            if '::' in f.name:
+                key = f.name.split('::')[1]
+                if len('key') == 0:
+                    raise ValueError('Your key is empty or not contain `::` in feature name')
+                if key_set.get(key) is not None:  # 已经含有 embedding，跳过
+                    continue
+                else:
+                    key_set.setdefault(key, True)
             if isinstance(f, SparseFeat):
-                ebd[f.name] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
-                                        embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
-                                        name=f'{prefix}_emb_{f.name}')
+                ebd[key] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
+                                     embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
+                                     name=f'{prefix}_emb_{f.name}')
             elif isinstance(f, SequenceFeat):
                 # 如果存在的多值属性在 Sparse Feature 中已经存在则不再创建，否则创建新的 embedding 来构建
                 # 需要注意的时候预处理的时候需要计算号 vocab_size
-                raise NotImplementedError
+                ebd[key] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
+                                     embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
+                                     name=f'sequence_emb_{f.name}')
             elif isinstance(f, DenseFeat):
                 # 如果采用 dense feature 和 sparse feature 相同维度的话可能会用到，比如在 attention-base 的网络中
                 # 如果未使用到则可以忽略
-                ebd[f.name] = MLP([dim], None, 0, use_bn=True)
+                ebd[key] = MLP([dim], None, 0, use_bn=True)
 
     return ebd
 
@@ -76,6 +89,8 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
     dense_x = []
     seq_x = []
     for f, v in inputs.items():
+        if '::' in f:   # Get the key
+            f = f.split('::')[1]
         if f[0] == 'C':
             # 处理稀疏型特征
             ebd_x.append(embedding[f](v))

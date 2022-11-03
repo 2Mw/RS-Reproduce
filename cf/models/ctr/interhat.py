@@ -2,10 +2,10 @@ import tensorflow as tf
 from cf.layers.attention import MultiheadAttention, AggregationAttention
 from cf.layers import gate, mlp
 from keras.layers import Conv1D, Dense
-from cf.models.base import model_summary, form_x, get_embedding
+from cf.models.ctr.base import model_summary, form_x, get_embedding
 from cf.preprocess.feature_column import SparseFeat
 from cf.models.ctr.cowclip import Cowclip
-from cf.models.base import checkCowclip
+from cf.models.ctr.base import checkCowclip
 
 
 class InterHAt(Cowclip):

@@ -1,12 +1,12 @@
 import tensorflow as tf
 from keras.layers import Dense
 from cf.layers.attention import MultiheadAttention
-from cf.models.base import get_embedding, model_summary, form_x
+from cf.models.ctr.base import get_embedding, model_summary, form_x
 from cf.layers import linear, mlp, gate
 from cf.preprocess.feature_column import SparseFeat
 from cf.utils.tensor import to2DTensor
 from cf.models.ctr.cowclip import Cowclip
-from cf.models.base import checkCowclip
+from cf.models.ctr.base import checkCowclip
 
 
 class AutoInt(Cowclip):
