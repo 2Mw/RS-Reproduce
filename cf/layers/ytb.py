@@ -31,5 +31,5 @@ class L2Norm(Layer):
             inputs = tf.ragged.boolean_mask(inputs, mask).to_tensor()
         return tf.math.l2_normalize(inputs, axis=-1)
 
-    def compute_mask(self, inputs, mask=None):
+    def compute_mask(self, inputs, mask):
         return mask

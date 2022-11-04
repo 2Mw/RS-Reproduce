@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
-from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy, huawei
+from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy, huawei, ml100k
 from cf.preprocess.feature_column import DenseFeat, SparseFeat, SequenceFeat
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -149,7 +149,8 @@ def gen_feature_columns(data, sparse_features, dense_features, sequence_features
     :param sparse_features: The names of sparse features.
     :param dense_features: The names of dense features.
     :param sequence_features: The names of sequence features.
-    :param seq_map: if sequence_features is not None, you should assign seq seq_division
+    :param seq_map: if sequence_features is not None, you should assign seq seq_division, else the format like:
+    {'S1': 556}, the number is vocabulary size
     :return: [SparseFeat, ..., DenseFeat, ..., SequenceFeat]
     """
     # sparse = [SparseFeat(f, data[f].max()+1) for f in sparse_features]
@@ -166,8 +167,8 @@ def gen_feature_columns(data, sparse_features, dense_features, sequence_features
     seq = []
     # 这里不应该扫描全表了，应该直接使用 seq_map 变量
     for name in sequence_features:
-        cnt = len(seq_map[name]) + 1
-        seq.append(SequenceFeat(name, cnt, np.str))
+        vocab = seq_map[name] + 1
+        seq.append(SequenceFeat(name, vocab, data[name].dtype))
     return sparse + dense + seq
 
 
@@ -244,7 +245,10 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'huawei':
             fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process)
-
+        elif dataset == 'ml100k':
+            fc, train_data, test_data = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process)
+        else:
+            raise ValueError(f'Not implement this dataset:{dataset}')
         # read data over, then dump to file.
         logger.info(f'=== dump data ===')
         if data_type == _pickle:

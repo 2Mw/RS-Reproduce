@@ -32,7 +32,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT_RATIO = 0.80  # MiB
+MEMORY_LIMIT_RATIO = 0.50  # MiB
 USE_CPU_ONLY = False
 ASSIGNED_GPU = os.environ.get("CUDA_VISIBLE_DEVICES")
 
@@ -67,9 +67,9 @@ else:
         SELECTED_GPU = get_available_gpu(ins)
         if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in SELECTED_GPU):
             print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
-            time.sleep(get_random_num(5, 8))
+            # time.sleep(get_random_num(5, 8))
         else:
-            time.sleep(get_random_num(10, 15))
+            # time.sleep(get_random_num(10, 15))
             a = get_available_gpu(ins)
             if ASSIGNED_GPU is None:
                 if len(a) == 0 or len(SELECTED_GPU) == 0:

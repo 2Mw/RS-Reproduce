@@ -2,10 +2,21 @@ from cf.config.dataset import ds_config
 
 config = {
     'train': {
-        'batch_size': 1024
+        'epochs': 500,
+        'optimizer': 'Adam',
+        'loss': 'sparse_categorical_crossentropy',
+        'sample_size': -1,
+        'batch_size': 128,
+        'lr': 0.0005,
+        'val_ratio': 0.1,
+        'test_ratio': 0.1,
+        'test_batch_size': 128,
+        'lr_embed': 1e-4,
+        'warmup': True,
     },
 
     'model': {
+        'numeric_process': 'mms',
         # temperature factor for similarity score, default 1.0.
         'temperature': 1.0,
         'embedding_dim': 64,

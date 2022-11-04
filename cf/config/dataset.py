@@ -22,7 +22,7 @@ ds_config = {
         'huawei_base': 'data/huawei',
         'huawei_train': 'train/train_data_ads.csv',
         # movielens - 100k
-        'ml_100k_base': 'data/ml100k',
-        'ml_100k_train': ''
+        'ml100k_base': 'data/ml100k',
+        'ml100k_train': 'u.data'
     }
 }

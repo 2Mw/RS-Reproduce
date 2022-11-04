@@ -2,6 +2,7 @@ import copy
 import os
 import numpy as np
 import pandas as pd
+from keras.preprocessing.sequence import pad_sequences as ps
 
 import cf.preprocess.data as base
 from cf.utils.logger import logger
@@ -62,9 +63,14 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
 
     title_ids = ratings_all["movie_name"].unique().tolist()
     title2title_encoded = {x: i for i, x in enumerate(title_ids)}
+
+    occupation_ids = ratings_all['occupation'].unique().tolist()
+    oc2oc_encoded = {x: i for i, x in enumerate(occupation_ids)}
+
     ratings_all['user'] = ratings_all['user_id'].map(user2user_encoded)
     ratings_all['movie'] = ratings_all['movie_id'].map(movie2movie_encoded)
     ratings_all['title_d'] = ratings_all['movie_name'].map(title2title_encoded)
+    ratings_all['occupation'] = ratings_all['occupation'].map(oc2oc_encoded)
 
     # 开始产生训练数据的原型
     # 1. 对每个用户看过的所有电影按照喜欢和不喜欢进行分类
@@ -72,15 +78,15 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     # 2. 产生每个用户看过的所有电影名称
     title_list = ratings_all.groupby(['user'])['title_d'].apply(list).reset_index()
     # 3. 对每个用户生成其看过所有电影的题材
-    genre_list = ratings_all.groupby(['user'])['all_genres'].unique().apply(list).reset_index()
-    genre_list['all_genres'] = genre_list['all_genres'].apply(
-        lambda x: [i for i in list(set(','.join(x))) if i.isdigit()])  # 对题材进行去重
+    genre_list = ratings_all.groupby(['user'])['all_genre'].unique().apply(list).reset_index()
+    genre_list['all_genre'] = genre_list['all_genre'].apply(
+        lambda x: [int(i) for i in list(set(','.join(x))) if i.isdigit()])  # 对题材进行去重
 
     # 创建以用户id为行，喜欢类型为列（即正样本和负样本），对应的表格值为电影
     user_video_list = movie_list.pivot(index='user', columns='like_type', values='movie').reset_index()
     user_video_list.fillna(ratings_all['movie'].max() + 1, inplace=True)
     # 生成用户信息
-    user_data = ratings_all[['user', 'occupation', 'gender']]
+    user_data = ratings_all[['user', 'occupation', 'gender', 'age']]
     # 相当于复制一份数据？
     user_data = user_data.drop_duplicates()
     user_data = user_data.reset_index()
@@ -91,7 +97,24 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     dataset['like'] = dataset['like'].apply(lambda x: x if type(x) is list else [x])
     dataset['dislike'] = dataset['dislike'].apply(lambda x: x if type(x) is list else [x])
     # 将最后一个喜欢的电影作为预测标签
-    dataset['predict_labels'] = dataset['like'].apply(lambda x: x[-1])
+    dataset['label'] = dataset['like'].apply(lambda x: x[-1])
     dataset['like'] = dataset['like'].apply(lambda x: x[:-1])
-    # 数据集所包含的字段 user, dislike[list], like[list], title_d[list], all_genres[list], occupations, gender, predict_labels
+    # 数据集所包含的字段 user, dislike[list], like[list], title_d[list], all_genre[list], occupations, gender, age, label
     # 对于 dense features normalize to [0,1] (in YoutubeDNN chapt3.3)
+    dataset['age'] = (dataset['age'] - dataset['age'].min()) / (dataset['age'].max() - dataset['age'].min())
+    dataset['gender'] = np.where(dataset['gender'] == 'M', 0, 1)
+    mapped_columns = ['user', 'S1::item', 'S2::item', 'S3::item', 'S4::genre', 'C1', 'I1', 'I2', 'label']
+    dataset.columns = mapped_columns
+
+    # !important pad_sequence
+    # for c in mapped_columns:
+    #     if c[0] == 'S':
+    #         dataset[c] = ps(dataset[c]).tolist()
+
+    item_class, genre_class = 1683, 20
+    seq_map = {'S1::item': item_class, 'S2::item': item_class, 'S3::item': item_class, 'S4::genre': genre_class}
+
+    fc = base.gen_feature_columns(dataset, ['C1'], ['I1', 'I2'], ['S1::item', 'S2::item', 'S3::item', 'S4::genre'],
+                                  seq_map)
+
+    return base.split_dataset(dataset, fc, test_size)

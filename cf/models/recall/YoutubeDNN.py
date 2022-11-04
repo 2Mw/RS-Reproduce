@@ -18,7 +18,7 @@ class YoutubeDNNRecall(Model):
         train_cfg = config['train']
         self.directory = directory
         self.embedding_dim = model_cfg['embedding_dim']
-        self.ebd = get_embedding(feature_columns, self.embedding_dim)
+        self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.mask_agg = MEA(name='aggregate_embedding')
         self.mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.l2 = L2Norm()
@@ -37,8 +37,12 @@ class YoutubeDNNRecall(Model):
         raise ValueError('Not found the item feature alias')
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
+        # TODO 需要解决输入的问题
         model_summary(self, self.feature_columns, self.directory)
 
     def call(self, inputs, training=None, mask=None):
-        # TODO 输入数据时候的 pad_sequence 怎么搞
-        pass
+        # 输入数据时候的 pad_sequence 怎么搞？ 应该在预处理的时候就填充好
+        x = form_x(inputs, self.ebd, False)
+        x = self.mask_agg(self.l2(x))
+        x = self.mlp(x)
+        return self.final(x)

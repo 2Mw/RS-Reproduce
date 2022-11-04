@@ -57,3 +57,6 @@ class MaskedEmbeddingsAggregator(Layer):
         elif self.agg_mode == 'mean':
             aggregated = tf.reduce_mean(masked_embeddings, axis=1)
         return aggregated
+
+    def get_config(self):
+        return {'agg_mode': self.agg_mode}
