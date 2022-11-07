@@ -29,8 +29,9 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse', *a
         key_set = {}
         for f in feature_columns:
             key = f.name
+            name = f.name
             if '::' in f.name:
-                key = f.name.split('::')[1]
+                name, key = f.name.split('::')[0], f.name.split('::')[1]
                 if len('key') == 0:
                     raise ValueError('Your key is empty or not contain `::` in feature name')
                 if key_set.get(key) is not None:  # 已经含有 embedding，跳过
@@ -40,13 +41,13 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse', *a
             if isinstance(f, SparseFeat):
                 ebd[key] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
                                      embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
-                                     name=f'{prefix}_emb_{f.name}', **kwargs)
+                                     name=f'{prefix}_emb_{name}', **kwargs)
             elif isinstance(f, SequenceFeat):
                 # 如果存在的多值属性在 Sparse Feature 中已经存在则不再创建，否则创建新的 embedding 来构建
                 # 需要注意的时候预处理的时候需要计算号 vocab_size
                 ebd[key] = Embedding(input_dim=f.vocab_size, input_length=1, output_dim=dim,
                                      embeddings_initializer='random_normal', embeddings_regularizer=l2(1e-5),
-                                     name=f'sequence_emb_{f.name}', **kwargs)
+                                     name=f'sequence_emb_{name}', **kwargs)
             elif isinstance(f, DenseFeat):
                 # 如果采用 dense feature 和 sparse feature 相同维度的话可能会用到，比如在 attention-base 的网络中
                 # 如果未使用到则可以忽略
@@ -74,7 +75,7 @@ def model_summary(instance, feature_column, directory):
     model.summary()
 
 
-def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
+def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split='', seq_form='str'):
     """
     Generate the input `x` to the model， if attention_based is True, return (embedding_x, dense_x); if False return
     the concatenation of both.
@@ -84,6 +85,7 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
     :param divide: If True return value is (embedding_x, dense_x), else return the concatenation of both.
     :param same_dim: If the dimension of numeric features are same with sparse features, default False.
     :param seq_split: The split string of sequence feature
+    :param seq_form: the form of sequence data, string form or array form, optional: `str`, `array`
     :return: if divide is True return `sparse_x, dense_x`, else return `concat(sparse_x, dense_x)`
     """
     ebd_x = []
@@ -105,20 +107,30 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split=''):
             else:
                 dense_x.append(v)
         elif f[0] == 'S':
-            # 处理多值型特征，使用 mean 来得到最终的 embedding 向量
-            if len(seq_split) == 0 or seq_split is None:
-                e = f'The split string is null'
+            supported_seq_form = ['str', 'array']
+            seq_form = seq_form.lower()
+            if seq_form not in supported_seq_form:
+                e = f'Not supported sequential data type: {seq_form}, only support {supported_seq_form}'
                 logger.error(e)
                 raise ValueError(e)
 
-            if v.get_shape().as_list()[0] is not None:
-                c = pd.DataFrame(v.numpy())
-                arr = c.apply(lambda x: x.apply(lambda y: list(map(int, y.decode().split(',')))))
-                vs = []
-                for item in arr[0]:
-                    o = tf.expand_dims(item, axis=-1)
-                    vs.append(tf.reduce_mean(embedding[f](o), axis=0))
-                seq_x.append(tf.stack(vs))
+            if seq_form == 'str':
+                # 处理多值型特征，使用 mean 来得到最终的 embedding 向量
+                if len(seq_split) == 0 or seq_split is None:
+                    e = f'The split string is null'
+                    logger.error(e)
+                    raise ValueError(e)
+
+                if v.get_shape().as_list()[0] is not None:
+                    c = pd.DataFrame(v.numpy())
+                    arr = c.apply(lambda x: x.apply(lambda y: list(map(int, y.decode().split(',')))))
+                    vs = []
+                    for item in arr[0]:
+                        o = tf.expand_dims(item, axis=-1)
+                        vs.append(tf.reduce_mean(embedding[f](o), axis=0))
+                    seq_x.append(tf.stack(vs))
+            elif seq_form == 'array':
+                seq_x.append(embedding[key](v))
 
     if divide:
         return tf.concat(ebd_x + seq_x, axis=-1), tf.concat(dense_x, axis=-1)

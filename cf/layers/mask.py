@@ -48,10 +48,9 @@ class MaskedEmbeddingsAggregator(Layer):
         self.agg_mode = agg_mode
 
     @tf.function
-    def call(self, inputs, mask=None, *args, **kwargs):
+    def call(self, inputs, mask=None):
         # 对不规则张量进行 mask 操作
         masked_embeddings = tf.ragged.boolean_mask(inputs, mask)
-        aggregated = None
         if self.agg_mode == 'sum':
             aggregated = tf.reduce_sum(masked_embeddings, axis=1)
         elif self.agg_mode == 'mean':

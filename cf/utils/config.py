@@ -115,6 +115,8 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
 
 
 def plot_curve(history, directory):
+    if history.get('BCE') is None or history.get('auc') is None:
+        return
     bce_df = pd.DataFrame(
         {
             'BCE': history['BCE'],

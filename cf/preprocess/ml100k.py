@@ -2,7 +2,6 @@ import copy
 import os
 import numpy as np
 import pandas as pd
-from keras.preprocessing.sequence import pad_sequences as ps
 
 import cf.preprocess.data as base
 from cf.utils.logger import logger
@@ -111,7 +110,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     #     if c[0] == 'S':
     #         dataset[c] = ps(dataset[c]).tolist()
 
-    item_class, genre_class = 1683, 20
+    item_class, genre_class = 1684, 21
     seq_map = {'S1::item': item_class, 'S2::item': item_class, 'S3::item': item_class, 'S4::genre': genre_class}
 
     fc = base.gen_feature_columns(dataset, ['C1'], ['I1', 'I2'], ['S1::item', 'S2::item', 'S3::item', 'S4::genre'],

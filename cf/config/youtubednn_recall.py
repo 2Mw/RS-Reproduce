@@ -2,17 +2,18 @@ from cf.config.dataset import ds_config
 
 config = {
     'train': {
-        'epochs': 500,
+        'epochs': 3,
         'optimizer': 'Adam',
         'loss': 'sparse_categorical_crossentropy',
         'sample_size': -1,
-        'batch_size': 128,
-        'lr': 0.0005,
+        'batch_size': 32,
+        'lr': 0.01,
         'val_ratio': 0.1,
         'test_ratio': 0.1,
-        'test_batch_size': 128,
+        'test_batch_size': 32,
         'lr_embed': 1e-4,
         'warmup': True,
+        'metrics': []
     },
 
     'model': {
@@ -22,7 +23,7 @@ config = {
         'embedding_dim': 64,
         'activation': 'relu',
         'dropout': 0.3,
-        'use_bn': True,
+        'use_bn': False,
         'units': [2048, 1024, 512, 256]
     }
 }

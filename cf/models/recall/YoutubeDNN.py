@@ -1,16 +1,20 @@
 import tensorflow as tf
-from keras.layers import Dense
+from keras.layers import Dense, Input, BatchNormalization
 from keras.models import Model
 from cf.layers import mlp
 from cf.models.ctr.base import get_embedding, form_x, model_summary
-from keras.losses import cosine_similarity
+from tensorflow import keras
 from cf.layers.mask import MaskedEmbeddingsAggregator as MEA
 from cf.layers.ytb import L2Norm
+import os
 
 
 # YouTube DNN 分为两部分：recall 和 rank， this is recall part.
 
 class YoutubeDNNRecall(Model):
+    """
+    WARNING: This model must train in eager mode.
+    """
     def __init__(self, feature_columns, config, directory="", *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.feature_columns = feature_columns
@@ -22,6 +26,7 @@ class YoutubeDNNRecall(Model):
         self.mask_agg = MEA(name='aggregate_embedding')
         self.mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.l2 = L2Norm()
+        self.bn = BatchNormalization()
         self.pred_class_num = self.__get_pred_class__()
         self.final = Dense(self.pred_class_num, activation=tf.nn.softmax, name='dense_output')
 
@@ -37,12 +42,37 @@ class YoutubeDNNRecall(Model):
         raise ValueError('Not found the item feature alias')
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
-        # TODO 需要解决输入的问题
-        model_summary(self, self.feature_columns, self.directory)
+        inputs = {
+            f.name: Input(shape=(None, ), name=f.name)
+            for f in self.feature_columns
+        }
+        model = Model(inputs, outputs=self.call(inputs))
+        if len(self.directory) > 0:
+            keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
+        model.summary()
 
     def call(self, inputs, training=None, mask=None):
-        # 输入数据时候的 pad_sequence 怎么搞？ 应该在预处理的时候就填充好
-        x = form_x(inputs, self.ebd, False)
-        x = self.mask_agg(self.l2(x))
+        ebd_x = []
+        dense_x = []
+        seq_x = []
+        for f, v in inputs.items():
+            key = f
+            if '::' in f:  # Get the key
+                key = f.split('::')[1]
+            if f[0] == 'C':
+                # 处理稀疏型特征
+                # ebd_x.append(self.ebd[key](v))
+                pass
+            elif f[0] == 'I':
+                # 处理数值型特征
+                # v = tf.expand_dims(v, 1)
+                # dense_x.append(v)
+                pass
+            elif f[0] == 'S':
+                seq_x.append(self.mask_agg(self.l2(self.ebd[key](v))))
+
+        x = tf.concat(ebd_x + dense_x + seq_x, axis=1)
         x = self.mlp(x)
-        return self.final(x)
+        return self.final(self.bn(x))
+
+

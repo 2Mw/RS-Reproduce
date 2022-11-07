@@ -19,17 +19,17 @@ class MLP(Layer):
         self.initializer = initializer if initializer is not None else keras.initializers.glorot_normal
         self.dnn = [Dense(unit, activation) for unit in units]
         self.dropout = Dropout(dropout)
-        self.bn = BatchNormalization()
+        self.bn = [BatchNormalization() for unit in units]
         self.use_bn = use_bn
         self.residual = residual
 
     def call(self, inputs, *args, **kwargs):
         # 2sAGCN中是 bn->relu->dropout
         x = inputs
-        for dense in self.dnn:
+        for i, dense in enumerate(self.dnn):
             x = dense(x)
             if self.use_bn:
-                x = self.bn(x)
+                x = self.bn[i](x)
             # dropout 要放在 bn 层后面
             x = self.dropout(x)
         if self.residual:

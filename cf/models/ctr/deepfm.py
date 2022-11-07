@@ -7,10 +7,10 @@ from cf.models.ctr.base import checkCowclip
 from cf.preprocess.feature_column import SparseFeat
 
 
+@DeprecationWarning
 class DeepFM(Model):
     def __init__(self, feature_columns, config, directory: str = '', *args, **kwargs):
-        # TODO 需要修复
-        """
+        """Deprecated
 
         :param feature_columns:  A list. [{'name':, 'vocab_size':, 'dim':}, ...]
         :param config:  Hyper parameters configurations.

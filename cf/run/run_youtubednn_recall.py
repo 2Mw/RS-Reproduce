@@ -11,6 +11,7 @@ from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader
 from cf.utils.logger import logger
+from keras.preprocessing.sequence import pad_sequences as ps
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
@@ -35,6 +36,15 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     feature_columns, train_data, test_data = dataloader.load_data(dataset, basepath, sample_size,
                                                                   train_config['test_ratio'], train_file,
                                                                   num_process=num_process)
+    # 召回模型的多值数据预处理
+    for k in train_data[0].keys():
+        if k[0] == 'S':
+            train_data[0][k] = ps(train_data[0][k])
+
+    for k in test_data[0].keys():
+        if k[0] == 'S':
+            test_data[0][k] = ps(test_data[0][k])
+    # 构建模型
     logger.info(f'========= Build Model =========')
     steps = int(len(train_data[1]) / batch_size)
     # 创建输出结果目录
@@ -43,16 +53,9 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     model = initModel(cfg, feature_columns, directory, weights, steps=steps)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
-    # earlyStop = EarlyStopping('val_BCE', min_delta=0.0001, patience=2)
-    # aucStop = AbnormalAUC(0.82, steps=steps // 2, directory=directory, gap_steps=steps // 10)
-    # aucMonitor = MetricsMonitor('auc', 'max', directory)
-    # tb = TensorBoard(log_dir=os.path.join(directory, 'profile'), histogram_freq=100, profile_batch=[3, steps])
-    # train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
-    #                           validation_data=test_data, callbacks=[ckpt, earlyStop, aucStop, aucMonitor, tb])
     train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
                               validation_split=val_ratio, callbacks=[ckpt])
     logger.info(f'Train result: \n{train_history.history}\n')
-    # res = model.evaluate(test_data[0], test_data[1], batch_size=train_config['test_batch_size'])
     pred = model.predict(test_data[0], train_config['test_batch_size'])
     res = {'dataset': dataset}
     logger.info('========= Export Model Information =========')
