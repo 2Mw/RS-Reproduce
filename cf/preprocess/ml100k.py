@@ -21,7 +21,13 @@ SEP1, SEP2 = '|', '\t'
 
 
 def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
+    pass
+
+
+def create_dataset_dep(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
     """
+    @deprecated
+
     Create Movielens-100k for recall model
 
     :param file: the filepath of u.data of movielen-100k
@@ -34,6 +40,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
         e = f'Please specify the filepath of `u.data` in the file param: {file}'
         logger.error(e)
         raise FileNotFoundError(e)
+    raise DeprecationWarning('This method has deprecated')
     dirname = os.path.dirname(file)
     user_file, movie_file = [os.path.join(dirname, i) for i in ['u.user', 'u.item']]
     rating_file = file

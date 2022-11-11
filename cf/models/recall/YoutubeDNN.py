@@ -14,6 +14,7 @@ import os
 class YoutubeDNNRecall(Model):
     """
     WARNING: This model must train in eager mode.
+    Single tower for listwise.
     """
     def __init__(self, feature_columns, config, directory="", *args, **kwargs):
         super().__init__(*args, **kwargs)
