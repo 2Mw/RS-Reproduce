@@ -3,16 +3,16 @@ from tensorflow import keras
 from keras.models import Model
 from cf.layers import fm, mlp, linear
 from cf.utils import tensor
-from cf.models.base import get_embedding, model_summary, form_x
-from cf.models.cowclip import Cowclip
-from cf.models.base import checkCowclip
+from cf.models.ctr.cowclip import Cowclip
+from cf.models.ctr.base import get_embedding, model_summary, form_x
+from cf.models.ctr.base import checkCowclip
 from cf.preprocess.feature_column import SparseFeat
 
 
+@DeprecationWarning
 class DeepFM(Model):
     def __init__(self, feature_columns, config, directory: str = '', *args, **kwargs):
-        # TODO 需要修复
-        """
+        """Deprecated
 
         :param feature_columns:  A list. [{'name':, 'vocab_size':, 'dim':}, ...]
         :param config:  Hyper parameters configurations.

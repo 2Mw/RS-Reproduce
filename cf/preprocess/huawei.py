@@ -55,6 +55,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     :param numeric_process:
     :return:
     """
+    raise NotImplementedError
     seq_names, seq_map = ADS_SEQUENCE_FEATURE_NAME + FEEDS_SEQUENCE_FEATURE_NAME, {}
     dirname = os.path.dirname(file)
     files = ['train_data_ads.csv', 'train_data_feeds.csv', '../test/test_data_ads.csv']

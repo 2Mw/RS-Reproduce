@@ -94,7 +94,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     df.astype('str')
     df['I1'] = df['I1'].astype('float32')
 
-    df = base.process(df, sparse_feature, dense_feature, numeric_process)
+    df = base.process(df, sparse_feature, dense_feature, numeric_process=numeric_process)
 
     fc = base.gen_feature_columns(df, sparse_feature, dense_feature)
 

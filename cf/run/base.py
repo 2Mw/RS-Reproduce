@@ -9,7 +9,7 @@ from cf.models import MODULES as pool
 import tensorflow_addons as tfa
 from cf.utils.logger import logger
 from cf.utils.config import get_date
-from cf.models.cowclip import Cowclip
+from cf.models.ctr.cowclip import Cowclip
 from keras.models import Model
 import json
 

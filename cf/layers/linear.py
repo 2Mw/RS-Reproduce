@@ -2,7 +2,7 @@ import time
 import tensorflow as tf
 from tensorflow import keras
 from keras.layers import Layer, Dense
-from cf.models.base import get_embedding, form_x
+from cf.models.ctr.base import get_embedding, form_x
 
 
 class Linear(Layer):

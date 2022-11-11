@@ -26,7 +26,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
 
     fn = logNormalize if numeric_process == 'ln' else None
 
-    df = base.process(df, sparse_features, dense_features, numeric_process, fn)
+    df = base.process(df, sparse_features, dense_features, numeric_process=numeric_process, numeric_fn=fn)
 
     fc = base.gen_feature_columns(df, sparse_features, dense_features)
 
