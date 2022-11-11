@@ -19,7 +19,7 @@ t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config
 p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
-p_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/medcn/20220727151629/weights.006-0.07807.hdf5
+p_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/medcn/20220727170434/weights.005-0.07562.hdf5
 prcmd=$(py) $(cli) -m $(model) -c $(p_cfg) -t predict -p $(p_weight) -d $(dataset)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)

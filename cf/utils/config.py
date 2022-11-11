@@ -108,7 +108,7 @@ def export_result(train_hist, val_res, directory: str, cost: float, model, datas
         pred = pd.DataFrame(pred)
         filename = os.path.join(directory, 'pred.csv')
         if dataset == 'huawei':
-            pred.sort_values('log_id')
+            pred = pred.sort_values('log_id')
             pred.to_csv(filename, index=False, header=['log_id', 'pctr'])
         else:
             pred.to_csv(filename, index=False)
