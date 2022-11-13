@@ -285,3 +285,44 @@ def split_dataset(df, fc, test_size):
             return fc, (train_x, train_y)
         else:
             return fc, (train_x,)
+
+
+def mapped2sequential(df: pd.DataFrame, columns: list):
+    """
+    Map the discrete value to sequential id.
+
+    :param df: pd.DataFrame
+    :param columns: the columns you want to process with `mapped2sequential`
+    :return:
+    """
+    for c in columns:
+        if c in df.columns:
+            uniq_values = df[c].unique().tolist()
+            val_encoded = {x: i for i, x in enumerate(uniq_values)}
+            df[c] = df[c].map(val_encoded)
+
+
+def min_max_normalize(df: pd.DataFrame, columns: list):
+    """
+    Add MinMaxNormalize to numeric value.
+
+    :param df:
+    :param columns: the columns you want to process with `min_max_normalize`
+    :return:
+    """
+    for c in columns:
+        if c in df.columns:
+            df[c] = (df[c] - df[c].min()) / (df[c].max() - df[c].min())
+
+
+def std_normalize(df: pd.DataFrame, columns: list):
+    """
+    Add MinMaxNormalize to numeric value.
+
+    :param df:
+    :param columns: columns: the columns you want to process with `std_normalize`
+    :return:
+    """
+    for c in columns:
+        if c in df.columns:
+            df[c] = (df[c] - df[c].mean()) / df[c].std()
