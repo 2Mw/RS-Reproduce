@@ -23,6 +23,13 @@ ds_config = {
         'huawei_train': 'train/train_data_ads.csv',
         # movielens - 100k
         'ml100k_base': 'data/ml100k',
-        'ml100k_train': 'u.data'
+        'ml100k_train': 'u.data',
+        'ml100k_columns': {
+            'query': ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item'],
+            'item': ['C4::item', 'C5', 'S3::genre', 'I3'],
+            'query_id': 'C1::query',
+            'item_id': 'C4::item',
+            'target_id': 'S1::item',  # topk 对比的列表
+        }
     }
 }

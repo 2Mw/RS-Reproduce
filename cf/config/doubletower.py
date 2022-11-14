@@ -24,7 +24,7 @@ config = {
         'activation': 'relu',
         'dropout': 0.3,
         'use_bn': False,
-        'units': [2048, 1024, 512, 256]
+        'units': [2048, 1024, 512, 256],
     }
 }
 

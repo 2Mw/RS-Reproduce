@@ -15,7 +15,7 @@ import json
 
 project_dir = cf.get_project_path()
 
-_RUN_EAGERLY = False
+_RUN_EAGERLY = True
 
 
 def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '', **kwargs):

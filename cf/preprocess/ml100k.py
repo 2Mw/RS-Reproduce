@@ -97,20 +97,25 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     # 生成 feature columns
     # origin columns: user_id, age, gender, occupation, zip_code, dislike, like, movie_id, movie_title, all_genres, release_year
     # mapped columns: C1, I1, I2, C2, C3, S1::item, S2::item, C4, C5, S2::genre, I3
+    train_data.columns = ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item', 'C4::item', 'C5', 'S3::genre', 'I3']
+    test_user_data.columns = ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item']
     fc = [
-        SparseFeat('C1', user_data['user_id'].max() + 1, np.int64),
-        DenseFeat('I1', 1, np.float64),
-        DenseFeat('I2', 1, np.float64),
-        SparseFeat('C2', user_data['occupation'].max() + 1, np.int64),
-        SparseFeat('C3', user_data['zip_code'].max() + 1, np.int64),
-        SequenceFeat('S1::item', movie_data['movie_id'].max() + 1, np.int64),
-        SequenceFeat('S2::item', movie_data['movie_id'].max() + 1, np.int64),
-        SparseFeat('C4::item', movie_data['movie_id'].max() + 1, np.int64),
-        SparseFeat('C5', movie_data['movie_title'].max() + 1, np.int64),
+        SparseFeat('C1::query', user_data['user_id'].max() + 1, np.int32),
+        DenseFeat('I1', 1, np.float32),
+        DenseFeat('I2', 1, np.float32),
+        SparseFeat('C2', user_data['occupation'].max() + 1, np.int32),
+        SparseFeat('C3', user_data['zip_code'].max() + 1, np.int32),
+        SequenceFeat('S1::item', movie_data['movie_id'].max() + 1, np.int32),
+        SequenceFeat('S2::item', movie_data['movie_id'].max() + 1, np.int32),
+        SparseFeat('C4::item', movie_data['movie_id'].max() + 1, np.int32),
+        SparseFeat('C5', movie_data['movie_title'].max() + 1, np.int32),
         SequenceFeat('S3::genre', 21, np.int64),
-        DenseFeat('I3', 1, np.float64),
+        DenseFeat('I3', 1, np.float32),
     ]
-    return fc, train_data, test_user_data
+    train_x = {f.name: train_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+    train_x.update({f.name: train_data[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+    test_data = {f.name: test_user_data[f.name] if f.name in test_user_data.columns else None for f in fc}
+    return fc, train_x, test_data
 
 
 def create_dataset_dep(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
@@ -129,7 +134,7 @@ def create_dataset_dep(file: str, sample_num: int = -1, test_size: float = 0.2, 
         e = f'Please specify the filepath of `u.data` in the file param: {file}'
         logger.error(e)
         raise FileNotFoundError(e)
-    raise DeprecationWarning('This method has deprecated')
+    # raise DeprecationWarning('This method has deprecated')
     dirname = os.path.dirname(file)
     user_file, movie_file = [os.path.join(dirname, i) for i in ['u.user', 'u.item']]
     rating_file = file

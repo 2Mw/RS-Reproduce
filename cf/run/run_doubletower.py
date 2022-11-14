@@ -36,27 +36,32 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     feature_columns, train_data, test_data = dataloader.load_data(dataset, basepath, sample_size,
                                                                   train_config['test_ratio'], train_file,
                                                                   num_process=num_process)
+    train_size, test_size = 0, 0
     # 召回模型的多值数据预处理
-    for k in train_data[0].keys():
+    for k in train_data.keys():
         if k[0] == 'S':
-            train_data[0][k] = ps(train_data[0][k])
+            train_size = max(train_size, len(train_data[k]))
+            train_data[k] = ps(train_data[k])
 
-    for k in test_data[0].keys():
-        if k[0] == 'S':
-            test_data[0][k] = ps(test_data[0][k])
+    for k in test_data.keys():
+        if k[0] == 'S' and test_data[k] is not None:
+            test_size = max(test_size, len(test_data[k]))
+            test_data[k] = ps(test_data[k])
     # 构建模型
     logger.info(f'========= Build Model =========')
-    steps = int(len(train_data[1]) / batch_size)
+    # steps = int(len(train_data) / batch_size)
     # 创建输出结果目录
     directory = base.create_result_dir(__model__, project_dir)
     export_config(copy.deepcopy(bcfg), directory)
-    model = initModel(cfg, feature_columns, directory, weights, steps=steps)
+    cfg['dataset'] = dataset
+    model = initModel(cfg, feature_columns, directory, weights)
     # 创建回调
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
-    train_history = model.fit(train_data[0], train_data[1], epochs=epochs, batch_size=batch_size,
-                              validation_split=val_ratio, callbacks=[ckpt])
+    train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, validation_data=test_data,
+                              callbacks=[ckpt])
+    model.save_vector()
     logger.info(f'Train result: \n{train_history.history}\n')
-    pred = model.predict(test_data[0], train_config['test_batch_size'])
+    pred = model.predict(test_data, test_size)
     res = {'dataset': dataset}
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
