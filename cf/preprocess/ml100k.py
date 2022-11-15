@@ -44,8 +44,8 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     # process user dataset
     base.mapped2sequential(users, ['occupation', 'zip_code'])
     users['gender'] = np.where(users['gender'] == 'M', 0, 1)
-    # process movie dataset
-    all_genre = [','.join([str(i) for i, x in enumerate(arr) if x == 1]) for arr in movies[genres_col].values]
+    # process movie dataset，必須 +1 防止被 mask
+    all_genre = [','.join([str(i+1) for i, x in enumerate(arr) if x == 1]) for arr in movies[genres_col].values]
     movies['all_genres'] = all_genre
     movies['release_date'] = movies['release_date'].fillna('01-Jan-1995')
     movies['release_year'] = movies['release_date'].str[-4:]
@@ -92,13 +92,18 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
             train_data = df
         else:
             train_data = pd.concat([train_data, df])
+
+    # 象征性地为 test_user_data 添加一个 movie
+    test_user_data['movie_id'] = test_user_data['like'].apply(lambda x: x[-1])
+    test_user_data = test_user_data.merge(movie_data, on='movie_id')
     # 将数据集顺序打乱
     train_data = train_data.sample(frac=1).reset_index(drop=True)
     # 生成 feature columns
     # origin columns: user_id, age, gender, occupation, zip_code, dislike, like, movie_id, movie_title, all_genres, release_year
     # mapped columns: C1, I1, I2, C2, C3, S1::item, S2::item, C4, C5, S2::genre, I3
-    train_data.columns = ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item', 'C4::item', 'C5', 'S3::genre', 'I3']
-    test_user_data.columns = ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item']
+    mapped_columns = ['C1::query', 'I1', 'I2', 'C2', 'C3', 'S1::item', 'S2::item', 'C4::item', 'C5', 'S3::genre', 'I3']
+    train_data.columns = mapped_columns
+    test_user_data.columns = mapped_columns
     fc = [
         SparseFeat('C1::query', user_data['user_id'].max() + 1, np.int32),
         DenseFeat('I1', 1, np.float32),
@@ -114,8 +119,16 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     ]
     train_x = {f.name: train_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
     train_x.update({f.name: train_data[f.name].values for f in fc if isinstance(f, SequenceFeat)})
-    test_data = {f.name: test_user_data[f.name] if f.name in test_user_data.columns else None for f in fc}
-    return fc, train_x, test_data
+    query_data = {f.name: test_user_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+    query_data.update({f.name: test_user_data[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+    # 对于 item 数据进行处理
+    item_df = pd.DataFrame([user_data['user_id'][0]] * len(movie_data), columns=['user_id'])
+    item_df = item_df.merge(user_data, on='user_id')
+    item_df = pd.concat([item_df, movie_data], axis=1)
+    item_df.columns = mapped_columns
+    item_data = {f.name: item_df[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+    item_data.update({f.name: item_df[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+    return fc, train_x, query_data, item_data
 
 
 def create_dataset_dep(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):

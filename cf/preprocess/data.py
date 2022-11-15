@@ -204,7 +204,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
 
     # concat the name of different type of data
     data_type = data_type.lower()
-    files = ['feature', 'train_data', 'test_data']
+    files = ['feature', 'train_data', 'test_data', 'item_data']
     suffix = 'feature' if data_type == _feather else 'pkl'
     files = [f'{file}.{suffix}' for file in files]
 
@@ -246,7 +246,8 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         elif dataset == 'huawei':
             fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process)
         elif dataset == 'ml100k':
-            fc, train_data, test_data = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data, items = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process)
+            pickle.dump(items, open(f'{data_dir}/{files[3]}', 'wb'), pickle.HIGHEST_PROTOCOL)
         else:
             raise ValueError(f'Not implement this dataset:{dataset}')
         # read data over, then dump to file.
@@ -287,18 +288,20 @@ def split_dataset(df, fc, test_size):
             return fc, (train_x,)
 
 
-def mapped2sequential(df: pd.DataFrame, columns: list):
+def mapped2sequential(df: pd.DataFrame, columns: list, start_from_1=True):
     """
     Map the discrete value to sequential id.
 
     :param df: pd.DataFrame
     :param columns: the columns you want to process with `mapped2sequential`
+    :param start_from_1: id 是否從一開始計算，防止在使用 mask_zero 的時候被 mask 掉
     :return:
     """
     for c in columns:
         if c in df.columns:
             uniq_values = df[c].unique().tolist()
-            val_encoded = {x: i for i, x in enumerate(uniq_values)}
+            val_encoded = {x: i + 1 for i, x in enumerate(uniq_values)} if start_from_1 else {x: i for i, x in
+                                                                                              enumerate(uniq_values)}
             df[c] = df[c].map(val_encoded)
 
 

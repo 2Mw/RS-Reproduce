@@ -52,9 +52,9 @@ class MaskedEmbeddingsAggregator(Layer):
         # 对不规则张量进行 mask 操作
         masked_embeddings = tf.ragged.boolean_mask(inputs, mask)
         if self.agg_mode == 'sum':
-            aggregated = tf.reduce_sum(masked_embeddings, axis=-1)
+            aggregated = tf.reduce_sum(masked_embeddings, axis=1, keepdims=True)
         elif self.agg_mode == 'mean':
-            aggregated = tf.reduce_mean(masked_embeddings, axis=-1)
+            aggregated = tf.reduce_mean(masked_embeddings, axis=1, keepdims=True)
         return aggregated
 
     def get_config(self):
