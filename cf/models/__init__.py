@@ -10,6 +10,7 @@ from cf.models.ctr.experimental.dcn_me import *
 from cf.models.ctr.experimental.autoint_me import *
 from cf.models.recall.YoutubeDNN import *
 from cf.models.recall.YoutubeSBC import *
+from cf.models.recall.DoubleTower import *
 
 MODULES = {
     'dcn': DCN,
@@ -24,5 +25,6 @@ MODULES = {
     'autoint_me': AutoIntME,
     'youtubednn_recall': YoutubeDNNRecall,
     # 'youtubednn_rank': None,
-    'youtubesbc': YoutubeSBC
+    'youtubesbc': YoutubeSBC,
+    'doubletower': DoubleTower,
 }

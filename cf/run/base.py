@@ -12,10 +12,12 @@ from cf.utils.config import get_date
 from cf.models.ctr.cowclip import Cowclip
 from keras.models import Model
 import json
+import numpy as np
+import faiss
 
 project_dir = cf.get_project_path()
 
-_RUN_EAGERLY = False
+_RUN_EAGERLY = True
 
 
 def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '', **kwargs):
@@ -176,3 +178,32 @@ def get_optimizer(name, lr, lr_emb=None, steps=None, warmup=False, cowclip=False
         opt.learning_rate = lr
         # opt.clipnorm = clipnorm if clipnorm is not None else 10
         return opt
+
+
+def save_faiss(item_ids, item_vectors, directory=""):
+    """
+    Save vectors in faiss database.
+
+    :param item_ids:
+    :param item_vectors:
+    :param directory: directory to save index
+    :return:
+    """
+    ids = np.array([i for i in item_ids]).astype(np.int64)
+    values = np.array(item_vectors)
+    dim = 0
+    if len(values.shape) == 2:
+        dim = values.shape[1]
+    else:
+        e = f'The values dimension must be 2.'
+        logger.error(e)
+        raise ValueError(e)
+    quan = faiss.IndexFlatIP(dim)
+    nlist = int(values.shape[0] / 10)
+    nlist = nlist if nlist > 0 else 1
+    item_index = faiss.IndexIVFFlat(quan, dim, nlist)
+    item_index.train(values)
+    item_index.add_with_ids(values, ids)
+    if directory is not None and len(directory) > 0:
+        faiss.write_index(item_index, os.path.join(directory, 'item.index'))
+    return item_index
