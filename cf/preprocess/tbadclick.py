@@ -51,7 +51,7 @@ dense_feature = [f'I{i}' for i in range(1, 3)]
 SEP = ','
 
 
-def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
+def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms', model_type=""):
     """
     Create TaoBao Ad click dataset
 

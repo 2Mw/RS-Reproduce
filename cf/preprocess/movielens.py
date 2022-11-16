@@ -22,7 +22,7 @@ dense_feature = ['I1', 'I2']
 SEP = '::'
 
 
-def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
+def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms', model_type=""):
     """
     Create movielens dataset.
 

@@ -8,7 +8,7 @@ label = ['label']
 NAMES = label + dense_features + sparse_features
 
 
-def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
+def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms', model_type=""):
     # 注意力机制需要将每个特征转换为相同维度的embedding, 其他的不需要把数值型特征变换
     """
     使用 sklearn 来对 criteo 进行处理，
