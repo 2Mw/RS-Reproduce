@@ -6,7 +6,7 @@ import pandas as pd
 from cf.config.doubletower import config
 from cf.utils.config import *
 import cf
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader

@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import Dense, Input, BatchNormalization
+from keras.layers import Dense, Input, BatchNormalization, GlobalAveragePooling1D
 from keras.models import Model
 from cf.layers import mlp
 from cf.models.ctr.base import get_embedding
@@ -24,6 +24,7 @@ class DoubleTower(Model):
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
         self.mask_agg = MEA(name='aggregate_embedding')
+        self.avg_pool = GlobalAveragePooling1D()
         self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         # self.l2 = L2Norm()
@@ -51,7 +52,7 @@ class DoubleTower(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            f.name: Input(shape=(None,), name=f.name)
+            f.name: Input(shape=(None,))
             for f in self.feature_columns
         }
         # TODO 这里的 training：true 会不会有 bug
@@ -84,9 +85,8 @@ class DoubleTower(Model):
         if training:
             # 训练过程，返回 loss
             # 相似度计算最终使用 temperature
-            batch_size = tf.shape(query_out)[0]
             sim = tf.nn.softmax((query_out @ tf.transpose(item_out)) / self.temperature, axis=-1)
-            loss = tf.reduce_sum((-tf.math.log(sim) * tf.eye(batch_size))) / tf.cast(batch_size, 'float32')
+            loss = tf.reduce_mean(tf.linalg.diag_part((-1) * tf.math.log(sim)))
             # 保存数据
             self.add_loss(lambda: loss)
             return loss
@@ -121,10 +121,9 @@ class DoubleTower(Model):
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                r = self.mask_agg(self.ebd[key](v))
-                # if isinstance(r, tf.Tensor) and np.isnan(r).sum() > 0:
-                #     raise ArithmeticError(f'{np.isnan(r).sum()}, {f}, {v}')
-                seq_x.append(r)
+                e = self.ebd[key](v)
+                r = self.avg_pool(e)
+                seq_x.append(tf.expand_dims(r, 1))
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)
         return to2DTensor(tf.concat(sparse_x + dense_x + seq_x, axis=-1))

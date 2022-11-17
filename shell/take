@@ -1,4 +1,5 @@
 #!/data/amax/b510/yl/.conda/envs/rs/bin/python
+import math
 import os
 import tensorflow as tf
 import time
@@ -45,10 +46,17 @@ if __name__ == '__main__':
         free_ = gpu['fb_memory_usage']['free']
         print(f'\rCurrently gpu({SELECTED_GPU}) free memory {free_}.  -{time.ctime()}', end="")
         if free_ >= MEMORY_LIMIT:
+            SIZE = min(int(math.sqrt(free_ / 2 * 1e6 / 8) * 0.5), SIZE)
+            print(f'\nsuitable size if {SIZE}')
             break
         time.sleep(1)
 
     os.environ["CUDA_VISIBLE_DEVICES"] = SELECTED_GPU
+    gpus = tf.config.experimental.list_physical_devices("GPU")
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, False)
+    cfg = tf.compat.v1.ConfigProto()
+    cfg.gpu_options.per_process_gpu_memory_fraction = 1.0
     a = tf.ones([1, 1], dtype=tf.int32, name='123')
     fails = 0
 
@@ -68,4 +76,5 @@ if __name__ == '__main__':
 
     print('Allocate Over')
     while True:
-        time.sleep(100)
+        a = tf.math.softmax(tf.math.log(a))
+        # time.sleep(10)
