@@ -36,9 +36,9 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     num_process = cfg['model']['numeric_process']
     feature_columns, train_data, test_user_data = dataloader.load_data(dataset, basepath, sample_size,
                                                                        train_config['test_ratio'], train_file,
-                                                                       num_process=num_process)
+                                                                       num_process=num_process, prefix='recall')
 
-    data_dir = os.path.join(basepath, 'data_all')
+    data_dir = os.path.join(basepath, 'recall_data_all')
     item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
 
     train_size, test_size, item_size = 0, 0, 0

@@ -46,56 +46,92 @@ SEP = ','
 
 
 # For the mapped_names 'label', `clk, fav` is 0, `cart, pay` is 1.
-def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms'):
+def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, numeric_process: str = 'mms',
+                   model_type=""):
     """
     Create fliggy dataset.
+
 
     :param file: file path of fliggy dataset.
     :param sample_num: sample number of dataset, -1 means all chunks.
     :param test_size: test size of dataset.
     :param numeric_process: numeric process of dataset.The way of processing numerical feature ln-LogNormalize, kbd-KBinsDiscretizer, mms-MinMaxScaler
+    :param model_type: 不同类型表示不同处理方式
     :return: fc, (train_x, train_y), (test_x, test_y), train_x: {'C1': [1,2,3]}
     """
-    if sample_num != -1:
-        raise ValueError('Fliggy sample_num must be all(-1).')
-    dirname = os.path.dirname(file)
-    user_file, item_file = [os.path.join(dirname, i) for i in ['user_profile.csv', 'item_profile.csv']]
-    behaviors = base.read_raw_data(file, sample_num, SEP)
-    users = base.read_raw_data(user_file, sample_num, SEP)
-    items = base.read_raw_data(item_file, sample_num, SEP)
-    # process lines
-    data = []
-    user_dict, item_dict = {}, {}
-    for u in users:
-        uLabels = u[-1].split(';')
-        arr = ['1' if str(l) in uLabels else '0' for l in USER_LABELS]
-        u[-1] = int("".join(arr), base=2)
-        user_dict[u[0]] = u
-    for i in items:
-        if len(i) == 0 or i is None:
-            continue
-        iLabels = i[-1].split(';')
-        e = 1
-        for l in iLabels:
-            e *= int(l)
-        i[-1] = str(e)
-        item_dict[i[0]] = i
+    if model_type == 'ctr':
+        if sample_num != -1:
+            raise ValueError('Fliggy sample_num must be all(-1).')
+        dirname = os.path.dirname(file)
+        user_file, item_file = [os.path.join(dirname, i) for i in ['user_profile.csv', 'item_profile.csv']]
+        behaviors = base.read_raw_data(file, sample_num, SEP)
+        users = base.read_raw_data(user_file, sample_num, SEP)
+        items = base.read_raw_data(item_file, sample_num, SEP)
+        # process lines
+        data = []
+        user_dict, item_dict = {}, {}
+        for u in users:
+            uLabels = u[-1].split(';')
+            arr = ['1' if str(l) in uLabels else '0' for l in USER_LABELS]
+            u[-1] = int("".join(arr), base=2)
+            user_dict[u[0]] = u
+        for i in items:
+            if len(i) == 0 or i is None:
+                continue
+            iLabels = i[-1].split(';')
+            e = 1
+            for l in iLabels:
+                e *= int(l)
+            i[-1] = str(e)
+            item_dict[i[0]] = i
 
-    for b in behaviors:
-        entry = []
-        if user_dict.get(b[0]) is None or item_dict.get(b[1]) is None:
-            continue
-        entry.extend(user_dict[b[0]])
-        entry.extend(item_dict[b[1]])
-        entry.append(MAP_BEHAVIOR.get(b[2]))
-        data.append(entry)
-    df = pd.DataFrame(data, columns=MAPPED_NAMES)
+        for b in behaviors:
+            entry = []
+            if user_dict.get(b[0]) is None or item_dict.get(b[1]) is None:
+                continue
+            entry.extend(user_dict[b[0]])
+            entry.extend(item_dict[b[1]])
+            entry.append(MAP_BEHAVIOR.get(b[2]))
+            data.append(entry)
+        df = pd.DataFrame(data, columns=MAPPED_NAMES)
 
-    df.astype('str')
-    df['I1'] = df['I1'].astype('float32')
+        df.astype('str')
+        df['I1'] = df['I1'].astype('float32')
 
-    df = base.process(df, sparse_feature, dense_feature, numeric_process=numeric_process)
+        df = base.process(df, sparse_feature, dense_feature, numeric_process=numeric_process)
 
-    fc = base.gen_feature_columns(df, sparse_feature, dense_feature)
+        fc = base.gen_feature_columns(df, sparse_feature, dense_feature)
 
-    return base.split_dataset(df, fc, test_size)
+        return base.split_dataset(df, fc, test_size)
+    elif model_type == 'recall':
+        # 对于双塔召回模型的处理
+        if 'user_item_behavior_history.csv' not in file:
+            e = f'The train file name must be user_item_behavior_history.csv'
+            raise ValueError(e)
+        dirname = os.path.dirname(file)
+
+        # 由于飞猪中的用户和item交互数据大约有两亿条，全部训练不够现实，这里选择只处理 5kw 条
+        sample_num = 5e7
+
+        user_file, item_file = [os.path.join(dirname, i) for i in ['user_profile.csv', 'item_profile.csv']]
+        behavior = base.read_data(file, sample_num, SEP, BEHAVIOR_NAMES)
+        users = base.read_data(user_file, -1, SEP, USER_NAMES)
+        items = base.read_data(item_file, -1, SEP, ITEM_NAMES)
+        # 直接进行合并
+        behavior = behavior.merge(users, on='UserID').merge(items, on='ItemID')
+        # 处理数值属性
+        base.min_max_normalize(behavior, ['TimeStamp'])
+        # 处理稀疏属性
+        base.mapped2sequential(behavior,
+                               ['UserID', 'ItemID', 'Occupation', 'CateID', 'BehaviorType', ['UserCity', 'Item_city']])
+        # 处理多值属性
+        uLabel, u_label_vocab = base.multi_value_process(behavior, 'uLabel', ';')
+        iLabel, i_label_vocab = base.multi_value_process(behavior, 'iLabel', ';')
+        behavior['uLabels'] = uLabel
+        behavior['iLabels'] = iLabel
+        behavior = behavior.drop(columns=['uLabel', 'iLabel'])
+        # 抽取 query_data 和 item_data
+
+
+    else:
+        raise NotImplementedError('未知的处理方式')

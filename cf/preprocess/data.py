@@ -18,7 +18,7 @@ numeric_process_way = ['ln', 'kbd', 'mms']
 data_types = [_pickle, _feather]
 
 
-def read_data(file: str, sample_size, sep, names=None, dtype=None):
+def read_data(file: str, sample_size, sep, names=None, dtype=None, **kwargs):
     """
     Read dataset from files by pandas.
 
@@ -33,7 +33,7 @@ def read_data(file: str, sample_size, sep, names=None, dtype=None):
         e = f'The file: {file} not exists.'
         logger.error(e)
         raise FileNotFoundError(e)
-    df = pd.read_csv(file, iterator=True, names=names, sep=sep, dtype=dtype)
+    df = pd.read_csv(file, iterator=True, names=names, sep=sep, dtype=dtype, **kwargs)
     if sample_size > 0:
         df = df.get_chunk(sample_size)
     else:
@@ -173,7 +173,7 @@ def gen_feature_columns(data, sparse_features, dense_features, sequence_features
 
 
 def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, train_file, data_type='pickle',
-              num_process: str = 'mms'):
+              num_process: str = 'mms', prefix: str = ""):
     """
     Load feature columns, train data, test data from files.
 
@@ -184,6 +184,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
     :param train_file: The name of train data file.
     :param data_type: data store type, feather or pickle
     :param num_process: The way of processing numerical feature ln-LogNormalize, kbd-KBinsDiscretizer, mms-MinMaxScaler
+    :param prefix: the prefix for saving files' path name, such as 'ctr' or 'recall'
     :return: feature_columns, train_data, test_data
     """
     dataset = dataset.lower()
@@ -197,10 +198,17 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
         logger.error(e)
         raise ValueError(e)
 
+    if len(prefix) > 0:
+        prefix = prefix.lower()
+        if prefix in ['ctr', 'recall']:
+            if prefix == 'ctr':
+                prefix = ''
+            elif prefix == 'recall':
+                prefix = prefix + '_'
     if sample_size == -1:
-        data_dir = os.path.join(base, f'data_all')
+        data_dir = os.path.join(base, f'{prefix}data_all')
     else:
-        data_dir = os.path.join(base, f'data_{sample_size}')
+        data_dir = os.path.join(base, f'{prefix}data_{sample_size}')
 
     # concat the name of different type of data
     data_type = data_type.lower()
@@ -233,20 +241,24 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             raise NotImplementedError(e)
     else:
         logger.info(f'=== Start to preprocess {dataset} data ===')
+        prefix = 'ctr' if prefix == '' else prefix
         if dataset == 'criteo':
-            fc, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'ml':
-            fc, train_data, test_data = movielens.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = movielens.create_dataset(train_file, sample_size, test_ratio, num_process,
+                                                                 prefix)
         elif dataset == 'avazu':
-            fc, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = avazu.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'tbadclick':
-            fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process,
+                                                                 prefix)
         elif dataset == 'fliggy':
-            fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'huawei':
-            fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'ml100k':
-            fc, train_data, test_data, items = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process)
+            fc, train_data, test_data, items = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process,
+                                                                     prefix)
             pickle.dump(items, open(f'{data_dir}/{files[3]}', 'wb'), pickle.HIGHEST_PROTOCOL)
         else:
             raise ValueError(f'Not implement this dataset:{dataset}')
@@ -292,17 +304,36 @@ def mapped2sequential(df: pd.DataFrame, columns: list, start_from_1=True):
     """
     Map the discrete value to sequential id.
 
+    支持共享映射:
+    e.g.    1 -- columns = ['a', 'b', 'c']
+            2 -- columns = [['a', 'b'], 'c']  表示 'a', 'b' 共用一份 map
+
     :param df: pd.DataFrame
     :param columns: the columns you want to process with `mapped2sequential`
     :param start_from_1: id 是否從一開始計算，防止在使用 mask_zero 的時候被 mask 掉
     :return:
     """
     for c in columns:
-        if c in df.columns:
-            uniq_values = df[c].unique().tolist()
-            val_encoded = {x: i + 1 for i, x in enumerate(uniq_values)} if start_from_1 else {x: i for i, x in
-                                                                                              enumerate(uniq_values)}
-            df[c] = df[c].map(val_encoded)
+        m = {}
+        sign = 1 if start_from_1 else 0
+        if isinstance(c, str):
+            if c in df.columns:
+                l = df[c].unique().tolist()
+                for v in l:
+                    if m.setdefault(v, sign) == sign:
+                        sign += 1
+                df[c] = df[c].map(m)
+        elif isinstance(c, list):
+            for sub_c in c:
+                if isinstance(sub_c, str):
+                    if sub_c in df.columns:
+                        l = df[sub_c].unique().tolist()
+                        for v in l:
+                            if m.setdefault(v, sign) == sign:
+                                sign += 1
+                        df[sub_c] = df[sub_c].map(m)
+                else:
+                    raise ValueError('最多支持二级list')
 
 
 def min_max_normalize(df: pd.DataFrame, columns: list):
@@ -329,3 +360,24 @@ def std_normalize(df: pd.DataFrame, columns: list):
     for c in columns:
         if c in df.columns:
             df[c] = (df[c] - df[c].mean()) / df[c].std()
+
+
+def multi_value_process(df: pd.DataFrame, column: str, sep: str):
+    """
+    对多值属性进行处理，返回处理后的结果以及对应的 vocab_size
+
+    :param df:
+    :param column:
+    :param sep: 属性分割字符串
+    :return: 返回处理后的结果以及对应的 vocab_size
+    """
+    uMap, ans = {}, []
+    sign = 1
+    for arr in df[column]:
+        que = []
+        for i in arr.split(sep):
+            if sign == uMap.setdefault(i, sign):
+                sign += 1
+            que.append(uMap[i])
+        ans.append(que)
+    return ans, len(uMap) + 1
