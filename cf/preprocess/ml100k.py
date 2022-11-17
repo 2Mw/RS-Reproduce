@@ -40,7 +40,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     rating_file = file
     users = base.read_data(user_file, -1, SEP1, user_col)
     ratings = base.read_data(rating_file, -1, SEP2, ratings_col)
-    movies = base.read_data(movie_file, -1, SEP1, movies_col)
+    movies = base.read_data(movie_file, -1, SEP1, movies_col, encoding='ISO-8859-1')
     # process user dataset
     base.mapped2sequential(users, ['occupation', 'zip_code'])
     users['gender'] = np.where(users['gender'] == 'M', 0, 1)

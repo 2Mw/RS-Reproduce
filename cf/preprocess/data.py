@@ -18,7 +18,7 @@ numeric_process_way = ['ln', 'kbd', 'mms']
 data_types = [_pickle, _feather]
 
 
-def read_data(file: str, sample_size, sep, names=None, dtype=None):
+def read_data(file: str, sample_size, sep, names=None, dtype=None, **kwargs):
     """
     Read dataset from files by pandas.
 
@@ -33,7 +33,7 @@ def read_data(file: str, sample_size, sep, names=None, dtype=None):
         e = f'The file: {file} not exists.'
         logger.error(e)
         raise FileNotFoundError(e)
-    df = pd.read_csv(file, iterator=True, names=names, sep=sep, dtype=dtype)
+    df = pd.read_csv(file, iterator=True, names=names, sep=sep, dtype=dtype, **kwargs)
     if sample_size > 0:
         df = df.get_chunk(sample_size)
     else:
