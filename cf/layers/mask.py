@@ -1,3 +1,5 @@
+import warnings
+
 import tensorflow as tf
 from tensorflow import keras
 from keras.layers import Dense, Layer, LayerNormalization, Dropout
@@ -50,11 +52,20 @@ class MaskedEmbeddingsAggregator(Layer):
     @tf.function
     def call(self, inputs, mask=None):
         # 对不规则张量进行 mask 操作
+        warnings.warn("推荐使用 GlobalAveragePooling1D，这种方法在低版本 tensorflow(<2.4.0) 会报错", DeprecationWarning)
         masked_embeddings = tf.ragged.boolean_mask(inputs, mask)
         if self.agg_mode == 'sum':
-            aggregated = tf.reduce_sum(masked_embeddings, axis=1, keepdims=True)
+            if tf.__version__ < '2.4.0':
+                aggregated = tf.reduce_sum(masked_embeddings, axis=1)
+                aggregated = tf.expand_dims(aggregated, axis=1)
+            else:
+                aggregated = tf.reduce_sum(masked_embeddings, axis=1, keepdims=True)
         elif self.agg_mode == 'mean':
-            aggregated = tf.reduce_mean(masked_embeddings, axis=1, keepdims=True)
+            if tf.__version__ < '2.4.0':
+                aggregated = tf.reduce_mean(masked_embeddings, axis=1)
+                aggregated = tf.expand_dims(aggregated, axis=1)
+            else:
+                aggregated = tf.reduce_mean(masked_embeddings, axis=1, keepdims=True)
         return aggregated
 
     def get_config(self):

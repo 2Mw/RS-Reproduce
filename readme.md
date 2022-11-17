@@ -38,8 +38,8 @@ RS
     8. [MaskNet 2021](https://arxiv.org/pdf/2102.07619)
 
 * Recall models
-  1. [YoutubeDNN](https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/45530.pdf)
-  2. [YoutubeSBC](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/6c8a86c981a62b0126a11896b7f6ae0dae4c3566.pdf)
+    1. [YoutubeDNN](https://static.googleusercontent.com/media/research.google.com/zh-CN//pubs/archive/45530.pdf)
+    2. [YoutubeSBC](https://storage.googleapis.com/pub-tools-public-publication-data/pdf/6c8a86c981a62b0126a11896b7f6ae0dae4c3566.pdf)
 
 * Other:
     1. [CowClip 2022](https://arxiv.org/pdf/2204.06240)
@@ -52,7 +52,8 @@ RS
 4. [User Behavior Data from Taobao](https://tianchi.aliyun.com/dataset/dataDetail?dataId=649)
 5. [Ad Display/Click Data](https://tianchi.aliyun.com/dataset/dataDetail?dataId=56#1)
 6. [Fliggy](https://tianchi.aliyun.com/dataset/dataDetail?dataId=113649)
-7. [Huawei Competition](https://developer.huawei.com/consumer/cn/activity/starAI2022/algo/competition.html) --- [data_3.zip](https://digix-algo-challenge.obs.cn-east-2.myhuaweicloud.com/2022/AI/238143c8f2b211ec84305c80b6c7dac5/2022_3_data.zip)
+7. [Huawei Competition](https://developer.huawei.com/consumer/cn/activity/starAI2022/algo/competition.html)
+   --- [data_3.zip](https://digix-algo-challenge.obs.cn-east-2.myhuaweicloud.com/2022/AI/238143c8f2b211ec84305c80b6c7dac5/2022_3_data.zip)
 
 ## Code Reference
 
@@ -85,8 +86,11 @@ RS
 8. For recommendation system, the numerical feature have large variance and hurt algorithms, so we should normalize
    them(AutoInt C5.1). If we consider training numerical feature with sparse feature in the attention based model, the
    performance may not well.
-9. In EDCN, using `BatchNormalization` is required, other than it will occur **gradient vanishing** problems because small
-   number matrix hadamard product in bridge module, and use **residual shortcut** optionally.
+9. In EDCN, using `BatchNormalization` is required, other than it will occur **gradient vanishing** problems because
+   small number matrix hadamard product in bridge module, and use **residual shortcut** optionally.
+10. For ragged tensor, it occurs `keepdims=True is not supported for RaggedTensors` error in lower version of
+    Tensorflow(<2.4.0), while it is okay in higher version.
+11. In lower version of tf(<2.4.0), the name of variables must conform to regex `"^[A-Za-z0-9.][A-Za-z0-9_.\\/>-]*$"`.
 
 ### Train method
 

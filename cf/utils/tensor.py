@@ -15,6 +15,6 @@ def to2DTensor(tensor):
     if len(tensor.shape) == 1:
         return tf.expand_dims(tensor, 1)
     s = 1
-    for i in tensor.shape[1:]:
+    for i in tf.shape(tensor)[1:]:
         s *= i
     return tf.reshape(tensor, [-1, s])

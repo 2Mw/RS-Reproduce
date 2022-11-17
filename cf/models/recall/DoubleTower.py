@@ -54,7 +54,6 @@ class DoubleTower(Model):
             f.name: Input(shape=(None,), name=f.name)
             for f in self.feature_columns
         }
-        # TODO 这里的 training：true 会不会有 bug
         model = Model(inputs, outputs=self.call(inputs, training=True))
         if len(self.directory) > 0:
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
@@ -84,9 +83,8 @@ class DoubleTower(Model):
         if training:
             # 训练过程，返回 loss
             # 相似度计算最终使用 temperature
-            batch_size = tf.shape(query_out)[0]
             sim = tf.nn.softmax((query_out @ tf.transpose(item_out)) / self.temperature, axis=-1)
-            loss = tf.reduce_sum((-tf.math.log(sim) * tf.eye(batch_size))) / tf.cast(batch_size, 'float32')
+            loss = tf.reduce_mean(tf.linalg.diag_part(-tf.math.log(sim)))
             # 保存数据
             self.add_loss(lambda: loss)
             return loss
@@ -114,17 +112,14 @@ class DoubleTower(Model):
             if len(v.shape) == 1:
                 v = tf.expand_dims(v, -1)
             key = f
-            if '::' in f:  # Get the key
-                key = f.split('::')[1]
+            if ']]' in f:  # Get the key
+                key = f.split(']]')[1]
             if f[0] == 'C':
                 sparse_x.append(self.ebd[key](v))
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                r = self.mask_agg(self.ebd[key](v))
-                # if isinstance(r, tf.Tensor) and np.isnan(r).sum() > 0:
-                #     raise ArithmeticError(f'{np.isnan(r).sum()}, {f}, {v}')
-                seq_x.append(r)
+                print(v)
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)
         return to2DTensor(tf.concat(sparse_x + dense_x + seq_x, axis=-1))
