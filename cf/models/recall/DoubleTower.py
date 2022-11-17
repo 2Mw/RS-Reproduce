@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import Dense, Input, BatchNormalization
+from keras.layers import Dense, Input, BatchNormalization, GlobalAveragePooling1D
 from keras.models import Model
 from cf.layers import mlp
 from cf.models.ctr.base import get_embedding
@@ -23,7 +23,7 @@ class DoubleTower(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
-        self.mask_agg = MEA(name='aggregate_embedding')
+        self.avg_pool = GlobalAveragePooling1D()
         self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         # self.l2 = L2Norm()
@@ -119,7 +119,7 @@ class DoubleTower(Model):
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                print(v)
+                seq_x.append(tf.expand_dims(self.avg_pool(self.ebd[key](v)), 1))
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)
         return to2DTensor(tf.concat(sparse_x + dense_x + seq_x, axis=-1))
