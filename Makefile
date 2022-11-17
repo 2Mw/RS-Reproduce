@@ -6,15 +6,15 @@ py=/data/amax/b510/yl/.conda/envs/rs/bin/python
 cli=$(proj)/cf/run/run_cli.py
 
 # Configs
-model=medcn
+model=doubletower
 # Dataset (criteo, ml, avazu)
-dataset=huawei
+dataset=ml100k
 ## evaluate config
-config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/dcn_me/avazu/0.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/dcn_me/20220713153831/weights.002-0.38175.hdf5
+config=
+weight=
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/doubletower/20221115225615/0.yaml
 t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config
@@ -27,7 +27,7 @@ lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1
 pdir=
 port=6006
 ## Tune order
-name=medcn
+name=doubletower
 tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:
@@ -36,7 +36,7 @@ evaluate:
 
 train:
 	@cd $(proj)
-	@$(trcmd)
+	$(trcmd)
 
 clear:
 	@clear
