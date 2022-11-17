@@ -119,7 +119,8 @@ class DoubleTower(Model):
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                seq_x.append(tf.expand_dims(self.avg_pool(self.ebd[key](v)), 1))
+                mid = tf.ragged.boolean_mask(self.ebd[key](v), self.ebd['item'].compute_mask(v))
+                seq_x.append(tf.expand_dims(self.avg_pool(mid), 1))
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)
         return to2DTensor(tf.concat(sparse_x + dense_x + seq_x, axis=-1))

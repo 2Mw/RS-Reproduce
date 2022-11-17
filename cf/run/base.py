@@ -17,7 +17,7 @@ import faiss
 
 project_dir = cf.get_project_path()
 
-_RUN_EAGERLY = True
+_RUN_EAGERLY = False
 
 
 def initModel(model_name: str, cfg, feature_columns, directory, weights: str = '', **kwargs):
