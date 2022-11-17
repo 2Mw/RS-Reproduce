@@ -23,7 +23,6 @@ class DoubleTower(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
-        self.mask_agg = MEA(name='aggregate_embedding')
         self.avg_pool = GlobalAveragePooling1D()
         self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
@@ -55,7 +54,6 @@ class DoubleTower(Model):
             f.name: Input(shape=(None,))
             for f in self.feature_columns
         }
-        # TODO 这里的 training：true 会不会有 bug
         model = Model(inputs, outputs=self.call(inputs, training=True))
         if len(self.directory) > 0:
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
@@ -114,16 +112,14 @@ class DoubleTower(Model):
             if len(v.shape) == 1:
                 v = tf.expand_dims(v, -1)
             key = f
-            if '::' in f:  # Get the key
-                key = f.split('::')[1]
+            if ']]' in f:  # Get the key
+                key = f.split(']]')[1]
             if f[0] == 'C':
                 sparse_x.append(self.ebd[key](v))
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                e = self.ebd[key](v)
-                r = self.avg_pool(e)
-                seq_x.append(tf.expand_dims(r, 1))
+                seq_x.append(tf.expand_dims(self.avg_pool(self.ebd[key](v)), 1))
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)
         return to2DTensor(tf.concat(sparse_x + dense_x + seq_x, axis=-1))

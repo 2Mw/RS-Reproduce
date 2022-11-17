@@ -16,7 +16,7 @@ from cf.utils.tensor import *
 def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse', *args, **kwargs):
     """
     Get the embedding according to dimensions for sparse features. 由于 embedding 占用参数过多，因此提供在 cpu 中训练的方法
-    # 对于共享 Embedding 的 feature, name 应该采用 "xxx::key"的形式
+    # 对于共享 Embedding 的 feature, name 应该采用 "xxx]]key"的形式
 
     :param feature_columns: list of feature columns
     :param dim: Embedding output dimension
@@ -30,10 +30,10 @@ def get_embedding(feature_columns, dim, device: str = 'gpu', prefix='sparse', *a
         for f in feature_columns:
             key = f.name
             name = f.name
-            if '::' in f.name:
-                name, key = f.name.split('::')[0], f.name.split('::')[1]
+            if ']]' in f.name:
+                name, key = f.name.split(']]')[0], f.name.split(']]')[1]
                 if len('key') == 0:
-                    raise ValueError('Your key is empty or not contain `::` in feature name')
+                    raise ValueError('Your key is empty or not contain `]]` in feature name')
                 if key_set.get(key) is not None:  # 已经含有 embedding，跳过
                     continue
                 else:
@@ -93,8 +93,8 @@ def form_x(inputs, embedding, divide: bool, same_dim=False, seq_split='', seq_fo
     seq_x = []
     for f, v in inputs.items():
         key = f
-        if '::' in f:  # Get the key
-            key = f.split('::')[1]
+        if ']]' in f:  # Get the key
+            key = f.split(']]')[1]
         if f[0] == 'C':
             # 处理稀疏型特征
             ebd_x.append(embedding[key](v))

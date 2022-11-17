@@ -143,7 +143,7 @@ def gen_feature_columns(data, sparse_features, dense_features, sequence_features
 
     SequenceFeat = namedtuple('SequenceFeat', ['name', 'vocab_size', 'dtype'])
 
-    **对于共享 Embedding 的 feature, 应该采用 "xxx::key"的形式**，比如 C1::item
+    **对于共享 Embedding 的 feature, 应该采用 "xxx]]key"的形式**，比如 C1]]item
 
     :param data: data
     :param sparse_features: The names of sparse features.
@@ -362,15 +362,22 @@ def std_normalize(df: pd.DataFrame, columns: list):
             df[c] = (df[c] - df[c].mean()) / df[c].std()
 
 
-def multi_value_process(df: pd.DataFrame, column: str, sep: str):
+def multi_value_process(df: pd.DataFrame, column: str, sep: str, form='list'):
     """
     对多值属性进行处理，返回处理后的结果以及对应的 vocab_size
 
     :param df:
     :param column:
     :param sep: 属性分割字符串
+    :param form: 是以哪種形式返回數據，str 是以字符串的形式, list 是以列表的形式返回
     :return: 返回处理后的结果以及对应的 vocab_size
     """
+    supported_form = ['str', 'list']
+    if form.lower() not in supported_form:
+        e = f'Not supported form: {form}, only {supported_form} is supported.'
+        logger.error(e)
+        raise ValueError(e)
+    form = form.lower()
     uMap, ans = {}, []
     sign = 1
     for arr in df[column]:
@@ -379,5 +386,21 @@ def multi_value_process(df: pd.DataFrame, column: str, sep: str):
             if sign == uMap.setdefault(i, sign):
                 sign += 1
             que.append(uMap[i])
-        ans.append(que)
+        if form == 'str':
+            ans.append(','.join(que))
+        elif form == 'list':
+            ans.append(que)
     return ans, len(uMap) + 1
+
+
+def parse_list_to_str(df: pd.DataFrame, columns: list):
+    """
+    將多值屬性中為單元類型 list 的轉爲字符串
+
+    :param df:
+    :param columns:
+    :return:
+    """
+    for c in columns:
+        if c in df.columns and isinstance(df[c][0], list):
+            df[c] = df[c].apply(lambda x: ','.join(list(map(str, x))))

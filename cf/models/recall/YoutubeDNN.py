@@ -38,7 +38,7 @@ class YoutubeDNNRecall(Model):
         :return: the number of item class
         """
         for i in self.feature_columns:
-            if '::' in i.name and i.name.split('::')[1] == 'item':
+            if ']]' in i.name and i.name.split(']]')[1] == 'item':
                 return i.vocab_size
         raise ValueError('Not found the item feature alias')
 
@@ -58,8 +58,8 @@ class YoutubeDNNRecall(Model):
         seq_x = []
         for f, v in inputs.items():
             key = f
-            if '::' in f:  # Get the key
-                key = f.split('::')[1]
+            if ']]' in f:  # Get the key
+                key = f.split(']]')[1]
             if f[0] == 'C':
                 # 处理稀疏型特征
                 # ebd_x.append(self.ebd[key](v))
