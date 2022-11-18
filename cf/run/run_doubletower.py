@@ -39,7 +39,7 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
                                                                        train_config['test_ratio'], train_file,
                                                                        num_process=num_process, prefix='recall')
 
-    data_dir = os.path.join(basepath, 'recall_data_all')
+    data_dir = os.path.join(basepath, 'recall_data_all' if sample_size == -1 else f'recall_data_{sample_size}')
     item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
 
     train_size, test_size, item_size = 0, 0, 0
@@ -67,8 +67,10 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     cfg['dataset'] = dataset
     model = initModel(cfg, feature_columns, directory, weights)
     # 创建回调
-    ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
-    train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, callbacks=[ckpt])
+    # ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
+    train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size)
+    # 保存模型
+    model.save_weights(os.path.join(directory, 'weights.hdf5'))
     query, _ = model.predict(test_user_data, test_size)
     _, item = model.predict(item_data, item_size)
     # 得到数据，将 item 向量存入 faiss 数据库
@@ -104,5 +106,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    train(config)
+    train(config, 'fliggy')
     # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')

@@ -108,5 +108,6 @@ if __name__ == '__main__':
         model.evaluate(cfg, arg.pretrain, dataset)
     elif run_type == 'predict':
         model.predict(cfg, arg.pretrain, dataset)
+    # TODO recall model predict
 
 # print(arg.config)

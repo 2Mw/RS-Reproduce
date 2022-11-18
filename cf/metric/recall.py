@@ -6,7 +6,7 @@ n_cmp = [5, 10, 15, 20, 30, 50, 100, 300]
 def Recall(top_k, origin, n):
     m = {}
     for i in n_cmp:
-        m[i] = __recall(top_k, origin, n)
+        m[i] = __recall(top_k, origin, i)
         if i == n:
             break
     return m
@@ -26,7 +26,7 @@ def __recall(top_k, origin, n):
 def HitRate(top_k, origin, n):
     m = {}
     for i in n_cmp:
-        m[i] = __hit_rate(top_k, origin, n)
+        m[i] = __hit_rate(top_k, origin, i)
         if i == n:
             break
     return m
