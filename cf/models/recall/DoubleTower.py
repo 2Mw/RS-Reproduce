@@ -3,7 +3,7 @@ import warnings
 
 import numpy as np
 import tensorflow as tf
-from keras.layers import Dense, Input, BatchNormalization, GlobalAveragePooling1D
+from keras.layers import Dense, Input, BatchNormalization, AveragePooling1D
 from keras.models import Model
 from cf.layers import mlp
 from cf.models.ctr.base import get_embedding
@@ -23,7 +23,7 @@ class DoubleTower(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
-        self.avg_pool = GlobalAveragePooling1D()
+        self.avg_pool = AveragePooling1D()
         self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
         # self.l2 = L2Norm()
@@ -87,6 +87,7 @@ class DoubleTower(Model):
             loss = tf.reduce_mean(tf.linalg.diag_part((-1) * tf.math.log(sim)))
             # 保存数据
             self.add_loss(lambda: loss)
+            self.add_metric(loss, 'loss')
             return loss
         else:
             # predict / eval 过程，返回对应的 user 向量或者 query 向量
@@ -119,12 +120,13 @@ class DoubleTower(Model):
             elif f[0] == 'I':
                 dense_x.append(tf.expand_dims(v, -1))
             elif f[0] == 'S':
-                # mask = self.ebd[key].compute_mask(v)
-                # mid = tf.ragged.boolean_mask(self.ebd[key](v), mask)
-                mask = tf.expand_dims(tf.cast(self.ebd[key].compute_mask(v), tf.float32), -1)
-                cnt = tf.reduce_sum(mask, 1)
-                masked = tf.multiply(self.ebd[key](v), mask)
-                mid = tf.reduce_sum(masked, axis=1) / cnt
+                if tf.__version__ < '2.4.0':
+                    mask = tf.expand_dims(tf.cast(self.ebd[key].compute_mask(v), tf.float32), -1)
+                    cnt = tf.reduce_sum(mask, 1)
+                    masked = tf.multiply(self.ebd[key](v), mask)
+                    mid = tf.reduce_sum(masked, axis=1) / cnt
+                else:
+                    mid = tf.reduce_mean(tf.ragged.boolean_mask(self.ebd[key](v), self.ebd[key].compute_mask(v)), 1)
                 mid = tf.math.l2_normalize(mid, 1)
                 seq_x.append(tf.expand_dims(mid, 1))
             else:

@@ -157,6 +157,30 @@ def export_all(directory: str, config: object, model: keras.models.Model, train_
     logger.info(f'Successfully export all information of model to {os.path.abspath(directory)}')
 
 
+def export_recall_result(origin, top_k, directory):
+    """
+    导出召回模型的预测结果
+
+    :param origin: 原始需要预测用户的数据
+    :param top_k: 模型最终的预测结果
+    :param directory: The directory to export.
+    :return:
+    """
+    origin = pd.DataFrame(origin).values.tolist()
+    top_k = pd.DataFrame(top_k).values.tolist()
+    for i, e in enumerate(origin):
+        origin[i] = sorted(e)
+    for i, e in enumerate(top_k):
+        top_k[i] = sorted(e)
+    origin = pd.DataFrame(origin)
+    top_k = pd.DataFrame(top_k)
+    directory = os.path.join(directory, 'cmp')
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+    origin.to_csv(os.path.join(directory, 'origin.csv'), index=False)
+    top_k.to_csv(os.path.join(directory, 'top_k.csv'), index=False)
+
+
 def num_params(model: keras.models.Model):
     total, embed, dense = 0, 0, 0
     for v in model.trainable_variables:

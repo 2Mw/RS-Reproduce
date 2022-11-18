@@ -14,6 +14,7 @@ from cf.utils.logger import logger
 from keras.preprocessing.sequence import pad_sequences as ps
 import pickle
 import numpy as np
+import cf.metric as metric
 
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
@@ -66,7 +67,6 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     cfg['dataset'] = dataset
     model = initModel(cfg, feature_columns, directory, weights)
     # 创建回调
-    # TODO callback 里能不能 validate?
     ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
     train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, callbacks=[ckpt])
     query, _ = model.predict(test_user_data, test_size)
@@ -79,28 +79,15 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     index = base.save_faiss(item_data[item_col_name], item, directory)
     # 确定索引开始 search
     D, top_k = index.search(query, 100)
-    batch_size = test_size
-    r5, r10, r30, r50, r100, rc_cnt, hr_cnt = 0, 0, 0, 0, 0, 0, 0
-    for i, q in enumerate(test_user_data[topk_cmp_col]):
-        s1 = {a for a in q if a != 0}
-        rc_cnt += len(s1)
-        hr_cnt += np.sum(np.array(top_k[i]) != -1)
-        r5 += len(s1.intersection(top_k[i][:5]))
-        r10 += len(s1.intersection(top_k[i][:10]))
-        r30 += len(s1.intersection(top_k[i][:30]))
-        r50 += len(s1.intersection(top_k[i][:50]))
-        r100 += len(s1.intersection(top_k[i][:100]))
-    info = f'Recall@5: {r5 / rc_cnt:.4f}, Recall@10: {r10 / rc_cnt:.4f},' \
-           f'Recall@30: {r30 / rc_cnt:.4f}, Recall@50: {r50 / rc_cnt:.4f}, Recall@100: {r100 / rc_cnt:.4f}\n'
-    info += f'HR@5: {r5 / min(hr_cnt, 5 * batch_size):.4f}, HR@10: {r10 / min(hr_cnt, 10 * batch_size):.4f}, ' \
-            f'HR@30: {r30 / min(hr_cnt, 30 * batch_size):.4f}, HR@50: {r50 / min(hr_cnt, 50 * batch_size):.4f}, ' \
-            f'HR@100: {r100 / min(hr_cnt, 50 * batch_size):.4f}\n'
+    recalls = metric.Recall(top_k, test_user_data[topk_cmp_col], 100)
+    hr = metric.HitRate(top_k, test_user_data[topk_cmp_col], 100)
+    info = {'Recall': recalls, 'HitRate': hr}
     logger.info(info)
     res = {'dataset': dataset, 'record': info}
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
-    # TODO 召回模型的 train_history 需要进行修改
-    export_all(directory, bcfg, model, train_history, res, cost, dataset, weights, query)
+    export_all(directory, bcfg, model, train_history, res, cost, dataset, weights)
+    export_recall_result(test_user_data[topk_cmp_col], top_k, directory)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 
