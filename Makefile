@@ -14,7 +14,7 @@ config=
 weight=
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/doubletower/20221115225615/0.yaml
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/doubletower/20221117184134/0.yaml
 t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config

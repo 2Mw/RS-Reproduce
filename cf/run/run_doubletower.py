@@ -72,7 +72,7 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     query, _ = model.predict(test_user_data, test_size)
     _, item = model.predict(item_data, item_size)
     # 得到数据，将 item 向量存入 faiss 数据库
-    col_name = config['files'].get(f'{config.get("dataset")}_columns')
+    col_name = cfg['files'].get(f'{dataset}_columns')
     query_col_name = col_name['query_id']
     item_col_name = col_name['item_id']
     topk_cmp_col = col_name['target_id']
