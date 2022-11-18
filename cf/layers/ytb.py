@@ -5,7 +5,7 @@ from keras.layers import Layer, Dense
 
 class EmbeddingIndex(Layer):
     def __init__(self, index, **kwargs):
-        """Embedding index(TODO 这是用来干啥的？)
+        """Embedding index(这是用来干啥的？)
 
         :param index:
         :param kwargs:

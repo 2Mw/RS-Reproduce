@@ -204,6 +204,7 @@ def save_faiss(item_ids, item_vectors, directory=""):
     item_index = faiss.IndexIVFFlat(quan, dim, nlist)
     item_index.train(values)
     item_index.add_with_ids(values, ids)
+    item_index.nprobe = nlist
     if directory is not None and len(directory) > 0:
         faiss.write_index(item_index, os.path.join(directory, 'item.index'))
     return item_index
