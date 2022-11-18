@@ -127,7 +127,7 @@ class DoubleTower(Model):
                     mid = tf.reduce_sum(masked, axis=1) / cnt
                 else:
                     mid = tf.reduce_mean(tf.ragged.boolean_mask(self.ebd[key](v), self.ebd[key].compute_mask(v)), 1)
-                mid = tf.math.l2_normalize(mid)
+                mid = tf.math.l2_normalize(mid, 1)
                 seq_x.append(tf.expand_dims(mid, 1))
             else:
                 warnings.warn(f'The feature:{f} may not be categorized', SyntaxWarning)

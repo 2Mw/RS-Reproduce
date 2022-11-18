@@ -119,7 +119,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
         SequenceFeat('S2]]item', movie_data['movie_id'].max() + 1, np.int32),
         SparseFeat('C4]]item', movie_data['movie_id'].max() + 1, np.int32),
         SparseFeat('C5', movie_data['movie_title'].max() + 1, np.int32),
-        SequenceFeat('S3]]genre', 21, np.int64),
+        SequenceFeat('S3]]genre', 21, np.int32),
         DenseFeat('I3', 1, np.float32),
     ]
     train_x = {f.name: train_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}

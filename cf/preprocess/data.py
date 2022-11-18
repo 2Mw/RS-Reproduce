@@ -242,6 +242,7 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
     else:
         logger.info(f'=== Start to preprocess {dataset} data ===')
         prefix = 'ctr' if prefix == '' else prefix
+        prefix = 'recall' if prefix == 'recall_' else prefix
         if dataset == 'criteo':
             fc, train_data, test_data = criteo.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'ml':
@@ -253,7 +254,13 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             fc, train_data, test_data = tbadclick.create_dataset(train_file, sample_size, test_ratio, num_process,
                                                                  prefix)
         elif dataset == 'fliggy':
-            fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
+            if prefix == 'recall':
+                fc, train_data, test_data, items = fliggy.create_dataset(train_file, sample_size, test_ratio,
+                                                                         num_process, prefix)
+                pickle.dump(items, open(f'{data_dir}/{files[3]}', 'wb'), pickle.HIGHEST_PROTOCOL)
+            else:
+                fc, train_data, test_data = fliggy.create_dataset(train_file, sample_size, test_ratio, num_process,
+                                                                  prefix)
         elif dataset == 'huawei':
             fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'ml100k':

@@ -1,6 +1,11 @@
+import pickle
+
+import numpy as np
+
 import cf.preprocess.data as base
 import os
 import pandas as pd
+from cf.preprocess.feature_column import *
 
 # fliggy dataset: https://tianchi.aliyun.com/dataset/dataDetail?dataId=113649
 
@@ -111,16 +116,20 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
         dirname = os.path.dirname(file)
 
         # 由于飞猪中的用户和item交互数据大约有两亿条，全部训练不够现实，这里选择只处理 5kw 条
-        sample_num = 5e7
 
         user_file, item_file = [os.path.join(dirname, i) for i in ['user_profile.csv', 'item_profile.csv']]
         behavior = base.read_data(file, sample_num, SEP, BEHAVIOR_NAMES)
         users = base.read_data(user_file, -1, SEP, USER_NAMES)
         items = base.read_data(item_file, -1, SEP, ITEM_NAMES)
+        # 处理用户异常年龄
+        avg_age = int(users['Age'].mean())
+        users['Age'] = users['Age'].apply(lambda x: x if x <= 75 else avg_age)
+        # behavior 数据集含有 UserID	ItemID	BehaviorType 完全一致的数据，进行排除，使用 BehaviorCount 来表示交互的次数
+        behavior = behavior.drop(columns=['TimeStamp'])
+        behavior['BehaviorCount'] = 0
+        behavior = behavior.groupby(['UserID', 'ItemID', 'BehaviorType']).count().reset_index()
         # 直接进行合并
         behavior = behavior.merge(users, on='UserID').merge(items, on='ItemID')
-        # 处理数值属性
-        base.min_max_normalize(behavior, ['TimeStamp'])
         # 处理稀疏属性
         base.mapped2sequential(behavior,
                                ['UserID', 'ItemID', 'Occupation', 'CateID', 'BehaviorType', ['UserCity', 'Item_city']])
@@ -130,8 +139,69 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
         behavior['uLabels'] = uLabel
         behavior['iLabels'] = iLabel
         behavior = behavior.drop(columns=['uLabel', 'iLabel'])
-        # 抽取 query_data 和 item_data
-
-
+        # 获取每个用户所有交互过的 item
+        item_list_per_user = behavior.groupby(['UserID'])['ItemID'].apply(list).reset_index()
+        item_list_per_user.columns = ['UserID', 'InteractItems']
+        behavior = behavior.merge(item_list_per_user, on='UserID')
+        # 随机打乱顺序
+        behavior = behavior.sample(frac=1).reset_index(drop=True)
+        length = behavior.shape[0]
+        # 抽取训练集和测试集
+        train_data = behavior[:int(length * (1 - test_size))].reset_index(drop=True)
+        test_data = behavior[int(length * (1 - test_size)):].reset_index(drop=True)
+        # 抽取 item 数据
+        item_data = behavior[['ItemID', 'CateID', 'Item_city', 'iLabels']]
+        # 将 iLabel 列转为字符串方便进行去重处理
+        t = item_data['iLabels'].apply(lambda x: ','.join(list(map(str, x))))
+        item_data = item_data.drop(columns=['iLabels'])
+        item_data['iLabels'] = t
+        item_data = item_data.drop_duplicates().reset_index(drop=True)
+        # 将字符串转为list
+        t = item_data['iLabels'].apply(lambda x: [int(i) for i in x.split(',')])
+        item_data = item_data.drop(columns=['iLabels'])
+        item_data['iLabels'] = t
+        # 拼接成可以训练的数据格式
+        query_col = USER_NAMES + ['BehaviorType', 'BehaviorCount', 'InteractItems']
+        query_col[5] = 'uLabels'
+        tmp = behavior.iloc[0, :][query_col]
+        item_df = pd.DataFrame([tmp.tolist()] * item_data.shape[0], columns=query_col)
+        item_df = pd.concat([item_df, item_data], axis=1)
+        # 整理列的顺序
+        item_df = item_df[train_data.columns]
+        # 构建 feature columns
+        # ['UserID', 'ItemID', 'BehaviorType', 'BehaviorCount', 'Age', 'Gender',  'Occupation', 'UserCity', 'CateID',
+        #  'Item_city', 'uLabels', 'iLabels', 'InteractItems']
+        mapped_columns = ['C1]]query', 'C2]]item', 'I1', 'I2', 'I3', 'I4', 'C3', 'C4]]city', 'C5', 'C6]]city', 'S1',
+                          'S2', 'S3]]item']
+        train_data.columns = mapped_columns
+        test_data.columns = mapped_columns
+        item_df.columns = mapped_columns
+        city_max = max(behavior['UserCity'].max(), behavior['Item_city'].max())
+        fc = {
+            SparseFeat('C1]]query', behavior['UserID'].max() + 1, np.int32),
+            SparseFeat('C2]]item', behavior['ItemID'].max() + 1, np.int32),
+            DenseFeat('I1', 1, np.float32),
+            DenseFeat('I2', 1, np.float32),
+            DenseFeat('I3', 1, np.float32),
+            DenseFeat('I4', 1, np.float32),
+            SparseFeat('C3', behavior['Occupation'].max() + 1, np.int32),
+            SparseFeat('C4]]city', city_max + 1, np.int32),
+            SparseFeat('C5', behavior['CateID'].max() + 1, np.int32),
+            SparseFeat('C6]]city', city_max + 1, np.int32),
+            SequenceFeat('S1', u_label_vocab + 1, np.int32),
+            SequenceFeat('S2', i_label_vocab + 1, np.int32),
+            SequenceFeat('S3]]item', behavior['ItemID'].max() + 1, np.int32),
+        }
+        train_x = {f.name: train_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+        train_x.update({f.name: train_data[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+        query_data = {f.name: test_data[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+        query_data.update({f.name: test_data[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+        item_data = {f.name: item_df[f.name].values.astype(f.dtype) for f in fc if not isinstance(f, SequenceFeat)}
+        item_data.update({f.name: item_df[f.name].values for f in fc if isinstance(f, SequenceFeat)})
+        return fc, train_x, query_data, item_data
     else:
         raise NotImplementedError('未知的处理方式')
+
+if __name__ == '__main__':
+    f = open(r'E:\Notes\DeepLearning\practice\rs\data\fliggy\recall_data_all\feature.pkl', 'rb')
+    print(pickle.load(f))
