@@ -19,7 +19,7 @@ ds_config = {
         'fliggy_base': 'data/fliggy',
         'fliggy_train': 'user_item_behavior_history.csv',
         'fliggy_columns': {
-            'query': ['C1]]query', 'I1', 'I2', 'I3', 'I4', 'C3', 'C4]]city', 'S1', 'S3]]item'],
+            'query': ['C1]]query', 'I1', 'I2', 'I3', 'I4', 'C3', 'C4]]city', 'S1'],
             'item': ['C2]]item', 'C5', 'C6]]city', 'S2'],
             'query_id': 'C1]]query',
             'item_id': 'C2]]item',

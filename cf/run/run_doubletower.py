@@ -41,6 +41,11 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
 
     data_dir = os.path.join(basepath, 'recall_data_all' if sample_size == -1 else f'recall_data_{sample_size}')
     item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
+    
+    col_name = cfg['files'][f'{dataset}_columns']
+    topk_cmp_col = col_name['target_id']
+    train_data.pop(topk_cmp_col)
+    test_cmp = test_user_data.pop(topk_cmp_col)
 
     train_size, test_size, item_size = 0, 0, 0
     # 召回模型的多值数据预处理
@@ -67,29 +72,27 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     cfg['dataset'] = dataset
     model = initModel(cfg, feature_columns, directory, weights)
     # 创建回调
-    # ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
-    train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size)
+    ckpt = ModelCheckpoint(os.path.join(directory, 'weights.{epoch:03d}.hdf5'), save_weights_only=True)
+    train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, callbacks=[ckpt])
     # 保存模型
     model.save_weights(os.path.join(directory, 'weights.hdf5'))
     query, _ = model.predict(test_user_data, test_size)
     _, item = model.predict(item_data, item_size)
     # 得到数据，将 item 向量存入 faiss 数据库
-    col_name = cfg['files'].get(f'{dataset}_columns')
     query_col_name = col_name['query_id']
     item_col_name = col_name['item_id']
-    topk_cmp_col = col_name['target_id']
     index = base.save_faiss(item_data[item_col_name], item, directory)
     # 确定索引开始 search
     D, top_k = index.search(query, 100)
-    recalls = metric.Recall(top_k, test_user_data[topk_cmp_col], 100)
-    hr = metric.HitRate(top_k, test_user_data[topk_cmp_col], 100)
+    recalls = metric.Recall(top_k, test_cmp, 100)
+    hr = metric.HitRate(top_k, test_cmp, 100)
     info = {'Recall': recalls, 'HitRate': hr}
     logger.info(info)
     res = {'dataset': dataset, 'record': info}
     logger.info('========= Export Model Information =========')
     cost = time.time() - start
     export_all(directory, bcfg, model, train_history, res, cost, dataset, weights)
-    export_recall_result(test_user_data[topk_cmp_col], top_k, directory)
+    export_recall_result(test_cmp, top_k, directory)
     logger.info(f'========= Train over, cost: {cost:.3f}s =========')
 
 
