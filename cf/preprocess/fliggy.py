@@ -140,6 +140,8 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
         behavior['iLabels'] = iLabel
         behavior = behavior.drop(columns=['uLabel', 'iLabel'])
         # 获取每个用户所有交互过的 item
+        #### 无法 pad_sequence 巨大的列表，有两种做法
+        #### 1. 使用字符串进行保存 2. 直接从 query_col 中删除
         item_list_per_user = behavior.groupby(['UserID'])['ItemID'].apply(list).reset_index()
         item_list_per_user.columns = ['UserID', 'InteractItems']
         behavior = behavior.merge(item_list_per_user, on='UserID')

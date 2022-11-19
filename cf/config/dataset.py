@@ -19,11 +19,13 @@ ds_config = {
         'fliggy_base': 'data/fliggy',
         'fliggy_train': 'user_item_behavior_history.csv',
         'fliggy_columns': {
-            'query': ['C1]]query', 'I1', 'I2', 'I3', 'I4', 'C3', 'C4]]city', 'S1', 'S3]]item'],
+            'query': ['C1]]query', 'I1', 'I2', 'I3', 'I4', 'C3', 'C4]]city', 'S1'],
             'item': ['C2]]item', 'C5', 'C6]]city', 'S2'],
             'query_id': 'C1]]query',
             'item_id': 'C2]]item',
-            'target_id': 'S3]]item'
+            'target_id': 'S3]]item',
+            # 对于部分数据集的 target columns 做 pad_sequence 处理耗费十分巨大，所以是否在训练之前删除对应的列
+            'drop_target': True,
         },
         # huawei dataset:
         'huawei_base': 'data/huawei',

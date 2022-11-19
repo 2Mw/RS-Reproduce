@@ -1,5 +1,6 @@
 import os
 import pickle
+import time
 
 import keras.optimizers
 import pandas as pd
@@ -8,12 +9,14 @@ import cf
 from cf.models import MODULES as pool
 import tensorflow_addons as tfa
 from cf.utils.logger import logger
-from cf.utils.config import get_date
+from cf.utils.config import get_date, export_recall_result
 from cf.models.ctr.cowclip import Cowclip
 from keras.models import Model
 import json
 import numpy as np
 import faiss
+from keras.preprocessing.sequence import pad_sequences as ps
+import cf.metric as metric
 
 project_dir = cf.get_project_path()
 
@@ -136,6 +139,72 @@ def predict(model_name: str, cfg, weight: str, dataset: str = 'criteo'):
         pred.to_csv(filename)
 
 
+def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
+    """
+
+    :param model_name:
+    :param cfg:
+    :param weight:
+    :param dataset:
+    :return:
+    """
+    base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
+    sample_size = cfg['train']['sample_size']
+    cfg['dataset'] = dataset
+    if sample_size == -1:
+        data_dir = os.path.join(base, f'recall_data_all')
+    else:
+        data_dir = os.path.join(base, f'recall_data_{sample_size}')
+    if os.path.exists(data_dir):
+        feature_columns = pickle.load(open(f'{data_dir}/feature.pkl', 'rb'))
+        test_data = pickle.load(open(f'{data_dir}/test_data.pkl', 'rb'))
+        item_data = None
+    else:
+        raise FileNotFoundError(f'{data_dir} not found.')
+    # 首先查找是否存在 index 文件
+    index_file = os.path.join(data_dir, 'item.index')
+    if os.path.exists(index_file):
+        index = faiss.read_index(index_file)
+    else:
+        index = None
+        item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
+    model = initModel(model_name, cfg, feature_columns, '', weight)
+    directory = os.path.dirname(weight)
+    col_name = cfg['files'][f'{dataset}_columns']
+    topk_cmp_col = col_name['target_id']
+    item_col_name = col_name['item_id']
+    drop_target = col_name['drop_target']
+    if drop_target:
+        test_cmp = test_data.pop(topk_cmp_col)
+        if item_data is not None:
+            item_data.pop(topk_cmp_col)
+    else:
+        test_cmp = test_data[topk_cmp_col]
+
+    test_size = pad_sequence_data(test_data)
+    query, _ = model.predict(test_data, test_size)
+    if index is None:
+        # 已经存在 index
+        item_size = pad_sequence_data(item_data)
+        _, item = model.predict(item_data, item_size)
+        index = save_faiss(item_data[item_col_name], item, directory)
+    # 存在 index
+    D, top_k = index.search(query, 100)
+    recalls = metric.Recall(top_k, test_cmp, 100)
+    hr = metric.HitRate(top_k, test_cmp, 100)
+    info = {'Recall': recalls, 'HitRate': hr}
+    logger.info(info)
+    directory = os.path.join(directory, f'evaluate_{get_date()}')
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    f = open(os.path.join(directory, f'evaluate-{get_date()[4:]}.json'), 'w')
+    json.dump(info, f)
+    export_recall_result(test_cmp, top_k, directory)
+
+
+# 不存在 index 需要重新进行训练并且生成 index
+
+
 def create_result_dir(name, project_dir):
     date = get_date()
     dirs = [name, date]
@@ -208,3 +277,12 @@ def save_faiss(item_ids, item_vectors, directory=""):
     if directory is not None and len(directory) > 0:
         faiss.write_index(item_index, os.path.join(directory, 'item.index'))
     return item_index
+
+
+def pad_sequence_data(data):
+    data_size = 0
+    for k in data.keys():
+        if k[0] == 'S':
+            data_size = max(data_size, len(data[k]))
+            data[k] = ps(data[k])
+    return data_size

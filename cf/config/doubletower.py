@@ -5,7 +5,7 @@ config = {
         'epochs': 3,
         'optimizer': 'Adam',
         'loss': 'sparse_categorical_crossentropy',
-        'sample_size': -1,
+        'sample_size': 100000,
         'batch_size': 64,
         'lr': 0.01,
         'val_ratio': 0.1,

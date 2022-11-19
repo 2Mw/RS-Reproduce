@@ -94,4 +94,4 @@ RS
 
 ### Train method
 
-1. Training with 10240, 4096, 1024, 10240 batches in order which can reach better performance.
+1. Training with 10240, 4096, 1024, 10240 batches in order which can reach better performance for CTR models.
