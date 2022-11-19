@@ -23,7 +23,9 @@ ds_config = {
             'item': ['C2]]item', 'C5', 'C6]]city', 'S2'],
             'query_id': 'C1]]query',
             'item_id': 'C2]]item',
-            'target_id': 'S3]]item'
+            'target_id': 'S3]]item',
+            # 对于部分数据集的 target columns 做 pad_sequence 处理耗费十分巨大，所以是否在训练之前删除对应的列
+            'drop_target': True,
         },
         # huawei dataset:
         'huawei_base': 'data/huawei',

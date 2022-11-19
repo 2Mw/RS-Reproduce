@@ -47,22 +47,21 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     train_data.pop(topk_cmp_col)
     test_cmp = test_user_data.pop(topk_cmp_col)
 
-    train_size, test_size, item_size = 0, 0, 0
+    col_name = cfg['files'][f'{dataset}_columns']
+    topk_cmp_col = col_name['target_id']
+    drop_target = col_name['drop_target']
+    if drop_target:
+        train_data.pop(topk_cmp_col)
+        item_data.pop(topk_cmp_col)
+        test_cmp = test_user_data.pop(topk_cmp_col)
+    else:
+        test_cmp = test_user_data[topk_cmp_col]
+
     # 召回模型的多值数据预处理
-    for k in train_data.keys():
-        if k[0] == 'S':
-            train_size = max(train_size, len(train_data[k]))
-            train_data[k] = ps(train_data[k])
+    train_size = base.pad_sequence_data(train_data)
+    test_size = base.pad_sequence_data(test_user_data)
+    item_size = base.pad_sequence_data(item_data)
 
-    for k in test_user_data.keys():
-        if k[0] == 'S' and test_user_data[k] is not None:
-            test_size = max(test_size, len(test_user_data[k]))
-            test_user_data[k] = ps(test_user_data[k])
-
-    for k in item_data.keys():
-        if k[0] == 'S' and item_data[k] is not None:
-            item_size = max(item_size, len(item_data[k]))
-            item_data[k] = ps(item_data[k])
     # 构建模型
     logger.info(f'========= Build Model =========')
     # steps = int(len(train_data) / batch_size)
@@ -101,7 +100,7 @@ def initModel(cfg, feature_columns, directory, weights: str = '', **kwargs):
 
 
 def evaluate(cfg, weight: str, dataset: str = 'ml100k'):
-    base.evaluate(__model__, cfg, weight, dataset)
+    base.recall_evaluate(__model__, cfg, weight, dataset)
 
 
 def predict(cfg, weight: str, dataset: str = 'ml100k'):
@@ -109,5 +108,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    train(config, 'fliggy')
-    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\can\20220524195603\weights.001-0.46001.hdf5')
+    # train(config, 'fliggy')
+    evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119132046\weights.hdf5', 'fliggy')

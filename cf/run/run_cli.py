@@ -74,6 +74,7 @@ def checkArgs(args):
             logger.error(f'The filepath of weights:{args.pretrain} not exists.')
             sys.exit(0)
 
+    # 运行程序的模式
     mode = args.type.lower()
     if mode not in ['train', 'test', 'predict']:
         logger.error(f'The mode: {args.type} is invalid.')
@@ -108,6 +109,5 @@ if __name__ == '__main__':
         model.evaluate(cfg, arg.pretrain, dataset)
     elif run_type == 'predict':
         model.predict(cfg, arg.pretrain, dataset)
-    # TODO recall model predict
 
 # print(arg.config)
