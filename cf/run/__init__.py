@@ -33,7 +33,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 
 # Use to select GPU.
 
-MEMORY_LIMIT_RATIO = 0.0  # MiB
+MEMORY_LIMIT_RATIO = 0.7  # MiB
 USE_CPU_ONLY = False
 ASSIGNED_GPU = os.environ.get("CUDA_VISIBLE_DEVICES")
 
@@ -66,7 +66,7 @@ else:
     ins = smi.getInstance()
     while True:
         SELECTED_GPU = get_available_gpu(ins)
-        if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in SELECTED_GPU):
+        if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in ','.join(SELECTED_GPU)):
             print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
             time.sleep(get_random_num(5, 8))
         else:
@@ -79,7 +79,7 @@ else:
                     ASSIGNED_GPU = SELECTED_GPU[0]
                     break
             else:
-                if ASSIGNED_GPU in a:
+                if ASSIGNED_GPU in ','.join(a):
                     break
     os.environ["CUDA_VISIBLE_DEVICES"] = ASSIGNED_GPU
     # 设置 gpu 现存使用策略

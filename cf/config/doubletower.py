@@ -2,11 +2,11 @@ from cf.config.dataset import ds_config
 
 config = {
     'train': {
-        'epochs': 300,
+        'epochs': 1,
         'optimizer': 'Adam',
         'loss': 'sparse_categorical_crossentropy',
-        'sample_size': 100000,
-        'batch_size': 64,
+        'sample_size': -1,
+        'batch_size': 4096,
         'lr': 0.01,
         'val_ratio': 0.1,
         'test_ratio': 0.1,

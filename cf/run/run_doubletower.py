@@ -44,11 +44,6 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     
     col_name = cfg['files'][f'{dataset}_columns']
     topk_cmp_col = col_name['target_id']
-    train_data.pop(topk_cmp_col)
-    test_cmp = test_user_data.pop(topk_cmp_col)
-
-    col_name = cfg['files'][f'{dataset}_columns']
-    topk_cmp_col = col_name['target_id']
     drop_target = col_name['drop_target']
     if drop_target:
         train_data.pop(topk_cmp_col)
