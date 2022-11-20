@@ -119,6 +119,14 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
 
         user_file, item_file = [os.path.join(dirname, i) for i in ['user_profile.csv', 'item_profile.csv']]
         behavior = base.read_data(file, sample_num, SEP, BEHAVIOR_NAMES)
+
+        # 设置开关
+        ONLY_PART = True
+        if ONLY_PART:
+            # 30000 -- 23834463
+            ITEM_CLASS = 30000
+            behavior = behavior[behavior['ItemID'] < ITEM_CLASS]
+
         users = base.read_data(user_file, -1, SEP, USER_NAMES)
         items = base.read_data(item_file, -1, SEP, ITEM_NAMES)
         # 处理用户异常年龄
