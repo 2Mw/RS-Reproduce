@@ -3,7 +3,7 @@ import os.path
 
 import pandas as pd
 
-from cf.config.doubletower import config
+from cf.config.youtubesbc import config
 from cf.utils.config import *
 import cf
 from keras.callbacks import ModelCheckpoint
@@ -17,7 +17,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'doubletower'
+__model__ = 'youtubesbc'
 
 
 def train(cfg, dataset: str = 'ml100k', weights: str = ''):

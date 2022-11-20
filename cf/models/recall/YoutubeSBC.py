@@ -14,7 +14,7 @@ from cf.utils.tensor import *
 import os
 
 
-class DoubleTower(Model):
+class YoutubeSBC(Model):
     def __init__(self, feature_columns, config, directory="", *args, **kwargs):
         super().__init__(*args)
         self.feature_columns = feature_columns
