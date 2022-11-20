@@ -66,9 +66,9 @@ else:
     ins = smi.getInstance()
     while True:
         SELECTED_GPU = get_available_gpu(ins)
-        if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in SELECTED_GPU):
+        if len(SELECTED_GPU) == 0 or (ASSIGNED_GPU is not None and ASSIGNED_GPU not in ','.join(SELECTED_GPU)):
             print(f'\rCurrently GPUs are busy possibly({get_date()}).', end="")
-            # time.sleep(get_random_num(5, 8))
+            time.sleep(get_random_num(5, 8))
         else:
             # time.sleep(get_random_num(10, 15))
             a = get_available_gpu(ins)
@@ -79,7 +79,7 @@ else:
                     ASSIGNED_GPU = SELECTED_GPU[0]
                     break
             else:
-                if ASSIGNED_GPU in a:
+                if ASSIGNED_GPU in ','.join(a):
                     break
     os.environ["CUDA_VISIBLE_DEVICES"] = ASSIGNED_GPU
     # 设置 gpu 现存使用策略
