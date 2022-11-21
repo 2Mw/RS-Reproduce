@@ -39,6 +39,7 @@ ds_config = {
             'query_id': 'C1]]query',
             'item_id': 'C4]]item',
             'target_id': 'S1]]item',  # topk 对比的列表
+            'drop_target': False,
         },
     }
 }

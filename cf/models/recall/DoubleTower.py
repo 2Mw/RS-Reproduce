@@ -24,8 +24,10 @@ class DoubleTower(Model):
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
         self.avg_pool = AveragePooling1D()
-        self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
-        self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'])
+        self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+                                 initializer=keras.initializers.he_normal)
+        self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+                                initializer=keras.initializers.he_normal)
         # self.l2 = L2Norm()
         self.bn = BatchNormalization()
         # get the columns information about query and item tower
