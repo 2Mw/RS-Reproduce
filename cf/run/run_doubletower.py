@@ -103,5 +103,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    # train(config, 'fliggy')
-    evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119133246\weights.hdf5', 'fliggy')
+    train(config, 'ml100k')
+    # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119133246\weights.hdf5', 'fliggy')

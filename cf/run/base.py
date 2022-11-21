@@ -192,7 +192,7 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
     D, top_k = index.search(query, 100)
     recalls = metric.Recall(top_k, test_cmp, 100)
     hr = metric.HitRate(top_k, test_cmp, 100)
-    info = {'Recall': recalls, 'HitRate': hr}
+    info = {'Recall': recalls, 'HitRate': hr, 'Weight': weight}
     logger.info(info)
     directory = os.path.join(directory, f'evaluate_{get_date()}')
     if not os.path.exists(directory):
@@ -268,8 +268,8 @@ def save_faiss(item_ids, item_vectors, directory=""):
         logger.error(e)
         raise ValueError(e)
     quan = faiss.IndexFlatIP(dim)
-    nlist = int(values.shape[0] / 10)
-    nlist = nlist if nlist > 0 else 1
+    nlist = int(values.shape[0] / 300)
+    nlist = nlist if nlist > 0 else values.shape[0]
     item_index = faiss.IndexIVFFlat(quan, dim, nlist)
     item_index.train(values)
     item_index.add_with_ids(values, ids)
