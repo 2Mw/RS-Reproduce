@@ -268,7 +268,7 @@ def save_faiss(item_ids, item_vectors, directory=""):
         logger.error(e)
         raise ValueError(e)
     quan = faiss.IndexFlatIP(dim)
-    nlist = int(values.shape[0] / 10)
+    nlist = int(values.shape[0] / 300)
     nlist = nlist if nlist > 0 else 1
     item_index = faiss.IndexIVFFlat(quan, dim, nlist)
     item_index.train(values)
