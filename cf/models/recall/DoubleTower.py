@@ -12,6 +12,7 @@ from cf.layers.mask import MaskedEmbeddingsAggregator as MEA
 from cf.utils.logger import logger
 from cf.utils.tensor import *
 import os
+from cf.layers.activation import PReLU
 
 
 class DoubleTower(Model):
@@ -24,10 +25,17 @@ class DoubleTower(Model):
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
         self.avg_pool = AveragePooling1D()
-        self.query_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+        self.activation = model_cfg['activation']
+        if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            self.activation_fn = None
+        else:
+            self.activation_fn = self.activation
+        self.query_mlp = mlp.MLP(model_cfg['units'], self.activation_fn, model_cfg['dropout'], model_cfg['use_bn'],
                                  initializer=keras.initializers.he_normal)
-        self.item_mlp = mlp.MLP(model_cfg['units'], model_cfg['activation'], model_cfg['dropout'], model_cfg['use_bn'],
+        self.item_mlp = mlp.MLP(model_cfg['units'], self.activation_fn, model_cfg['dropout'], model_cfg['use_bn'],
                                 initializer=keras.initializers.he_normal)
+        if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            self.activation_fn = PReLU()
         # self.l2 = L2Norm()
         self.bn = BatchNormalization()
         # get the columns information about query and item tower
@@ -98,11 +106,15 @@ class DoubleTower(Model):
     def query_tower(self, x):
         x = self.form_x(x)
         x = self.query_mlp(x)
+        if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            x = self.activation_fn(x)
         return tf.math.l2_normalize(x, axis=-1)
 
     def item_tower(self, x):
         x = self.form_x(x)
         x = self.item_mlp(x)
+        if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            x = self.activation_fn(x)
         return tf.math.l2_normalize(x, axis=-1)
 
     def form_x(self, x):
