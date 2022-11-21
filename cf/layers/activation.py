@@ -1,10 +1,12 @@
+import tensorflow as tf
 from keras import constraints
 from keras import initializers
 from keras import regularizers
-from keras.utils import tf_utils
+# from keras.utils import tf_utils
+from keras.layers import InputSpec
 from keras.engine.base_layer import Layer
-from keras.engine.input_spec import InputSpec
-from keras import backend
+# from keras.engine.input_spec import InputSpec
+from tensorflow.keras import backend
 
 
 class PReLU(Layer):
@@ -60,7 +62,7 @@ class PReLU(Layer):
             self.shared_axes = list(shared_axes)
         print("Self_define_prelu")
 
-    @tf_utils.shape_type_conversion
+    # @tf_utils.shape_type_conversion
     def build(self, input_shape):
         param_shape = list(input_shape[1:])
         if self.shared_axes is not None:
@@ -96,6 +98,6 @@ class PReLU(Layer):
         base_config = super(PReLU, self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
-    @tf_utils.shape_type_conversion
+    # @tf_utils.shape_type_conversion
     def compute_output_shape(self, input_shape):
         return input_shape
