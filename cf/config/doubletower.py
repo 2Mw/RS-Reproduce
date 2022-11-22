@@ -21,10 +21,10 @@ config = {
         # temperature factor for similarity score, default 1.0.
         'temperature': 1.0,
         'embedding_dim': 64,
-        'activation': 'PReLU',
+        'activation': 'elu',
         'dropout': 0,
         'use_bn': False,
-        'units': [1024, 512, 256],
+        'units': [1024, 512, 128],
     }
 }
 

@@ -18,7 +18,7 @@ def __recall(top_k, origin, n):
         # 排除掉 mask_zero
         s1 = {a for a in q if a != 0}
         avail = min(np.sum(np.array(top_k[i]) != -1), n)
-        rc_sum += len(s1)
+        rc_sum += min(len(s1), n)
         rc += len(s1.intersection(top_k[i][:avail]))
     return rc / rc_sum
 
