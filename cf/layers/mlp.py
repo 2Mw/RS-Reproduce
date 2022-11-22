@@ -21,10 +21,12 @@ class MLP(Layer):
         self.initializer = initializer if initializer is not None else keras.initializers.glorot_normal
         self.activation = activation
         if activation is not None and activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
-            self.activation_fn = PReLU()
+            self.activation_fn = None
         else:
             self.activation_fn = activation
         self.dnn = [Dense(unit, self.activation_fn) for unit in units]
+        if activation is not None and activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            self.activation_fn = [PReLU() for unit in units]
         self.dropout = Dropout(dropout)
         self.bn = [BatchNormalization() for unit in units]
         self.use_bn = use_bn
@@ -36,7 +38,7 @@ class MLP(Layer):
         for i, dense in enumerate(self.dnn):
             x = dense(x)
             if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
-                x = self.activation_fn(x)
+                x = self.activation_fn[i](x)
             if self.use_bn:
                 x = self.bn[i](x)
             # dropout 要放在 bn 层后面
