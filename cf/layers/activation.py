@@ -60,7 +60,7 @@ class PReLU(Layer):
             self.shared_axes = [shared_axes]
         else:
             self.shared_axes = list(shared_axes)
-        print("Self_define_prelu")
+        # print("Self_define_prelu")
 
     # @tf_utils.shape_type_conversion
     def build(self, input_shape):
