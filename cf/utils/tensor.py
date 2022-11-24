@@ -14,7 +14,14 @@ def to2DTensor(tensor):
         return tensor
     if len(tensor.shape) == 1:
         return tf.expand_dims(tensor, 1)
-    s = 1
-    for i in tensor.shape[1:]:
-        s *= i
-    return tf.reshape(tensor, [-1, s])
+    if len(tensor.shape) == 3:
+        s = 1
+        for i in tensor.shape[1:]:
+            if i is None:
+                shapes = tf.shape(tensor)
+                return tf.reshape(tensor, [shapes[0], shapes[-1]])
+            s *= i
+        return tf.reshape(tensor, [-1, s])
+    else:
+        # 还没遇到过 4 维的
+        raise NotImplementedError

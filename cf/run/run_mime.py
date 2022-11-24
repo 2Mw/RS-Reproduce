@@ -20,7 +20,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'doubletower'
+__model__ = 'mime'
 
 
 def train(cfg, dataset: str = 'ml100k', weights: str = ''):
@@ -103,5 +103,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    train(config, 'amazonbooks')
+    train(config, 'ml100k')
     # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119133246\weights.hdf5', 'fliggy')

@@ -24,6 +24,7 @@ config = {
         'activation': 'PReLU',
         'dropout': 0,
         'use_bn': False,
+        'interest_num': 4,
         'units': [1024, 512],
     }
 }

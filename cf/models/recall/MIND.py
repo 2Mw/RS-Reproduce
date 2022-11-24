@@ -14,8 +14,17 @@ from cf.utils.tensor import *
 import os
 
 
-class DoubleTower(Model):
+class MIND(Model):
     def __init__(self, feature_columns, config, directory="", *args, **kwargs):
+        """
+        Multi-Interest Network with Dynamic Routing.
+
+        :param feature_columns:
+        :param config:
+        :param directory:
+        :param args:
+        :param kwargs:
+        """
         super().__init__(*args)
         self.feature_columns = feature_columns
         model_cfg = config['model']
@@ -23,13 +32,13 @@ class DoubleTower(Model):
         self.embedding_dim = model_cfg['embedding_dim']
         self.ebd = get_embedding(feature_columns, self.embedding_dim, mask_zero=True)
         self.temperature = model_cfg['temperature']
-        self.avg_pool = AveragePooling1D()
         self.activation = model_cfg['activation']
+        self.interest_num = model_cfg['interest_num']
         self.query_mlp = mlp.MLP(model_cfg['units'], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
                                  initializer=keras.initializers.he_normal)
         self.item_mlp = mlp.MLP(model_cfg['units'], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
                                 initializer=keras.initializers.he_normal)
-        # self.l2 = L2Norm()
+        self.bn = BatchNormalization()
         self.bn = BatchNormalization()
         # get the columns information about query and item tower
         if config.get('dataset') is not None:
@@ -59,42 +68,9 @@ class DoubleTower(Model):
             keras.utils.plot_model(model, os.path.join(self.directory, 'model.png'), show_shapes=True)
         model.summary()
 
-    def train_step(self, data):
-        # self-define train_step_demo: https://www.tensorflow.org/guide/keras/customizing_what_happens_in_fit
-        with tf.GradientTape() as tape:
-            loss = self(data[0], training=True)
-
-        trainable_vars = self.trainable_variables
-        gradients = tape.gradient(loss, trainable_vars)
-        self.optimizer.apply_gradients(zip(gradients, trainable_vars))
-
-        return {}
-
-    def test_step(self, data):
-        self(data[0], training=False)
-        return {}
-
-    def call(self, inputs, training=None, mask=None):
-        # 使用双塔就需要区分 query 字段和 item 字段
-        query_x = {k: inputs[k] for k in self.query_cols}
-        query_out = self.query_tower(query_x)
-        item_x = {k: inputs[k] for k in self.item_cols}
-        item_out = self.item_tower(item_x)
-        if training:
-            # 训练过程，返回 loss
-            # 相似度计算最终使用 temperature
-            sim = tf.nn.softmax((query_out @ tf.transpose(item_out)) / self.temperature, axis=-1)
-            loss = tf.reduce_mean(tf.linalg.diag_part(-tf.math.log(sim)))
-            # 保存数据
-            self.add_loss(lambda: loss)
-            self.add_metric(loss, 'loss')
-            return loss
-        else:
-            # predict / eval 过程，返回对应的 user 向量或者 query 向量
-            return query_out, item_out
-
     def query_tower(self, x):
-        x = self.form_x(x)
+        x = self.form_x(x) # [batch, dim]
+
         x = self.query_mlp(x)
         return tf.math.l2_normalize(x, axis=-1)
 

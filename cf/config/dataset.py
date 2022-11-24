@@ -41,5 +41,15 @@ ds_config = {
             'target_id': 'S1]]item',  # topk 对比的列表
             'drop_target': False,
         },
+        'amazonbooks_base': 'data/amazonbooks',
+        'amazonbooks_train': 'ratings_Books.csv',
+        'amazonbooks_columns': {
+            'query': ['C1]]query', 'S1]]item'],
+            'item': ['C2]]item'],
+            'query_id': 'C1]]query',
+            'item_id': 'C2]]item',
+            'target_id': 'S1]]item',  # topk 对比的列表
+            'drop_target': False,
+        }
     }
 }

@@ -212,6 +212,7 @@ def create_dataset(file: str, sample_num: int = -1, test_size: float = 0.2, nume
     else:
         raise NotImplementedError('未知的处理方式')
 
+
 if __name__ == '__main__':
     f = open(r'E:\Notes\DeepLearning\practice\rs\data\fliggy\recall_data_all\feature.pkl', 'rb')
     print(pickle.load(f))
