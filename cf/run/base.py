@@ -181,12 +181,13 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
     else:
         test_cmp = test_data[topk_cmp_col]
 
-    test_size = pad_sequence_data(test_data)
+    test_size = cfg['train']['test_batch_size']
+    pad_sequence_data(test_data)
     query, _ = model.predict(test_data, test_size)
     if index is None:
         # 已经存在 index
-        item_size = pad_sequence_data(item_data)
-        _, item = model.predict(item_data, item_size)
+        pad_sequence_data(item_data)
+        _, item = model.predict(item_data, test_size)
         index = save_faiss(item_data[item_col_name], item, directory)
     # 存在 index
     D, top_k = index.search(query, 100)
