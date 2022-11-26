@@ -5,6 +5,9 @@ proj=$(shell pwd)
 py=/data/amax/b510/yl/.conda/envs/rs/bin/python
 cli=$(proj)/cf/run/run_cli.py
 
+# Select GPU
+gpu=0
+gpucmd=CUDA_VISIBLE_DEVICES=$(gpu)
 # Configs
 model=dcnv2
 # Dataset (criteo, ml, avazu)
@@ -32,11 +35,11 @@ tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:
 	@cd $(proj)
-	@$(evcmd)
+	@$(gpucmd) $(evcmd)
 
 train:
 	@cd $(proj)
-	@$(trcmd)
+	@$(gpucmd) $(trcmd)
 
 clear:
 	@clear
@@ -61,4 +64,4 @@ show:
 
 predict:
 	@cd $(proj)
-	@$(prcmd)
+	@$(gpucmd) $(prcmd)
