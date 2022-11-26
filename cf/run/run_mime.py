@@ -3,7 +3,7 @@ import os.path
 
 import pandas as pd
 
-from cf.config.doubletower import config
+from cf.config.mime import config
 from cf.utils.config import *
 import cf
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard

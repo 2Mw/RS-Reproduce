@@ -37,7 +37,7 @@ class MLP(Layer):
         x = inputs
         for i, dense in enumerate(self.dnn):
             x = dense(x)
-            if self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
+            if self.activation is not None and self.activation.lower() == 'prelu' and tf.__version__ < '2.4.0':
                 x = self.activation_fn[i](x)
             if self.use_bn:
                 x = self.bn[i](x)

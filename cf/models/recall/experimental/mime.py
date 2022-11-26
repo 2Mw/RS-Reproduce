@@ -8,9 +8,10 @@ from keras.models import Model
 from cf.layers import mlp
 from cf.models.ctr.base import get_embedding
 from tensorflow import keras
-from cf.layers.mask import MaskedEmbeddingsAggregator as MEA
+from cf.layers import moe, gate
 from cf.utils.logger import logger
 from cf.utils.tensor import *
+from cf.preprocess.feature_column import SparseFeat, SequenceFeat
 import os
 
 
@@ -25,10 +26,16 @@ class MIME(Model):
         self.temperature = model_cfg['temperature']
         self.avg_pool = AveragePooling1D()
         self.activation = model_cfg['activation']
-        self.query_mlp = mlp.MLP(model_cfg['units'], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
+        self.units = model_cfg['units']
+        self.num_interest = model_cfg['interests']
+        self.query_mlp = mlp.MLP(self.units, self.activation, model_cfg['dropout'], model_cfg['use_bn'],
                                  initializer=keras.initializers.he_normal)
-        self.item_mlp = mlp.MLP(model_cfg['units'], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
-                                initializer=keras.initializers.he_normal)
+        self.item_mlp = [
+            [
+                mlp.MLP([unit], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
+                        initializer=keras.initializers.he_normal) for unit in self.units
+            ] for _ in range(self.num_interest)
+        ]
         # self.l2 = L2Norm()
         self.bn = BatchNormalization()
         # get the columns information about query and item tower
@@ -48,6 +55,22 @@ class MIME(Model):
             e = f'You must set `dataset` parameter in order to get columns information about query and item tower'
             logger.error(e)
             raise ValueError(e)
+        # multi-interests configuration
+        self.item_sparse_len = len(
+            list(filter(
+                lambda x: x.name in self.item_cols and (isinstance(x, SparseFeat) or isinstance(x, SequenceFeat)),
+                feature_columns)))
+        x_dim = self.item_sparse_len * self.embedding_dim + len(self.item_cols) - self.item_sparse_len
+        self.num_experts = model_cfg['mmoe_experts']
+        self.ebd_mmoe = moe.MMOE(self.num_experts, [x_dim], self.num_interest, dropout=model_cfg['dropout'])
+        self.dnn_mmoe = [moe.MMOE(self.num_experts, [self.units[0]], 2, dropout=model_cfg['dropout']) for _ in
+                         range(self.num_interest - 1)]
+
+        self.dnn_bridge = [gate.BridgeModule(model_cfg['bnn_bridge_type']) for _ in range(self.num_interest - 1)]
+        self.use_dnn_mmoe = model_cfg['use_dnn_mmoe']
+        self.merge_strategy = model_cfg['merge_strategy']
+        self.merge_dnn = mlp.MLP([self.units[-1]], self.activation, model_cfg['dropout'], model_cfg['use_bn'],
+                                 initializer=keras.initializers.he_normal)
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
@@ -100,7 +123,36 @@ class MIME(Model):
 
     def item_tower(self, x):
         x = self.form_x(x)
-        x = self.item_mlp(x)
+        xs = self.ebd_mmoe(x)
+        mlp_out = []
+        for i in range(len(self.units)):
+            mlp_out = [self.item_mlp[idx][i](_x) for idx, _x in enumerate(xs)]
+            if self.use_dnn_mmoe and self.num_interest > 1 and i == 0:
+                combined = []
+                for j in range(self.num_interest - 1):
+                    combined.append(self.dnn_bridge[j]([mlp_out[j], mlp_out[j + 1]]))
+                dnn_mmoe_out = []
+                for j, item in enumerate(self.dnn_mmoe):
+                    dnn_mmoe_out.extend(item(combined[j]))
+                res = [dnn_mmoe_out.pop(0)]
+                while len(dnn_mmoe_out) > 2:
+                    a = dnn_mmoe_out.pop(0)
+                    b = dnn_mmoe_out.pop(1)
+                    res.append(tf.concat([a, b], axis=-1))
+                res = res + dnn_mmoe_out
+                mlp_out = res
+            xs = mlp_out
+
+        if self.num_interest > 1:
+            if self.merge_strategy == 'mean':
+                xs = tf.concat([tf.expand_dims(i, axis=-1) for i in xs], axis=-1)
+                x = tf.reduce_mean(xs, axis=-1)
+            elif self.merge_strategy == 'dense':
+                x = self.merge_dnn(tf.concat(xs, axis=-1))
+            else:
+                raise NotImplementedError
+        else:
+            x = xs[0]
         return tf.math.l2_normalize(x, axis=-1)
 
     def form_x(self, x):
