@@ -6,15 +6,15 @@ py=/data/amax/b510/yl/.conda/envs/rs/bin/python
 cli=$(proj)/cf/run/run_cli.py
 
 # Select GPU
-gpu=0
+gpu=1
 gpucmd=CUDA_VISIBLE_DEVICES=$(gpu)
 # Configs
 model=mime
 # Dataset (criteo, ml, avazu)
-dataset=fliggy
+dataset=amazonbooks
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221126204150/weights.hdf5
+weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221126211509/weights.003.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
