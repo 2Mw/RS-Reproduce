@@ -11,7 +11,7 @@ model=doubletower
 dataset=fliggy
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/doubletower/20221122093705/0.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/doubletower/20221122094925/weights.001.hdf5
+weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/doubletower/20221122175131/weights.017.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/doubletower/20221122093705/0.yaml
