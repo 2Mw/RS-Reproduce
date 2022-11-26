@@ -35,7 +35,7 @@ tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:
 	@cd $(proj)
-	@$(gpucmd) $(evcmd)
+	$(gpucmd) $(evcmd)
 
 train:
 	@cd $(proj)

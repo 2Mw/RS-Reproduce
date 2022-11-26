@@ -29,6 +29,7 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     train_config = cfg['train']
     epochs = train_config['epochs']
     batch_size = train_config['batch_size']
+    test_batch_size = train_config['test_batch_size']
     sample_size = train_config['sample_size']
     logger.info(f'========= Loading {dataset} Data =========')
     num_process = cfg['model']['numeric_process']
@@ -50,9 +51,9 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
         test_cmp = test_user_data[topk_cmp_col]
 
     # 召回模型的多值数据预处理
-    train_size = base.pad_sequence_data(train_data)
-    test_size = base.pad_sequence_data(test_user_data)
-    item_size = base.pad_sequence_data(item_data)
+    base.pad_sequence_data(train_data)
+    base.pad_sequence_data(test_user_data)
+    base.pad_sequence_data(item_data)
 
     # 构建模型
     logger.info(f'========= Build Model =========')
@@ -67,8 +68,8 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, callbacks=[ckpt])
     # 保存模型
     model.save_weights(os.path.join(directory, 'weights.hdf5'))
-    query, _ = model.predict(test_user_data, test_size)
-    _, item = model.predict(item_data, item_size)
+    query, _ = model.predict(test_user_data, test_batch_size)
+    _, item = model.predict(item_data, test_batch_size)
     # 得到数据，将 item 向量存入 faiss 数据库
     query_col_name = col_name['query_id']
     item_col_name = col_name['item_id']

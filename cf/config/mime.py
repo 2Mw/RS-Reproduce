@@ -13,7 +13,7 @@ config = {
         'lr': 0.01,
         'val_ratio': 0.1,
         'test_ratio': 0.1,
-        'test_batch_size': 32,
+        'test_batch_size': 4096,
         'lr_embed': 1e-4,
         'warmup': True,
         'metrics': []
@@ -27,7 +27,6 @@ config = {
         'activation': 'PReLU',
         'dropout': 0,
         'use_bn': False,
-        'interest_num': 4,
         'units': [1024, 256],
         # number of interests
         'interests': __interest__,
