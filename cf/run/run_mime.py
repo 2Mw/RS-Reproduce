@@ -6,7 +6,7 @@ import pandas as pd
 from cf.config.mime import config
 from cf.utils.config import *
 import cf
-from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader
@@ -70,8 +70,8 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
     train_history = model.fit(train_data, epochs=epochs, batch_size=batch_size, callbacks=[ckpt])
     # 保存模型
     model.save_weights(os.path.join(directory, 'weights.hdf5'))
-    query, _ = model.predict(test_user_data, test_size)
-    _, item = model.predict(item_data, item_size)
+    query, _ = model.predict(test_user_data, 1024)
+    _, item = model.predict(item_data, 1024)
     # 得到数据，将 item 向量存入 faiss 数据库
     query_col_name = col_name['query_id']
     item_col_name = col_name['item_id']
@@ -103,5 +103,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    train(config, 'ml100k')
+    train(config, 'amazonbooks')
     # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119133246\weights.hdf5', 'fliggy')

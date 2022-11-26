@@ -74,7 +74,7 @@ class MIME(Model):
 
     def summary(self, line_length=None, positions=None, print_fn=None, expand_nested=False, show_trainable=False):
         inputs = {
-            f.name: Input(shape=(None,), name=f.name)
+            f.name: Input(shape=(None,))
             for f in self.feature_columns
         }
         model = Model(inputs, outputs=self.call(inputs, training=True))
@@ -107,7 +107,7 @@ class MIME(Model):
             # 训练过程，返回 loss
             # 相似度计算最终使用 temperature
             sim = tf.nn.softmax((query_out @ tf.transpose(item_out)) / self.temperature, axis=-1)
-            loss = tf.reduce_mean(tf.linalg.diag_part(-tf.math.log(sim)))
+            loss = tf.reduce_mean(tf.linalg.diag_part((-1) * tf.math.log(sim)))
             # 保存数据
             self.add_loss(lambda: loss)
             self.add_metric(loss, 'loss')

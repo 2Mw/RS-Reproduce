@@ -19,7 +19,10 @@ def to2DTensor(tensor):
         for i in tensor.shape[1:]:
             if i is None:
                 shapes = tf.shape(tensor)
-                return tf.reshape(tensor, [shapes[0], shapes[-1]])
+                if tf.__version__ < '2.4.0':
+                    return tf.reshape(tensor, [shapes[0], tensor.shape[-1]])
+                else:
+                    return tf.reshape(tensor, [shapes[0], shapes[-1]])
             s *= i
         return tf.reshape(tensor, [-1, s])
     else:
