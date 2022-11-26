@@ -270,7 +270,7 @@ def save_faiss(item_ids, item_vectors, directory=""):
     quan = faiss.IndexFlatIP(dim)
     nlist = int(values.shape[0] / 300)
     nlist = nlist if nlist > 0 else values.shape[0]
-    item_index = faiss.IndexIVFFlat(quan, dim, nlist)
+    item_index = faiss.IndexIVFFlat(quan, dim, nlist, faiss.METRIC_INNER_PRODUCT)
     item_index.train(values)
     item_index.add_with_ids(values, ids)
     item_index.nprobe = nlist

@@ -11,6 +11,8 @@ from cf.config.dcn_me import *
 from cf.config.youtubednn_recall import *
 from cf.config.youtubesbc import *
 from cf.config.doubletower import *
+from cf.config.mind import *
+from cf.config.mime import *
 from cf.models import MODULES as pool
 import cf.config as obj
 

@@ -5,7 +5,7 @@ import pandas as pd
 import os
 from cf.utils.logger import logger
 from sklearn.preprocessing import KBinsDiscretizer, MinMaxScaler, LabelEncoder
-from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy, huawei, ml100k
+from cf.preprocess import criteo, datasets, movielens, avazu, tbadclick, fliggy, huawei, ml100k, amazonbooks
 from cf.preprocess.feature_column import DenseFeat, SparseFeat, SequenceFeat
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -265,6 +265,10 @@ def load_data(dataset: str, base: str, sample_size: int, test_ratio: float, trai
             fc, train_data, test_data = huawei.create_dataset(train_file, sample_size, test_ratio, num_process, prefix)
         elif dataset == 'ml100k':
             fc, train_data, test_data, items = ml100k.create_dataset(train_file, sample_size, test_ratio, num_process,
+                                                                     prefix)
+            pickle.dump(items, open(f'{data_dir}/{files[3]}', 'wb'), pickle.HIGHEST_PROTOCOL)
+        elif dataset == 'amazonbooks':
+            fc, train_data, test_data, items = amazonbooks.create_dataset(train_file, sample_size, test_ratio, num_process,
                                                                      prefix)
             pickle.dump(items, open(f'{data_dir}/{files[3]}', 'wb'), pickle.HIGHEST_PROTOCOL)
         else:

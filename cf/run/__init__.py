@@ -13,6 +13,8 @@ from cf.run.run_autoint_me import *
 from cf.run.run_youtubesbc import *
 from cf.run.run_youtubednn_recall import *
 from cf.run.run_doubletower import *
+from cf.run.run_mind import *
+from cf.run.run_mime import *
 import os
 from cf.utils.logger import logger
 import tensorflow as tf

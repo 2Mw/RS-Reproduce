@@ -6,7 +6,7 @@ import pandas as pd
 from cf.config.doubletower import config
 from cf.utils.config import *
 import cf
-from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 from cf.utils.callbacks import AbnormalAUC, MetricsMonitor
 import cf.run.base as base
 from cf.preprocess import data as dataloader
@@ -20,7 +20,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 project_dir = cf.get_project_path()
 
-__model__ = 'doubletower'
+__model__ = 'mind'
 
 
 def train(cfg, dataset: str = 'ml100k', weights: str = ''):
@@ -41,7 +41,7 @@ def train(cfg, dataset: str = 'ml100k', weights: str = ''):
 
     data_dir = os.path.join(basepath, 'recall_data_all' if sample_size == -1 else f'recall_data_{sample_size}')
     item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
-    
+
     col_name = cfg['files'][f'{dataset}_columns']
     topk_cmp_col = col_name['target_id']
     drop_target = col_name['drop_target']
@@ -103,5 +103,5 @@ def predict(cfg, weight: str, dataset: str = 'ml100k'):
 
 
 if __name__ == '__main__':
-    train(config, 'amazonbooks')
+    train(config, 'ml100k')
     # evaluate(config, r'E:\Notes\DeepLearning\practice\rs\cf\result\doubletower\20221119133246\weights.hdf5', 'fliggy')

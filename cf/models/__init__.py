@@ -11,6 +11,8 @@ from cf.models.ctr.experimental.autoint_me import *
 from cf.models.recall.YoutubeDNN import *
 from cf.models.recall.YoutubeSBC import *
 from cf.models.recall.DoubleTower import *
+from cf.models.recall.MIND import *
+from cf.models.recall.experimental.mime import *
 
 MODULES = {
     'dcn': DCN,
@@ -27,4 +29,6 @@ MODULES = {
     # 'youtubednn_rank': None,
     'youtubesbc': YoutubeSBC,
     'doubletower': DoubleTower,
+    'mind': MIND,
+    'mime': MIME,
 }

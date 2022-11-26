@@ -2,11 +2,11 @@ from cf.config.dataset import ds_config
 
 config = {
     'train': {
-        'epochs': 1,
+        'epochs': 3,
         'optimizer': 'Adam',
         'loss': 'sparse_categorical_crossentropy',
         'sample_size': -1,
-        'batch_size': 4096,
+        'batch_size': 64,
         'lr': 0.01,
         'val_ratio': 0.1,
         'test_ratio': 0.1,
@@ -24,6 +24,7 @@ config = {
         'activation': 'PReLU',
         'dropout': 0,
         'use_bn': False,
+        'interest_num': 4,
         'units': [1024, 512],
     }
 }
