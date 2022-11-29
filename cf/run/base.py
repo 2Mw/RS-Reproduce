@@ -150,6 +150,8 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
     """
     base = os.path.join(project_dir, cfg['files'][f'{dataset}_base'])
     sample_size = cfg['train']['sample_size']
+    n_metric = cfg['train'].get('n_metric')
+    n_metric = 300 if n_metric is None else n_metric
     cfg['dataset'] = dataset
     if sample_size == -1:
         data_dir = os.path.join(base, f'recall_data_all')
@@ -190,9 +192,9 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
         _, item = model.predict(item_data, test_size)
         index = save_faiss(item_data[item_col_name], item, directory)
     # 存在 index
-    D, top_k = index.search(query, 100)
-    recalls = metric.Recall(top_k, test_cmp, 100)
-    hr = metric.HitRate(top_k, test_cmp, 100)
+    D, top_k = index.search(query, n_metric)
+    recalls = metric.Recall(top_k, test_cmp, n_metric)
+    hr = metric.HitRate(top_k, test_cmp, n_metric)
     info = {'Recall': recalls, 'HitRate': hr, 'Weight': weight}
     logger.info(info)
     directory = os.path.join(directory, f'evaluate_{get_date()}')
