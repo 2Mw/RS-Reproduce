@@ -196,9 +196,10 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
     D, top_k = index.search(query, n_metric)
     recalls = metric.Recall(top_k, test_cmp, n_metric)
     hr = metric.HitRate(top_k, test_cmp, n_metric)
-    info = {'Recall': recalls, 'HitRate': hr, 'Weight': weight}
+    cost = time.time() - start
+    info = {'Recall': recalls, 'HitRate': hr, 'Weight': weight, 'Cost': cost}
     logger.info(info)
-    logger.info(f"evaluate cost time: {time.time()-start:.3f}s")
+    logger.info(f"evaluate cost time: {cost:.3f}s")
     directory = os.path.join(directory, f'evaluate_{get_date()}')
     if not os.path.exists(directory):
         os.makedirs(directory)
