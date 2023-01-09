@@ -185,18 +185,20 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
 
     test_size = cfg['train']['test_batch_size']
     pad_sequence_data(test_data)
-    query, _ = model.predict(test_data, test_size)
     if index is None:
         # 已经存在 index
         pad_sequence_data(item_data)
         _, item = model.predict(item_data, test_size)
         index = save_faiss(item_data[item_col_name], item, directory)
     # 存在 index
+    start = time.time()  # recall evaluate start
+    query, _ = model.predict(test_data, test_size)
     D, top_k = index.search(query, n_metric)
     recalls = metric.Recall(top_k, test_cmp, n_metric)
     hr = metric.HitRate(top_k, test_cmp, n_metric)
     info = {'Recall': recalls, 'HitRate': hr, 'Weight': weight}
     logger.info(info)
+    logger.info(f"evaluate cost time: {time.time()-start:.3f}s")
     directory = os.path.join(directory, f'evaluate_{get_date()}')
     if not os.path.exists(directory):
         os.makedirs(directory)
