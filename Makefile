@@ -14,11 +14,11 @@ model=mime
 dataset=fliggy
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221127175545/weights.002.hdf5
+weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221205170121/weights.002.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
 t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
-t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221127225528/weights.hdf5
+t_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221202180909-1024/weights.001.hdf5
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config
 p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
