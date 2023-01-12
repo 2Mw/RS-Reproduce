@@ -170,8 +170,8 @@ def recall_evaluate(model_name: str, cfg, weight: str, dataset: str):
     else:
         index = None
         item_data = pickle.load(open(f'{data_dir}/item_data.pkl', 'rb'))
-    model = initModel(model_name, cfg, feature_columns, '', weight)
     directory = os.path.dirname(weight)
+    model = initModel(model_name, cfg, feature_columns, directory, weight)
     col_name = cfg['files'][f'{dataset}_columns']
     topk_cmp_col = col_name['target_id']
     item_col_name = col_name['item_id']
