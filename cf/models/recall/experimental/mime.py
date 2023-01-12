@@ -13,6 +13,8 @@ from cf.utils.logger import logger
 from cf.utils.tensor import *
 from cf.preprocess.feature_column import SparseFeat, SequenceFeat
 import os
+import seaborn as sns
+import time
 
 
 class MIME(Model):
@@ -124,6 +126,18 @@ class MIME(Model):
     def item_tower(self, x):
         x = self.form_x(x)
         xs = self.ebd_mmoe(x)
+        print(type(xs), type(xs[0]))
+        if hasattr(xs[0], 'numpy'):
+            for idx, b in enumerate(xs):
+                arr = b.numpy()
+                arr = arr[0:5, 0:100]
+                path = f"{self.directory}/output_{idx}_{time.time()}.png"
+                print(arr.shape, path)
+                ax = sns.heatmap(arr, cmap="crest")
+                fig = ax.get_figure()
+                fig.savefig(path)
+            print('Over export!')
+            exit(0)
         mlp_out = []
         for i in range(len(self.units)):
             mlp_out = [self.item_mlp[idx][i](_x) for idx, _x in enumerate(xs)]
