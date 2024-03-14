@@ -6,23 +6,23 @@ py=/data/amax/b510/yl/.conda/envs/rs/bin/python
 cli=$(proj)/cf/run/run_cli.py
 
 # Select GPU
-gpu=1
+gpu=0
 gpucmd=CUDA_VISIBLE_DEVICES=$(gpu)
 # Configs
-model=mime
+model=addpp
 # Dataset (criteo, ml, avazu)
-dataset=fliggy
+dataset=criteo
 ## evaluate config
 config=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
-weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20221202180909-1024/weights.001.hdf5
+weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/mime/20230112143408/weights.008.hdf5
 evcmd=$(py) $(cli) -m $(model) -c $(config) -t test -p $(weight) -d $(dataset)
 ## train config
-t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/mime/20221126190906/0.yaml
+t_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/addpp/20240313210616/0.yaml
 t_weight=''
 trcmd=$(py) $(cli) -m $(model) -c $(t_cfg) -p $(t_weight) -d $(dataset)
 ## pred config
-p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/medcn/huawei/0.yaml
-p_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/medcn/20220727170434/weights.005-0.07562.hdf5
+p_cfg=/data/amax/b510/yl/repo/33/22/rs/cf/tune/addpp/20240313210616/0.yaml
+p_weight=/data/amax/b510/yl/repo/33/22/rs/cf/result/addpp/20240314175553/model.tf
 prcmd=$(py) $(cli) -m $(model) -c $(p_cfg) -t predict -p $(p_weight) -d $(dataset)
 ## Other
 lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1)
@@ -30,7 +30,7 @@ lastlog=$(shell ls -f $(proj)/log/$(model)-$(dataset)*.log | sort -r | head -n 1
 pdir=
 port=6006
 ## Tune order
-name=mime
+name=addpp
 tune_cli=$(proj)/cf/utils/tune.py
 
 evaluate:

@@ -13,6 +13,8 @@ from cf.config.youtubesbc import *
 from cf.config.doubletower import *
 from cf.config.mind import *
 from cf.config.mime import *
+from cf.config.addpp import *
+
 from cf.models import MODULES as pool
 import cf.config as obj
 

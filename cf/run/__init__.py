@@ -15,6 +15,7 @@ from cf.run.run_youtubednn_recall import *
 from cf.run.run_doubletower import *
 from cf.run.run_mind import *
 from cf.run.run_mime import *
+from cf.run.run_addpp import *
 import os
 from cf.utils.logger import logger
 import tensorflow as tf
@@ -36,7 +37,7 @@ MODULES = {k: Instance(k) for k in cf.models.MODULES.keys()}
 # Use to select GPU.
 
 MEMORY_LIMIT_RATIO = 0.5  # MiB
-USE_CPU_ONLY = False
+USE_CPU_ONLY = True
 ASSIGNED_GPU = os.environ.get("CUDA_VISIBLE_DEVICES")
 
 

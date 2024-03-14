@@ -13,6 +13,7 @@ from cf.models.recall.YoutubeSBC import *
 from cf.models.recall.DoubleTower import *
 from cf.models.recall.MIND import *
 from cf.models.recall.experimental.mime import *
+from cf.models.rerank.addpp import *
 
 MODULES = {
     'dcn': DCN,
@@ -31,4 +32,5 @@ MODULES = {
     'doubletower': DoubleTower,
     'mind': MIND,
     'mime': MIME,
+    'addpp': ADDPP
 }
