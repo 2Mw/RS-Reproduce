@@ -143,3 +143,28 @@ def dpp_sw(kernel_matrix, window_size, max_length, relavance_score=None, relavan
             break
         selected_items.append(selected_item)
     return selected_items
+
+
+'''
+Maximum Marginal Relevance
+'''
+def mmr(sim_matrix, max_length, relavance_score, relavance_weight=0.5):
+    s = []
+    u = [i for i in range(sim_matrix.shape[0])]
+    idx = np.argmax(relavance_score)
+    s.append(idx)
+    u.remove(idx)
+    
+    sim_matrix = sim_matrix - np.diag(np.diag(sim_matrix))
+    
+    for _ in range(max_length - 1):
+        max_mr_i, max_i = -0x3f3f3f3f, 0
+        for i in u:
+            mr_i = relavance_weight * relavance_score[i] - (1-relavance_weight) * np.max(sim_matrix[i][s])
+            if mr_i > max_mr_i:
+                max_mr_i = mr_i
+                max_i = i
+        s.append(max_i)
+        u.remove(max_i)
+    
+    return s
